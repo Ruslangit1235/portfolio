@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Высота — фитнес-клуб в Екатеринбурге</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="demobar">
+  <div class="wrap">
+    <span>Демо-проект для портфолио. Клуб вымышленный, расписание и запись работают.</span>
+    <span class="sep"></span>
+    <a href="code.html">Смотреть код</a>
+    <a href="../../index.html">← В портфолио</a>
+  </div>
+</div>
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#top">Высо<span>та</span></a>
+    <button class="burger" id="burger" type="button" aria-expanded="false" aria-controls="nav">
+      <i></i><i></i><i></i><span class="vh">Меню</span>
+    </button>
+    <nav id="nav" class="nav" aria-label="Разделы">
+      <a href="#sched">Расписание</a>
+      <a href="#dirs">Направления</a>
+      <a href="#coaches">Тренеры</a>
+      <a href="#prices">Абонементы</a>
+      <a href="#faq">Вопросы</a>
+    </nav>
+    <a class="cta" href="#sched">Записаться</a>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ---------- герой ---------- -->
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero__text">
+        <p class="kicker">Екатеринбург · ул. Малышева 71 · круглосуточно</p>
+        <h1>Занятие<br>начинается<br><span>через час</span></h1>
+        <p class="lead">Сорок групповых занятий в неделю, четыре зала и бассейн на 25 метров. Запись открывается за семь дней, отмена — за два часа без списания.</p>
+        <div class="btns">
+          <a class="btn btn--fill" href="#sched">Выбрать занятие</a>
+          <a class="btn btn--line" href="#prices">Абонементы</a>
+        </div>
+      </div>
+
+      <dl class="facts">
+        <div><dt>Групповых занятий</dt><dd>40 в неделю</dd></div>
+        <div><dt>Залов</dt><dd>4 + бассейн</dd></div>
+        <div><dt>Тренеров</dt><dd>12</dd></div>
+        <div><dt>Первое занятие</dt><dd>бесплатно</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ---------- расписание ---------- -->
+  <section class="sec" id="sched">
+    <div class="wrap">
+      <div class="sec__head">
+        <p class="eyeb">Расписание</p>
+        <h2>Неделя целиком</h2>
+        <p>Нажмите на занятие, чтобы записаться. Свободные места обновляются сразу — это демо, но счётчик настоящий.</p>
+      </div>
+
+      <!-- фильтры -->
+      <div class="filters">
+        <div class="filters__row">
+          <span class="filters__lbl">Направление</span>
+          <div class="chips" id="dirchips">
+            <button class="chip" type="button" data-dir="Силовые" aria-pressed="false">Силовые</button>
+            <button class="chip" type="button" data-dir="Йога" aria-pressed="false">Йога</button>
+            <button class="chip" type="button" data-dir="Кардио" aria-pressed="false">Кардио</button>
+            <button class="chip" type="button" data-dir="Бассейн" aria-pressed="false">Бассейн</button>
+            <button class="chip" type="button" data-dir="Единоборства" aria-pressed="false">Единоборства</button>
+            <button class="chip" type="button" data-dir="Танцы" aria-pressed="false">Танцы</button>
+          </div>
+        </div>
+
+        <div class="filters__row filters__row--inline">
+          <label class="sel">Тренер
+            <select id="coach">
+              <option value="">любой</option>
+              <option>Орлов</option>
+              <option>Зимина</option>
+              <option>Карпов</option>
+              <option>Шульга</option>
+            </select>
+          </label>
+          <label class="sel">Время
+            <select id="part">
+              <option value="">весь день</option>
+              <option value="morning">утро, до 12:00</option>
+              <option value="day">день, 12:00–17:00</option>
+              <option value="evening">вечер, после 17:00</option>
+            </select>
+          </label>
+          <label class="check">
+            <input type="checkbox" id="free">
+            <span>только со свободными местами</span>
+          </label>
+          <button class="reset" type="button" id="reset">Сбросить</button>
+        </div>
+      </div>
+
+      <p class="found mono" id="found">Показано 25 занятий из 25</p>
+
+      <!-- вкладки дней: только на узком экране -->
+      <div class="days" id="days" role="tablist" aria-label="День недели"></div>
+
+      <div class="schedwrap">
+        <div class="sched" id="sched-grid"></div>
+      </div>
+      <p class="scrollnote mono" id="scrollnote">Сетка листается вправо →</p>
+
+      <div class="empty" id="empty" hidden>
+        <h3>Ничего не нашлось</h3>
+        <p>Снимите часть фильтров — например, выберите «весь день» или другого тренера.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- направления ---------- -->
+  <section class="sec sec--tint" id="dirs">
+    <div class="wrap">
+      <div class="sec__head">
+        <p class="eyeb">Направления</p>
+        <h2>Шесть групп занятий</h2>
+      </div>
+      <div class="cards">
+        <article class="card">
+          <h3>Силовые</h3>
+          <p>Штанга, гантели, работа с собственным весом. Группы до 12 человек, тренер ставит технику каждому.</p>
+          <p class="card__m mono">Большой зал · 55 мин</p>
+        </article>
+        <article class="card">
+          <h3>Йога</h3>
+          <p>Хатха и виньяса. Коврики и блоки клубные, приходить можно без своего инвентаря.</p>
+          <p class="card__m mono">Малый зал · 75 мин</p>
+        </article>
+        <article class="card">
+          <h3>Кардио</h3>
+          <p>Интервальные тренировки и степ. Пульсометры выдаём на входе, нагрузку считаем по зонам.</p>
+          <p class="card__m mono">Большой зал · 45 мин</p>
+        </article>
+        <article class="card">
+          <h3>Бассейн</h3>
+          <p>Аквааэробика и техника плавания. Пять дорожек по 25 метров, вода 27 градусов.</p>
+          <p class="card__m mono">Бассейн · 45 мин</p>
+        </article>
+        <article class="card">
+          <h3>Единоборства</h3>
+          <p>Бокс и кикбоксинг. Перчатки и бинты есть в прокате, спарринги только по желанию.</p>
+          <p class="card__m mono">Ринг · 60 мин</p>
+        </article>
+        <article class="card">
+          <h3>Танцы</h3>
+          <p>Латина и современная хореография. Начинающие и продолжающие занимаются раздельно.</p>
+          <p class="card__m mono">Малый зал · 60 мин</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- тренеры ---------- -->
+  <section class="sec" id="coaches">
+    <div class="wrap">
+      <div class="sec__head">
+        <p class="eyeb">Команда</p>
+        <h2>Кто ведёт занятия</h2>
+      </div>
+      <div class="coaches">
+        <article class="coach">
+          <div class="coach__ph"><span>ДО</span></div>
+          <h3>Дмитрий Орлов</h3>
+          <p>Силовые, кроссфит. Мастер спорта по тяжёлой атлетике, в клубе 7 лет.</p>
+        </article>
+        <article class="coach">
+          <div class="coach__ph"><span>МЗ</span></div>
+          <h3>Марина Зимина</h3>
+          <p>Йога, растяжка. Сертификат Yoga Alliance, 500 часов практики преподавания.</p>
+        </article>
+        <article class="coach">
+          <div class="coach__ph"><span>АК</span></div>
+          <h3>Антон Карпов</h3>
+          <p>Бокс, кикбоксинг. Кандидат в мастера спорта, работает с подростками.</p>
+        </article>
+        <article class="coach">
+          <div class="coach__ph"><span>ОШ</span></div>
+          <h3>Ольга Шульга</h3>
+          <p>Плавание, аквааэробика. Тренер первой категории, реабилитация после травм.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- абонементы ---------- -->
+  <section class="sec sec--tint" id="prices">
+    <div class="wrap">
+      <div class="sec__head">
+        <p class="eyeb">Абонементы</p>
+        <h2>Сколько стоит</h2>
+        <p>Заморозка до 30 дней в год входит в любой абонемент. Первое занятие бесплатное, записаться можно без карты.</p>
+      </div>
+      <div class="plans">
+        <article class="plan">
+          <h3>Утренний</h3>
+          <p class="plan__p">2 900 ₽<span>в месяц</span></p>
+          <ul class="ticks">
+            <li>Доступ с 7:00 до 12:00</li>
+            <li>Групповые занятия утром</li>
+            <li>Бассейн без ограничений</li>
+          </ul>
+          <button class="plan__b" type="button">Оформить</button>
+        </article>
+        <article class="plan plan--pick">
+          <p class="plan__badge mono">Берут чаще всего</p>
+          <h3>Полный день</h3>
+          <p class="plan__p">4 400 ₽<span>в месяц</span></p>
+          <ul class="ticks">
+            <li>Круглосуточный доступ</li>
+            <li>Все групповые занятия</li>
+            <li>Бассейн и сауна</li>
+            <li>Две персональные тренировки</li>
+          </ul>
+          <button class="plan__b plan__b--fill" type="button">Оформить</button>
+        </article>
+        <article class="plan">
+          <h3>Годовой</h3>
+          <p class="plan__p">38 000 ₽<span>за год</span></p>
+          <ul class="ticks">
+            <li>Всё из «Полного дня»</li>
+            <li>Экономия 14 800 ₽</li>
+            <li>Заморозка до 60 дней</li>
+          </ul>
+          <button class="plan__b" type="button">Оформить</button>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- вопросы ---------- -->
+  <section class="sec" id="faq">
+    <div class="wrap">
+      <div class="sec__head">
+        <p class="eyeb">Вопросы</p>
+        <h2>Что спрашивают чаще всего</h2>
+      </div>
+      <div class="faq">
+        <details>
+          <summary>За сколько открывается запись?</summary>
+          <p>За семь дней до занятия в 10:00. На популярные направления — силовые по вечерам и бокс — места расходятся за первые сутки, поэтому записывайтесь сразу.</p>
+        </details>
+        <details>
+          <summary>Что если не смогу прийти?</summary>
+          <p>Отмените запись в приложении не позднее чем за два часа. Если отменить позже или не прийти, занятие спишется с абонемента. Три пропуска подряд — и запись на неделю блокируется.</p>
+        </details>
+        <details>
+          <summary>Нужна ли справка от врача?</summary>
+          <p>Для тренажёрного зала и групповых занятий не нужна. В бассейн — да, справка о состоянии кожи действует 6 месяцев, её можно получить у нашего врача по вторникам.</p>
+        </details>
+        <details>
+          <summary>Есть ли занятия для начинающих?</summary>
+          <p>В расписании такие занятия помечены уровнем. На силовых и в танцах группы разделены, на йоге и в кардио тренер даёт два варианта упражнений сразу.</p>
+        </details>
+        <details>
+          <summary>Можно прийти один раз?</summary>
+          <p>Да, разовое занятие — 650 ₽, бассейн — 500 ₽. Первое групповое занятие бесплатно: выберите в расписании и приходите за 15 минут до начала с паспортом.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ---------- модалка записи ---------- -->
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="m-title">
+  <div class="modal__bg" data-close></div>
+  <div class="modal__box">
+    <button class="modal__x" type="button" data-close aria-label="Закрыть">✕</button>
+    <p class="modal__dir mono" id="m-dir"></p>
+    <h2 id="m-title"></h2>
+    <dl class="modal__specs" id="m-specs"></dl>
+    <form id="m-form" novalidate>
+      <div class="field">
+        <label for="m-name">Имя</label>
+        <input id="m-name" type="text" autocomplete="name">
+      </div>
+      <div class="field">
+        <label for="m-tel">Телефон</label>
+        <input id="m-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 900 000-00-00">
+      </div>
+      <button class="modal__btn" type="submit" id="m-submit">Записаться</button>
+      <p class="modal__msg" id="m-msg" role="status"></p>
+    </form>
+  </div>
+</div>
+
+<footer class="foot">
+  <div class="wrap">
+    <div>
+      <h4>Высота</h4>
+      <p>Екатеринбург, ул. Малышева 71<br>Вход со стороны парковки<br>Работаем круглосуточно</p>
+    </div>
+    <div>
+      <h4>Разделы</h4>
+      <ul>
+        <li><a href="#sched">Расписание</a></li>
+        <li><a href="#dirs">Направления</a></li>
+        <li><a href="#coaches">Тренеры</a></li>
+        <li><a href="#prices">Абонементы</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Связь</h4>
+      <ul>
+        <li><a href="tel:+73430000000">+7 343 000-00-00</a></li>
+        <li><a href="mailto:club@example.ru">club@example.ru</a></li>
+        <li>Телеграм: @example</li>
+      </ul>
+    </div>
+  </div>
+  <div class="wrap"><p class="foot__note">Демо-верстка для портфолио. Клуб, тренеры и цены вымышлены.</p></div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

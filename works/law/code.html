@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Код · Клюев и партнёры — юридическое бюро</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#0e1113; --panel:#161a1d; --panel-2:#12161a; --line:#262c2f; --line-2:#394144;
+    --ink:#e8ebe6; --ink-2:#9aa39e; --ink-3:#79837f;
+    --accent:#8b7bff; --mark:#e0ab43;
+    --f-d:"Unbounded","Trebuchet MS",sans-serif;
+    --f-b:"Golos Text","Segoe UI",system-ui,sans-serif;
+    --f-m:"JetBrains Mono",ui-monospace,Consolas,monospace;
+    color-scheme:dark;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:400 .98rem/1.6 var(--f-b);
+    -webkit-font-smoothing:antialiased}
+  h1{margin:0;font-family:var(--f-d);font-weight:600;letter-spacing:-.03em;
+    font-size:clamp(1.35rem,1.1rem+1.3vw,2rem);line-height:1.1}
+  p{margin:0}
+  a{color:var(--accent)}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+  .wrap{width:min(1280px,100%);margin-inline:auto;padding-inline:clamp(16px,3vw,32px)}
+  .mono{font-family:var(--f-m);font-size:.82rem;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+
+  .bar{border-bottom:1px solid var(--line);padding-block:11px;font-size:.82rem}
+  .bar .wrap{display:flex;gap:10px 20px;flex-wrap:wrap;align-items:center}
+  .bar .sep{margin-left:auto}
+  .bar a{font-weight:500;text-decoration:none}
+  .bar a:hover{text-decoration:underline}
+
+  header.head{padding-block:clamp(24px,4vw,40px) 20px}
+  .kind{color:var(--mark);text-transform:uppercase;letter-spacing:.14em;margin-bottom:1em}
+  .note{color:var(--ink-2);max-width:72ch;margin-top:1em}
+
+  .toolbar{position:sticky;top:0;z-index:10;background:var(--bg);
+    border-bottom:1px solid var(--line);margin-bottom:14px}
+  .toolbar::before{content:"";position:absolute;left:0;right:0;top:-18px;height:18px;
+    background:var(--bg)}
+  .tabs{display:flex;flex-wrap:wrap;gap:6px;padding-block:14px 0}
+  .tab{background:transparent;border:1px solid var(--line-2);color:var(--ink-2);
+    padding:9px 15px;font:400 .84rem var(--f-m);cursor:pointer;white-space:nowrap}
+  .tab:hover{color:var(--ink);border-color:var(--ink-3)}
+  .tab[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .tab em{font-style:normal;opacity:.6;margin-left:7px}
+
+  .meta{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;
+    padding:12px 0;color:var(--ink-3)}
+  .copy{margin-left:auto;background:transparent;border:1px solid var(--line-2);color:var(--ink-2);
+    padding:9px 14px;font:400 .82rem var(--f-m);cursor:pointer}
+  .copy:hover{color:var(--ink);border-color:var(--ink-3)}
+  .copy.ok{color:var(--accent);border-color:var(--accent)}
+
+  .viewer{display:flex;border:1px solid var(--line);background:var(--panel);margin-bottom:44px}
+  /* white-space:pre обязателен: это div, а не pre. Без него переносы строк
+     схлопываются в пробелы, колонка номеров растягивается на всю ширину
+     и выдавливает код в нулевую ширину. */
+  .gutter{flex:none;white-space:pre;padding:18px 12px 18px 16px;
+    border-right:1px solid var(--line);color:var(--ink-3);text-align:right;
+    user-select:none;background:var(--panel-2)}
+  .gutter,.viewer pre{font:400 .82rem/1.72 var(--f-m);margin:0}
+  /* min-width:0 обязателен: без него flex-элемент не сжимается
+     ниже ширины содержимого и страница уезжает по горизонтали. */
+  .viewer pre{flex:1;min-width:0;padding:18px 20px;overflow-x:auto;white-space:pre;tab-size:2}
+  .viewer code{font:inherit;background:none;padding:0;display:block}
+
+  .warn{border:1px solid var(--mark);color:var(--mark);padding:14px 16px;margin-bottom:20px;
+    font-size:.88rem}
+
+  /* подсветка */
+  .hljs-comment,.hljs-quote{color:#6b7671;font-style:italic}
+  .hljs-tag,.hljs-punctuation{color:#9aa39e}
+  .hljs-name,.hljs-selector-tag{color:#8b7bff}
+  .hljs-attr,.hljs-attribute,.hljs-selector-class,.hljs-selector-id{color:#e0ab43}
+  .hljs-string,.hljs-meta .hljs-string{color:#8fc9a8}
+  .hljs-number,.hljs-literal{color:#d98fb0}
+  .hljs-keyword,.hljs-selector-pseudo{color:#7fb7e8}
+  .hljs-built_in,.hljs-title,.hljs-title.function_{color:#e8ebe6}
+  .hljs-variable,.hljs-property,.hljs-params{color:#c9d1cb}
+  .hljs-meta{color:#79837f}
+
+  footer.foot{border-top:1px solid var(--line);padding-block:24px;color:var(--ink-3);font-size:.86rem}
+  footer.foot .wrap{display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
+  @media(max-width:620px){.gutter{display:none}}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="wrap">
+    <span class="mono" style="color:var(--ink-3)">Исходный код демо-проекта</span>
+    <span class="sep"></span>
+    <a href="index.html">← Открыть сам сайт</a>
+    <a href="../../index.html">В портфолио</a>
+  </div>
+</div>
+
+<header class="head">
+  <div class="wrap">
+    <p class="kind mono">Многостраничник</p>
+    <h1>Клюев и партнёры — юридическое бюро</h1>
+    <p class="note">Пять файлов на три страницы. Стили и скрипт общие: шапка, подвал и сетка описаны один раз, страницы отличаются только содержимым.</p>
+  </div>
+</header>
+
+<div class="wrap">
+  <noscript>
+    <p class="warn">Для подсветки и переключения файлов нужен JavaScript. Исходники всё равно
+      можно прочитать: они лежат в этой же странице ниже.</p>
+  </noscript>
+
+  <div class="toolbar">
+    <div class="tabs" role="tablist" aria-label="Файлы проекта">
+      <button class="tab" role="tab" data-src="src0" aria-selected="true">index.html<em>234</em></button>
+      <button class="tab" role="tab" data-src="src1" aria-selected="false">services.html<em>177</em></button>
+      <button class="tab" role="tab" data-src="src2" aria-selected="false">contacts.html<em>119</em></button>
+      <button class="tab" role="tab" data-src="src3" aria-selected="false">style.css<em>228</em></button>
+      <button class="tab" role="tab" data-src="src4" aria-selected="false">app.js<em>106</em></button>
+    </div>
+
+    <div class="meta mono">
+      <span id="stat"></span>
+      <button class="copy" type="button" id="copy">Скопировать файл</button>
+    </div>
+  </div>
+
+  <div class="viewer">
+    <div class="gutter" id="gutter" aria-hidden="true"></div>
+    <pre><code id="code"></code></pre>
+  </div>
+</div>
+
+<footer class="foot">
+  <div class="wrap">
+    <p>Демо-проект из портфолио верстальщика</p>
+    <p class="mono">5 файлов · 864 строк · 42.7 КБ</p>
+  </div>
+</footer>
+
+<template id="src0" data-name="index.html" data-lang="xml" data-bytes="12480">&lt;!DOCTYPE html&gt;
+&lt;html lang="ru"&gt;
+&lt;head&gt;
+&lt;meta charset="utf-8"&gt;
+&lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+&lt;title&gt;Клюев и партнёры — юридическое бюро&lt;/title&gt;
+&lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;
+&lt;link rel="preconnect" href="https://fonts.gstatic.com" crossorigin&gt;
+&lt;link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;600&amp;family=Golos+Text:wght@400;500;600&amp;display=swap"&gt;
+&lt;link rel="stylesheet" href="style.css"&gt;
+&lt;style&gt;
+  .hero{padding-block:clamp(50px,7vw,100px);border-bottom:1px solid var(--line)}
+  .hero .wrap{display:grid;gap:clamp(30px,4vw,56px);align-items:center}
+  @media(min-width:920px){.hero .wrap{grid-template-columns:1.1fr .9fr}}
+  .hero h1{font-size:clamp(2.2rem,1.5rem+3vw,3.8rem)}
+  .hero .kicker{font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--gold);margin-bottom:1.5em}
+  .hero .btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+  .seal{border:1px solid var(--line);background:#fff;padding:clamp(24px,3vw,36px)}
+  .seal h2{font-size:1.15rem;font-family:var(--f-b);font-weight:600;margin-bottom:1em}
+  .seal ol{display:grid;gap:14px;counter-reset:s}
+  .seal li{counter-increment:s;display:grid;grid-template-columns:30px 1fr;gap:14px;
+    color:var(--ink-2);font-size:.96rem}
+  .seal li::before{content:counter(s,decimal-leading-zero);font-family:var(--f-d);
+    color:var(--gold);font-variant-numeric:tabular-nums}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+&lt;div class="demobar"&gt;
+  &lt;div class="wrap"&gt;
+    &lt;span&gt;Демо-проект для портфолио. Бюро вымышленное, три страницы связаны навигацией.&lt;/span&gt;
+    &lt;span class="sep"&gt;&lt;/span&gt;
+    &lt;a href="code.html"&gt;Смотреть код&lt;/a&gt;
+    &lt;a href="../../index.html"&gt;← В портфолио&lt;/a&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;header class="top"&gt;
+  &lt;div class="wrap"&gt;
+    &lt;a class="logo" href="index.html"&gt;&lt;b&gt;Клюев и партнёры&lt;/b&gt;&lt;span&gt;Юридическое бюро&lt;/span&gt;&lt;/a&gt;
+    &lt;button class="burger" id="burger" type="button" aria-expanded="false" aria-controls="nav"&gt;
+      &lt;i&gt;&lt;/i&gt;&lt;i&gt;&lt;/i&gt;&lt;i&gt;&lt;/i&gt;&lt;span class="vh"&gt;Меню&lt;/span&gt;
+    &lt;/button&gt;
+    &lt;nav class="nav" id="nav" aria-label="Разделы сайта"&gt;
+      &lt;a href="index.html" aria-current="page"&gt;О бюро&lt;/a&gt;
+      &lt;a href="services.html"&gt;Практики&lt;/a&gt;
+      &lt;a href="contacts.html"&gt;Контакты&lt;/a&gt;
+    &lt;/nav&gt;
+    &lt;a class="tel" href="tel:+78120000000"&gt;+7 812 000-00-00&lt;/a&gt;
+  &lt;/div&gt;
+&lt;/header&gt;
+
+&lt;main&gt;
+  &lt;section class="hero"&gt;
+    &lt;div class="wrap"&gt;
+      &lt;div&gt;
+        &lt;p class="kicker"&gt;Санкт-Петербург · с 2011 года&lt;/p&gt;
+        &lt;h1&gt;Спорные вопросы решаем до суда. Если получается.&lt;/h1&gt;
+        &lt;p class="lead" style="margin-top:1.1em"&gt;Бюро из девяти юристов. Ведём корпоративные, налоговые и земельные споры — берёмся, только когда видим позицию, и говорим об этом на первой встрече.&lt;/p&gt;
+        &lt;div class="btns"&gt;
+          &lt;a class="btn btn--fill" href="contacts.html"&gt;Записаться на консультацию&lt;/a&gt;
+          &lt;a class="btn btn--line" href="services.html"&gt;Смотреть практики&lt;/a&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class="seal"&gt;
+        &lt;h2&gt;Как проходит первая встреча&lt;/h2&gt;
+        &lt;ol&gt;
+          &lt;li&gt;Присылаете документы, мы читаем их до разговора&lt;/li&gt;
+          &lt;li&gt;Час обсуждаем позицию и риски — бесплатно&lt;/li&gt;
+          &lt;li&gt;Называем стоимость и сроки письменно&lt;/li&gt;
+          &lt;li&gt;Подписываем договор с фиксированным гонораром&lt;/li&gt;
+        &lt;/ol&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class="sec"&gt;
+    &lt;div class="wrap"&gt;
+      &lt;h2&gt;Чем занимаемся&lt;/h2&gt;
+      &lt;p class="lead" style="margin-bottom:2em"&gt;Четыре направления. За каждым закреплён партнёр, который ведёт дело от первой встречи до исполнения решения.&lt;/p&gt;
+      &lt;div class="cards"&gt;
+        &lt;article class="card"&gt;
+          &lt;p class="card__n"&gt;01&lt;/p&gt;
+          &lt;h3&gt;Корпоративные споры&lt;/h3&gt;
+          &lt;p&gt;Выход участников, оспаривание сделок, корпоративные конфликты, защита от недружественного поглощения.&lt;/p&gt;
+          &lt;a class="card__more" href="services.html#corp"&gt;Подробнее →&lt;/a&gt;
+        &lt;/article&gt;
+        &lt;article class="card"&gt;
+          &lt;p class="card__n"&gt;02&lt;/p&gt;
+          &lt;h3&gt;Налоговые проверки&lt;/h3&gt;
+          &lt;p&gt;Сопровождение выездных и камеральных проверок, возражения на акт, обжалование решений в УФНС и суде.&lt;/p&gt;
+          &lt;a class="card__more" href="services.html#tax"&gt;Подробнее →&lt;/a&gt;
+        &lt;/article&gt;
+        &lt;article class="card"&gt;
+          &lt;p class="card__n"&gt;03&lt;/p&gt;
+          &lt;h3&gt;Земля и недвижимость&lt;/h3&gt;
+          &lt;p&gt;Оспаривание кадастровой стоимости, споры о границах, узаконивание построек, изъятие для нужд города.&lt;/p&gt;
+          &lt;a class="card__more" href="services.html#land"&gt;Подробнее →&lt;/a&gt;
+        &lt;/article&gt;
+        &lt;article class="card"&gt;
+          &lt;p class="card__n"&gt;04&lt;/p&gt;
+          &lt;h3&gt;Банкротство&lt;/h3&gt;
+          &lt;p&gt;Защита интересов кредиторов и должников, субсидиарная ответственность, оспаривание сделок должника.&lt;/p&gt;
+          &lt;a class="card__more" href="services.html#bankr"&gt;Подробнее →&lt;/a&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class="sec"&gt;
+    &lt;div class="wrap"&gt;
+      &lt;dl class="figures"&gt;
+        &lt;div class="figure"&gt;&lt;dd&gt;14&lt;/dd&gt;&lt;dt&gt;лет практики&lt;/dt&gt;&lt;/div&gt;
+        &lt;div class="figure"&gt;&lt;dd&gt;9&lt;/dd&gt;&lt;dt&gt;юристов в бюро&lt;/dt&gt;&lt;/div&gt;
+        &lt;div class="figure"&gt;&lt;dd&gt;340&lt;/dd&gt;&lt;dt&gt;завершённых дел&lt;/dt&gt;&lt;/div&gt;
+        &lt;div class="figure"&gt;&lt;dd&gt;71%&lt;/dd&gt;&lt;dt&gt;решены без суда&lt;/dt&gt;&lt;/div&gt;
+      &lt;/dl&gt;
+      &lt;p style="margin-top:18px;font-size:.86rem;color:var(--ink-3)"&gt;Цифры вымышленные — страница сделана как демонстрация верстки.&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class="sec"&gt;
+    &lt;div class="wrap"&gt;
+      &lt;h2&gt;Партнёры&lt;/h2&gt;
+      &lt;div class="team" style="margin-top:1.6em"&gt;
+        &lt;article class="person"&gt;
+          &lt;div class="person__ph"&gt;&lt;span class="person__ini"&gt;АК&lt;/span&gt;&lt;/div&gt;
+          &lt;h3&gt;Андрей Клюев&lt;/h3&gt;
+          &lt;p&gt;Управляющий партнёр. Корпоративные споры, сделки M&amp;amp;A.&lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class="person"&gt;
+          &lt;div class="person__ph"&gt;&lt;span class="person__ini"&gt;МС&lt;/span&gt;&lt;/div&gt;
+          &lt;h3&gt;Марина Соловьёва&lt;/h3&gt;
+          &lt;p&gt;Партнёр. Налоговые проверки и споры с ФНС.&lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class="person"&gt;
+          &lt;div class="person__ph"&gt;&lt;span class="person__ini"&gt;ДБ&lt;/span&gt;&lt;/div&gt;
+          &lt;h3&gt;Дмитрий Барсуков&lt;/h3&gt;
+          &lt;p&gt;Партнёр. Земля, недвижимость, градостроительные вопросы.&lt;/p&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class="sec"&gt;
+    &lt;div class="wrap"&gt;
+      &lt;h2&gt;Из практики&lt;/h2&gt;
+      &lt;p class="lead" style="margin-bottom:1.8em"&gt;Три дела, завершённые в прошлом году. Названия сторон не раскрываем — это условие соглашения с доверителями.&lt;/p&gt;
+      &lt;ol class="cases"&gt;
+        &lt;li class="case"&gt;
+          &lt;p class="case__tag"&gt;Налоговый спор&lt;/p&gt;
+          &lt;div&gt;
+            &lt;h3&gt;Производственная компания против УФНС&lt;/h3&gt;
+            &lt;p&gt;Инспекция сняла вычеты по сделкам с четырьмя поставщиками, сославшись на недостаточную осмотрительность. Собрали переписку, журналы пропусков и товарные накладные за три года.&lt;/p&gt;
+          &lt;/div&gt;
+          &lt;div class="case__res"&gt;&lt;b&gt;38 млн ₽&lt;/b&gt;&lt;span&gt;доначислений снято в апелляции&lt;/span&gt;&lt;/div&gt;
+        &lt;/li&gt;
+        &lt;li class="case"&gt;
+          &lt;p class="case__tag"&gt;Корпоративный спор&lt;/p&gt;
+          &lt;div&gt;
+            &lt;h3&gt;Выход участника из ООО&lt;/h3&gt;
+            &lt;p&gt;Общество занизило действительную стоимость доли вдвое. Добились назначения оценочной экспертизы и взыскали разницу вместе с процентами за пользование деньгами.&lt;/p&gt;
+          &lt;/div&gt;
+          &lt;div class="case__res"&gt;&lt;b&gt;14 месяцев&lt;/b&gt;&lt;span&gt;от иска до исполнения решения&lt;/span&gt;&lt;/div&gt;
+        &lt;/li&gt;
+        &lt;li class="case"&gt;
+          &lt;p class="case__tag"&gt;Кадастровая стоимость&lt;/p&gt;
+          &lt;div&gt;
+            &lt;h3&gt;Склад в Ленинградской области&lt;/h3&gt;
+            &lt;p&gt;Кадастровая стоимость превышала рыночную в 2,6 раза. Прошли комиссию без суда, налог на имущество пересчитали сразу за два периода.&lt;/p&gt;
+          &lt;/div&gt;
+          &lt;div class="case__res"&gt;&lt;b&gt;−61%&lt;/b&gt;&lt;span&gt;кадастровая стоимость объекта&lt;/span&gt;&lt;/div&gt;
+        &lt;/li&gt;
+      &lt;/ol&gt;
+      &lt;p style="margin-top:18px;font-size:.86rem;color:var(--ink-3)"&gt;Дела и цифры вымышлены — страница сделана как демонстрация верстки.&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class="sec"&gt;
+    &lt;div class="wrap"&gt;
+      &lt;h2&gt;Что говорят доверители&lt;/h2&gt;
+      &lt;div class="quotes" style="margin-top:1.6em"&gt;
+        &lt;figure class="quote" style="margin:0"&gt;
+          &lt;p&gt;«На первой встрече нам сказали, что половина требований бесперспективна. Это сэкономило год и деньги на экспертизу».&lt;/p&gt;
+          &lt;footer&gt;Финансовый директор, производство упаковки&lt;/footer&gt;
+        &lt;/figure&gt;
+        &lt;figure class="quote" style="margin:0"&gt;
+          &lt;p&gt;«Гонорар назвали письменно до начала работы и не пересматривали, хотя заседаний оказалось вдвое больше плана».&lt;/p&gt;
+          &lt;footer&gt;Собственник сети автосервисов&lt;/footer&gt;
+        &lt;/figure&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class="cta"&gt;
+    &lt;div class="wrap"&gt;
+      &lt;div&gt;
+        &lt;h2&gt;Первая консультация бесплатна&lt;/h2&gt;
+        &lt;p&gt;Пришлите документы — вернёмся с оценкой перспектив в течение двух рабочих дней.&lt;/p&gt;
+      &lt;/div&gt;
+      &lt;p&gt;&lt;a class="btn btn--gold" href="contacts.html"&gt;Написать в бюро&lt;/a&gt;&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+&lt;/main&gt;
+
+&lt;footer class="foot"&gt;
+  &lt;div class="wrap"&gt;
+    &lt;div&gt;
+      &lt;h4&gt;Бюро&lt;/h4&gt;
+      &lt;p&gt;Клюев и партнёры&lt;br&gt;Санкт-Петербург, наб. Фонтанки 40&lt;br&gt;ИНН 7800000000&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;h4&gt;Разделы&lt;/h4&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href="index.html"&gt;О бюро&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="services.html"&gt;Практики&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="contacts.html"&gt;Контакты&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;h4&gt;Связь&lt;/h4&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href="tel:+78120000000"&gt;+7 812 000-00-00&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="mailto:office@example.ru"&gt;office@example.ru&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;Пн–Пт, 10:00–19:00&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/footer&gt;
+&lt;script src="app.js"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</template>
+<template id="src1" data-name="services.html" data-lang="xml" data-bytes="8684">&lt;!DOCTYPE html&gt;
+&lt;html lang="ru"&gt;
+&lt;head&gt;
+&lt;meta charset="utf-8"&gt;
+&lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+&lt;title&gt;Практики — Клюев и партнёры&lt;/title&gt;
+&lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;
+&lt;link rel="preconnect" href="https://fonts.gstatic.com" crossorigin&gt;
+&lt;link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;600&amp;family=Golos+Text:wght@400;500;600&amp;display=swap"&gt;
+&lt;link rel="stylesheet" href="style.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+&lt;div class="demobar"&gt;
+  &lt;div class="wrap"&gt;
+    &lt;span&gt;Демо-проект для портфолио. Вторая страница многостраничника.&lt;/span&gt;
+    &lt;span class="sep"&gt;&lt;/span&gt;
+    &lt;a href="code.html"&gt;Смотреть код&lt;/a&gt;
+    &lt;a href="../../index.html"&gt;← В портфолио&lt;/a&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;header class="top"&gt;
+  &lt;div class="wrap"&gt;
+    &lt;a class="logo" href="index.html"&gt;&lt;b&gt;Клюев и партнёры&lt;/b&gt;&lt;span&gt;Юридическое бюро&lt;/span&gt;&lt;/a&gt;
+    &lt;button class="burger" id="burger" type="button" aria-expanded="false" aria-controls="nav"&gt;
+      &lt;i&gt;&lt;/i&gt;&lt;i&gt;&lt;/i&gt;&lt;i&gt;&lt;/i&gt;&lt;span class="vh"&gt;Меню&lt;/span&gt;
+    &lt;/button&gt;
+    &lt;nav class="nav" id="nav" aria-label="Разделы сайта"&gt;
+      &lt;a href="index.html"&gt;О бюро&lt;/a&gt;
+      &lt;a href="services.html" aria-current="page"&gt;Практики&lt;/a&gt;
+      &lt;a href="contacts.html"&gt;Контакты&lt;/a&gt;
+    &lt;/nav&gt;
+    &lt;a class="tel" href="tel:+78120000000"&gt;+7 812 000-00-00&lt;/a&gt;
+  &lt;/div&gt;
+&lt;/header&gt;
+
+&lt;main&gt;
+  &lt;section class="page-head"&gt;
+    &lt;div class="wrap"&gt;
+      &lt;p class="crumbs"&gt;&lt;a href="index.html"&gt;О бюро&lt;/a&gt; → Практики&lt;/p&gt;
+      &lt;h1&gt;Практики&lt;/h1&gt;
+      &lt;p&gt;Четыре направления, в которых у бюро есть собственная судебная практика. За каждым закреплён партнёр — вы работаете с ним, а не с меняющимися исполнителями.&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class="sec"&gt;
+    &lt;div class="wrap"&gt;
+
+      &lt;nav class="subnav" aria-label="Практики"&gt;
+        &lt;a href="#corp"&gt;Корпоративные споры&lt;/a&gt;
+        &lt;a href="#tax"&gt;Налоговые проверки&lt;/a&gt;
+        &lt;a href="#land"&gt;Земля и недвижимость&lt;/a&gt;
+        &lt;a href="#bankr"&gt;Банкротство&lt;/a&gt;
+      &lt;/nav&gt;
+
+      &lt;article class="detail" id="corp"&gt;
+        &lt;p class="detail__tag"&gt;Практика 01&lt;/p&gt;
+        &lt;div&gt;
+          &lt;h3&gt;Корпоративные споры&lt;/h3&gt;
+          &lt;p&gt;Ведём конфликты между участниками и акционерами: от блокировки решений собрания до принудительного выкупа доли. Работаем и на стороне общества, и на стороне участника.&lt;/p&gt;
+          &lt;ul&gt;
+            &lt;li&gt;Оспаривание решений общих собраний и сделок с заинтересованностью&lt;/li&gt;
+            &lt;li&gt;Исключение участника, выход и определение действительной стоимости доли&lt;/li&gt;
+            &lt;li&gt;Взыскание убытков с директора&lt;/li&gt;
+            &lt;li&gt;Корпоративные договоры и опционы&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/div&gt;
+      &lt;/article&gt;
+
+      &lt;article class="detail" id="tax"&gt;
+        &lt;p class="detail__tag"&gt;Практика 02&lt;/p&gt;
+        &lt;div&gt;
+          &lt;h3&gt;Налоговые проверки и споры&lt;/h3&gt;
+          &lt;p&gt;Подключаемся на любой стадии, но лучше — до вручения акта. Готовим сотрудников к допросам, отвечаем на требования, считаем риски доначислений.&lt;/p&gt;
+          &lt;ul&gt;
+            &lt;li&gt;Сопровождение выездных и камеральных проверок&lt;/li&gt;
+            &lt;li&gt;Возражения на акт, апелляционная жалоба в УФНС&lt;/li&gt;
+            &lt;li&gt;Обжалование решений в арбитражном суде&lt;/li&gt;
+            &lt;li&gt;Споры о дроблении бизнеса и должной осмотрительности&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/div&gt;
+      &lt;/article&gt;
+
+      &lt;article class="detail" id="land"&gt;
+        &lt;p class="detail__tag"&gt;Практика 03&lt;/p&gt;
+        &lt;div&gt;
+          &lt;h3&gt;Земля и недвижимость&lt;/h3&gt;
+          &lt;p&gt;Занимаемся объектами в Петербурге и Ленинградской области. Ведём дела, где нужны экспертизы: кадастровая оценка, границы, назначение участка.&lt;/p&gt;
+          &lt;ul&gt;
+            &lt;li&gt;Оспаривание кадастровой стоимости в комиссии и суде&lt;/li&gt;
+            &lt;li&gt;Споры о границах и наложении участков&lt;/li&gt;
+            &lt;li&gt;Узаконивание самовольных построек&lt;/li&gt;
+            &lt;li&gt;Изъятие земли для государственных нужд и компенсации&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/div&gt;
+      &lt;/article&gt;
+
+      &lt;article class="detail" id="bankr"&gt;
+        &lt;p class="detail__tag"&gt;Практика 04&lt;/p&gt;
+        &lt;div&gt;
+          &lt;h3&gt;Банкротство&lt;/h3&gt;
+          &lt;p&gt;Представляем кредиторов и контролирующих лиц. Сопровождаем процедуры от подачи заявления до завершения расчётов.&lt;/p&gt;
+          &lt;ul&gt;
+            &lt;li&gt;Включение требований в реестр и оспаривание требований других кредиторов&lt;/li&gt;
+            &lt;li&gt;Защита от субсидиарной ответственности&lt;/li&gt;
+            &lt;li&gt;Оспаривание сделок должника&lt;/li&gt;
+            &lt;li&gt;Сопровождение торгов имуществом&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/div&gt;
+      &lt;/article&gt;
+
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class="sec"&gt;
+    &lt;div class="wrap"&gt;
+      &lt;h2&gt;Как считаем гонорар&lt;/h2&gt;
+      &lt;div class="cards cards--3" style="margin-top:1.4em"&gt;
+        &lt;article class="card"&gt;
+          &lt;p class="card__n"&gt;Фиксированный&lt;/p&gt;
+          &lt;h3&gt;За дело целиком&lt;/h3&gt;
+          &lt;p&gt;Называем сумму после изучения документов. Не растёт, даже если заседаний окажется больше, чем планировали.&lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class="card"&gt;
+          &lt;p class="card__n"&gt;Почасовой&lt;/p&gt;
+          &lt;h3&gt;За сопровождение&lt;/h3&gt;
+          &lt;p&gt;Для задач без понятного горизонта: проверки, переговоры, текущие консультации. Отчёт по часам раз в месяц.&lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class="card"&gt;
+          &lt;p class="card__n"&gt;Смешанный&lt;/p&gt;
+          &lt;h3&gt;Ставка плюс премия&lt;/h3&gt;
+          &lt;p&gt;Умеренный фикс и процент от выигранной суммы. Применяем в делах о взыскании, где результат измерим.&lt;/p&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class="cta"&gt;
+    &lt;div class="wrap"&gt;
+      &lt;div&gt;
+        &lt;h2&gt;Не нашли свою ситуацию?&lt;/h2&gt;
+        &lt;p&gt;Опишите её в двух абзацах — ответим, беремся ли мы за такие дела и к кому обратиться, если нет.&lt;/p&gt;
+      &lt;/div&gt;
+      &lt;p&gt;&lt;a class="btn btn--gold" href="contacts.html"&gt;Написать в бюро&lt;/a&gt;&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+&lt;/main&gt;
+
+&lt;footer class="foot"&gt;
+  &lt;div class="wrap"&gt;
+    &lt;div&gt;
+      &lt;h4&gt;Бюро&lt;/h4&gt;
+      &lt;p&gt;Клюев и партнёры&lt;br&gt;Санкт-Петербург, наб. Фонтанки 40&lt;br&gt;ИНН 7800000000&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;h4&gt;Разделы&lt;/h4&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href="index.html"&gt;О бюро&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="services.html"&gt;Практики&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="contacts.html"&gt;Контакты&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;h4&gt;Связь&lt;/h4&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href="tel:+78120000000"&gt;+7 812 000-00-00&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="mailto:office@example.ru"&gt;office@example.ru&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;Пн–Пт, 10:00–19:00&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/footer&gt;
+&lt;script src="app.js"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</template>
+<template id="src2" data-name="contacts.html" data-lang="xml" data-bytes="5112">&lt;!DOCTYPE html&gt;
+&lt;html lang="ru"&gt;
+&lt;head&gt;
+&lt;meta charset="utf-8"&gt;
+&lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+&lt;title&gt;Контакты — Клюев и партнёры&lt;/title&gt;
+&lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;
+&lt;link rel="preconnect" href="https://fonts.gstatic.com" crossorigin&gt;
+&lt;link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;600&amp;family=Golos+Text:wght@400;500;600&amp;display=swap"&gt;
+&lt;link rel="stylesheet" href="style.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+&lt;div class="demobar"&gt;
+  &lt;div class="wrap"&gt;
+    &lt;span&gt;Демо-проект для портфолио. Третья страница многостраничника.&lt;/span&gt;
+    &lt;span class="sep"&gt;&lt;/span&gt;
+    &lt;a href="code.html"&gt;Смотреть код&lt;/a&gt;
+    &lt;a href="../../index.html"&gt;← В портфолио&lt;/a&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;header class="top"&gt;
+  &lt;div class="wrap"&gt;
+    &lt;a class="logo" href="index.html"&gt;&lt;b&gt;Клюев и партнёры&lt;/b&gt;&lt;span&gt;Юридическое бюро&lt;/span&gt;&lt;/a&gt;
+    &lt;button class="burger" id="burger" type="button" aria-expanded="false" aria-controls="nav"&gt;
+      &lt;i&gt;&lt;/i&gt;&lt;i&gt;&lt;/i&gt;&lt;i&gt;&lt;/i&gt;&lt;span class="vh"&gt;Меню&lt;/span&gt;
+    &lt;/button&gt;
+    &lt;nav class="nav" id="nav" aria-label="Разделы сайта"&gt;
+      &lt;a href="index.html"&gt;О бюро&lt;/a&gt;
+      &lt;a href="services.html"&gt;Практики&lt;/a&gt;
+      &lt;a href="contacts.html" aria-current="page"&gt;Контакты&lt;/a&gt;
+    &lt;/nav&gt;
+    &lt;a class="tel" href="tel:+78120000000"&gt;+7 812 000-00-00&lt;/a&gt;
+  &lt;/div&gt;
+&lt;/header&gt;
+
+&lt;main&gt;
+  &lt;section class="page-head"&gt;
+    &lt;div class="wrap"&gt;
+      &lt;p class="crumbs"&gt;&lt;a href="index.html"&gt;О бюро&lt;/a&gt; → Контакты&lt;/p&gt;
+      &lt;h1&gt;Контакты&lt;/h1&gt;
+      &lt;p&gt;Офис в пяти минутах от станции «Достоевская». Приём по записи — так юрист успевает прочитать документы до встречи.&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class="sec"&gt;
+    &lt;div class="wrap contact-grid"&gt;
+      &lt;div&gt;
+        &lt;div class="map" role="img" aria-label="Схема: офис на набережной Фонтанки, 40"&gt;
+          &lt;span class="map__pin"&gt;&lt;/span&gt;
+          &lt;span class="map__note"&gt;наб. Фонтанки, 40 · вход со двора&lt;/span&gt;
+        &lt;/div&gt;
+
+        &lt;dl class="reqs"&gt;
+          &lt;div&gt;&lt;dt&gt;Адрес&lt;/dt&gt;&lt;dd&gt;Санкт-Петербург, наб. реки Фонтанки, 40, офис 312&lt;/dd&gt;&lt;/div&gt;
+          &lt;div&gt;&lt;dt&gt;Телефон&lt;/dt&gt;&lt;dd&gt;&lt;a href="tel:+78120000000" style="color:inherit"&gt;+7 812 000-00-00&lt;/a&gt;&lt;/dd&gt;&lt;/div&gt;
+          &lt;div&gt;&lt;dt&gt;Почта&lt;/dt&gt;&lt;dd&gt;&lt;a href="mailto:office@example.ru" style="color:inherit"&gt;office@example.ru&lt;/a&gt;&lt;/dd&gt;&lt;/div&gt;
+          &lt;div&gt;&lt;dt&gt;Часы приёма&lt;/dt&gt;&lt;dd&gt;Пн–Пт, 10:00–19:00, по записи&lt;/dd&gt;&lt;/div&gt;
+          &lt;div&gt;&lt;dt&gt;ИНН / ОГРН&lt;/dt&gt;&lt;dd&gt;7800000000 / 1117800000000&lt;/dd&gt;&lt;/div&gt;
+        &lt;/dl&gt;
+      &lt;/div&gt;
+
+      &lt;div&gt;
+        &lt;h2&gt;Написать в бюро&lt;/h2&gt;
+        &lt;p class="lead" style="margin-bottom:1.6em"&gt;Коротко опишите ситуацию и приложите ключевые документы. Ответим в течение двух рабочих дней.&lt;/p&gt;
+
+        &lt;form class="form" id="lead" novalidate&gt;
+          &lt;div class="field"&gt;
+            &lt;label for="name"&gt;Как к вам обращаться&lt;/label&gt;
+            &lt;input id="name" name="name" type="text" autocomplete="name" required&gt;
+          &lt;/div&gt;
+          &lt;div class="field"&gt;
+            &lt;label for="mail"&gt;Почта или телефон&lt;/label&gt;
+            &lt;input id="mail" name="mail" type="text" autocomplete="email" required&gt;
+          &lt;/div&gt;
+          &lt;div class="field"&gt;
+            &lt;label for="msg"&gt;Суть вопроса&lt;/label&gt;
+            &lt;textarea id="msg" name="msg" maxlength="1400" required
+                      placeholder="Что произошло, кто вторая сторона, есть ли уже иск или требование"&gt;&lt;/textarea&gt;
+            &lt;p class="counter" id="counter"&gt;0 / 1200&lt;/p&gt;
+          &lt;/div&gt;
+          &lt;p&gt;&lt;button class="btn btn--fill" type="submit" style="cursor:pointer;font-family:inherit"&gt;Отправить&lt;/button&gt;&lt;/p&gt;
+          &lt;p class="form__msg" id="msgout" role="status"&gt;&lt;/p&gt;
+        &lt;/form&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+&lt;/main&gt;
+
+&lt;footer class="foot"&gt;
+  &lt;div class="wrap"&gt;
+    &lt;div&gt;
+      &lt;h4&gt;Бюро&lt;/h4&gt;
+      &lt;p&gt;Клюев и партнёры&lt;br&gt;Санкт-Петербург, наб. Фонтанки 40&lt;br&gt;ИНН 7800000000&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;h4&gt;Разделы&lt;/h4&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href="index.html"&gt;О бюро&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="services.html"&gt;Практики&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="contacts.html"&gt;Контакты&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;h4&gt;Связь&lt;/h4&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href="tel:+78120000000"&gt;+7 812 000-00-00&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="mailto:office@example.ru"&gt;office@example.ru&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;Пн–Пт, 10:00–19:00&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/footer&gt;
+
+&lt;script src="app.js"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</template>
+<template id="src3" data-name="style.css" data-lang="css" data-bytes="12622">/* Клюев и партнёры — общие стили для всех страниц.
+   Один файл на три страницы: шапка, подвал и сетка не дублируются. */
+
+/* Дизайн намеренно светлый. Объявляем схему явно, иначе авто-тёмная
+   тема браузера затемняет фон, оставляя тёмным и текст. */
+:root{
+  color-scheme:light;
+  --navy:#12233d; --navy-2:#1c3358; --paper:#f7f5f1; --paper-2:#ece7de;
+  --ink:#1a1a1c; --ink-2:#5b5f66; --ink-3:#8a8f97;
+  --gold:#a8842b; --gold-lt:#c9a344; --line:#ddd7cc;
+  --hh:76px; --subh:60px;
+  --f-d:"Spectral",Georgia,serif;
+  --f-b:"Golos Text","Segoe UI",system-ui,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font:400 clamp(1rem,.97rem+.15vw,1.06rem)/1.7 var(--f-b);-webkit-font-smoothing:antialiased}
+h1,h2,h3{margin:0;font-family:var(--f-d);font-weight:600;line-height:1.15;text-wrap:balance}
+p{margin:0 0 .9em}p:last-child{margin-bottom:0}
+ul,ol,dl,dd{margin:0;padding:0}li{list-style:none}
+a{color:var(--gold)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.wrap{width:min(1140px,100%);margin-inline:auto;padding-inline:clamp(16px,4vw,40px)}
+
+.demobar{background:var(--navy);color:#c3cbd8;font-size:.8rem;padding:9px 0}
+.demobar .wrap{display:flex;gap:14px;flex-wrap:wrap;justify-content:space-between}
+.demobar a{color:var(--gold-lt)}
+
+/* шапка */
+.top{background:var(--paper);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.top .wrap{display:flex;align-items:center;gap:22px;min-height:76px}
+.logo{text-decoration:none;color:var(--ink);display:flex;flex-direction:column;line-height:1.2}
+.logo b{font-family:var(--f-d);font-size:1.25rem;font-weight:600;letter-spacing:.01em}
+.logo span{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
+.nav{margin-left:auto;display:flex;gap:26px}
+.nav a{text-decoration:none;color:var(--ink-2);font-size:.94rem;padding-block:6px;
+  border-bottom:2px solid transparent}
+.nav a:hover{color:var(--ink)}
+.nav a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--gold)}
+.top .tel{text-decoration:none;color:var(--ink);font-weight:500;font-size:.94rem;white-space:nowrap}
+@media(max-width:860px){.nav{gap:16px;font-size:.88rem}.top .tel{display:none}}
+@media(max-width:560px){.nav{display:none}}
+
+/* типовые блоки */
+.page-head{background:var(--navy);color:#fff;padding-block:clamp(46px,6vw,80px)}
+.page-head h1{font-size:clamp(2rem,1.5rem+2.4vw,3.2rem)}
+.page-head p{margin-top:.8em;color:#c3cbd8;max-width:56ch}
+.crumbs{font-size:.84rem;color:#8fa0b8;margin-bottom:1.4em}
+.crumbs a{color:#8fa0b8}
+
+.sec{padding-block:clamp(46px,6vw,86px)}
+.sec + .sec{border-top:1px solid var(--line)}
+.sec h2{font-size:clamp(1.6rem,1.25rem+1.6vw,2.4rem);margin-bottom:.7em}
+.lead{font-size:1.14rem;color:var(--ink-2);max-width:60ch}
+
+.btn{display:inline-block;text-decoration:none;font:500 .98rem var(--f-b);
+  padding:15px 28px;border:1px solid var(--navy);transition:background-color .15s,color .15s}
+.btn--fill{background:var(--navy);color:#fff}
+.btn--fill:hover{background:var(--navy-2);color:#fff}
+.btn--line{color:var(--ink)}
+.btn--line:hover{background:var(--navy);color:#fff}
+.btn--gold{background:var(--gold);border-color:var(--gold);color:#fff}
+.btn--gold:hover{background:var(--gold-lt);border-color:var(--gold-lt);color:#fff}
+
+/* сетка практик */
+.cards{display:grid;gap:1px;background:var(--line);border:1px solid var(--line)}
+@media(min-width:620px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:1000px){.cards--3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.card{background:var(--paper);padding:clamp(22px,2.6vw,32px);display:flex;flex-direction:column}
+.card__n{font-family:var(--f-d);font-size:.9rem;color:var(--gold);margin-bottom:1em;
+  font-variant-numeric:tabular-nums}
+.card h3{font-size:1.3rem;margin-bottom:.5em}
+.card p{color:var(--ink-2);font-size:.97rem}
+.card__more{margin-top:auto;padding-top:1.2em;font-size:.92rem;font-weight:500;text-decoration:none}
+.card__more:hover{text-decoration:underline}
+
+/* цифры */
+.figures{display:grid;gap:1px;background:var(--line);border-block:1px solid var(--line)}
+@media(min-width:420px){.figures{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:760px){.figures{grid-template-columns:repeat(4,1fr)}}
+.figure{background:var(--paper);padding:26px 0}
+@media(min-width:620px){.figure{padding-inline:20px}.figure:first-child{padding-left:0}}
+.figure dt{font-size:.86rem;color:var(--ink-3);order:2}
+.figure dd{font-family:var(--f-d);font-size:clamp(1.9rem,1.5rem+1.4vw,2.6rem);
+  font-weight:600;line-height:1;order:1;margin-bottom:.25em;font-variant-numeric:tabular-nums}
+.figure{display:flex;flex-direction:column}
+
+/* команда */
+.team{display:grid;gap:clamp(20px,2.6vw,30px)}
+@media(min-width:480px){.team{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:840px){.team{grid-template-columns:repeat(3,1fr)}}
+.person__ph{aspect-ratio:3/4;background:var(--paper-2);border:1px solid var(--line);
+  display:grid;place-items:center;margin-bottom:16px}
+.person__ini{font-family:var(--f-d);font-size:2.6rem;color:var(--gold);font-weight:600}
+.person h3{font-size:1.15rem}
+.person p{color:var(--ink-2);font-size:.93rem;margin-top:.3em}
+
+/* полоса призыва */
+.cta{background:var(--navy);color:#fff;padding-block:clamp(44px,5.5vw,76px)}
+.cta .wrap{display:grid;gap:24px;align-items:center}
+@media(min-width:840px){.cta .wrap{grid-template-columns:1fr auto}}
+.cta h2{font-size:clamp(1.6rem,1.25rem+1.6vw,2.3rem);margin-bottom:.5em}
+.cta p{color:#c3cbd8;max-width:52ch}
+
+/* подробные практики */
+.detail{display:grid;gap:10px 40px;padding-block:32px;border-bottom:1px solid var(--line)}
+@media(min-width:840px){.detail{grid-template-columns:230px minmax(0,1fr)}}
+.detail:last-child{border-bottom:none}
+.detail h3{font-size:1.35rem}
+.detail__tag{font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);
+  padding-top:.5em}
+.detail p{color:var(--ink-2)}
+.detail ul{margin-top:.9em;display:grid;gap:7px}
+.detail li{position:relative;padding-left:20px;color:var(--ink-2);font-size:.96rem}
+.detail li::before{content:"";position:absolute;left:0;top:.68em;width:9px;height:1px;background:var(--gold)}
+
+/* контакты */
+.contact-grid{display:grid;gap:clamp(26px,4vw,48px)}
+@media(min-width:880px){.contact-grid{grid-template-columns:1fr 1fr}}
+.reqs{border:1px solid var(--line);background:#fff}
+.reqs div{display:grid;gap:3px 18px;padding:15px clamp(16px,2vw,24px);
+  border-bottom:1px solid var(--line)}
+@media(min-width:520px){.reqs div{grid-template-columns:132px minmax(0,1fr);align-items:baseline}}
+.reqs div:last-child{border-bottom:none}
+.reqs dt{min-width:132px;color:var(--ink-3);font-size:.88rem}
+.reqs dd{font-weight:500}
+.map{aspect-ratio:16/10;background:
+  repeating-linear-gradient(0deg,var(--paper-2) 0 1px,transparent 1px 34px),
+  repeating-linear-gradient(90deg,var(--paper-2) 0 1px,transparent 1px 34px),#fff;
+  border:1px solid var(--line);position:relative;margin-bottom:22px}
+.map__pin{position:absolute;left:46%;top:44%;width:16px;height:16px;border-radius:50% 50% 50% 0;
+  background:var(--gold);transform:rotate(-45deg)}
+.map__note{position:absolute;left:12px;bottom:12px;background:#fff;border:1px solid var(--line);
+  padding:7px 11px;font-size:.8rem;color:var(--ink-2)}
+
+.form{display:grid;gap:14px}
+.field{display:grid;gap:6px}
+.field label{font-size:.88rem;color:var(--ink-2)}
+.field input,.field textarea{font:400 1rem var(--f-b);padding:13px 14px;
+  border:1px solid var(--line);background:#fff;color:var(--ink)}
+.field textarea{resize:vertical;min-height:110px}
+.field input:focus,.field textarea:focus{border-color:var(--gold)}
+.form__msg{font-size:.9rem;color:var(--gold);min-height:1.3em}
+
+/* подвал */
+.foot{background:var(--navy);color:#a8b6c9;padding-block:36px;font-size:.9rem}
+.foot .wrap{display:grid;gap:18px}
+@media(min-width:760px){.foot .wrap{grid-template-columns:1.4fr 1fr 1fr}}
+.foot h4{margin:0 0 .7em;color:#fff;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;font-weight:600}
+.foot a{color:#a8b6c9;text-decoration:none}
+.foot a:hover{color:var(--gold-lt)}
+.foot li{padding-block:3px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ---------- мобильное меню ---------- */
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.demobar .sep{margin-left:auto}
+.demobar .wrap{align-items:center}
+
+.burger{display:none;width:42px;height:38px;border:1px solid var(--line);background:#fff;
+  position:relative;cursor:pointer;padding:0;margin-left:auto}
+.burger i{position:absolute;left:12px;right:12px;height:1.5px;background:var(--ink);
+  transition:transform .2s,opacity .2s}
+.burger i:nth-child(1){top:12px}.burger i:nth-child(2){top:18px}.burger i:nth-child(3){top:24px}
+.burger[aria-expanded="true"] i:nth-child(1){transform:translateY(6px) rotate(45deg)}
+.burger[aria-expanded="true"] i:nth-child(2){opacity:0}
+.burger[aria-expanded="true"] i:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
+
+@media(max-width:860px){
+  .burger{display:block}
+  .nav{position:absolute;left:0;right:0;top:100%;margin-left:0;flex-direction:column;gap:0;
+    background:#fff;border-bottom:1px solid var(--line);padding:4px clamp(16px,4vw,40px) 12px;
+    font-size:1rem}
+  .nav:not(.is-open){display:none}
+  .nav a{padding-block:13px;border-bottom:1px solid var(--line);border-bottom-width:1px}
+  .nav a[aria-current="page"]{border-bottom-color:var(--gold)}
+  .top .tel{display:none}
+}
+@media(max-width:560px){.nav{display:none}.nav.is-open{display:flex}}
+
+/* ---------- кейсы ---------- */
+.cases{border:1px solid var(--line);background:#fff}
+.case{display:grid;gap:8px 32px;padding:clamp(20px,2.6vw,28px) clamp(18px,2.4vw,26px);
+  border-bottom:1px solid var(--line);align-items:start}
+.case:last-child{border-bottom:none}
+@media(min-width:760px){.case{grid-template-columns:168px minmax(0,1fr) 210px}}
+.case__tag{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);
+  padding-top:.35em}
+.case h3{font-size:1.18rem;margin-bottom:.45em}
+.case p{color:var(--ink-2);font-size:.95rem;max-width:62ch}
+.case__res{border-left:2px solid var(--gold);padding-left:16px}
+@media(max-width:759px){
+  .case__res{margin-top:6px;border-left:none;border-top:1px solid var(--line);
+    padding-left:0;padding-top:14px}
+}
+.case__res b{display:block;font-family:var(--f-d);font-size:1.75rem;line-height:1;color:var(--navy);
+  font-variant-numeric:tabular-nums}
+.case__res span{display:block;margin-top:6px;font-size:.85rem;color:var(--ink-3);line-height:1.4}
+
+/* ---------- отзывы ---------- */
+.quotes{display:grid;gap:clamp(20px,2.6vw,32px)}
+@media(min-width:840px){.quotes{grid-template-columns:repeat(2,1fr)}}
+.quote{border-left:2px solid var(--gold);padding:2px 0 2px 22px}
+.quote p{font-family:var(--f-d);font-size:1.12rem;line-height:1.5}
+.quote footer{margin-top:14px;font-size:.9rem;color:var(--ink-3)}
+
+/* ---------- боковая навигация по практикам ---------- */
+.subnav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.subnav a{text-decoration:none;font-size:.88rem;color:var(--ink-2);border:1px solid var(--line);
+  background:#fff;padding:9px 15px;transition:border-color .15s,color .15s,background-color .15s}
+.subnav a:hover{border-color:var(--navy);color:var(--navy)}
+.subnav a.is-active{background:var(--navy);border-color:var(--navy);color:#fff}
+@media(min-width:900px){
+  /* Липкая полоса тянется до краёв окна, иначе содержимое видно в боковых отступах. */
+  .subnav{position:sticky;top:var(--hh);z-index:6;background:var(--paper);
+    margin-inline:calc(-1 * clamp(16px,4vw,40px));padding:12px clamp(16px,4vw,40px);
+    border-bottom:1px solid var(--line);margin-bottom:26px;flex-wrap:nowrap;overflow-x:auto}
+}
+
+/* Отступ, чтобы заголовок не уезжал под липкую шапку при переходе по якорю. */
+.detail{scroll-margin-top:calc(var(--hh) + 20px)}
+@media(min-width:900px){.detail{scroll-margin-top:calc(var(--hh) + var(--subh) + 20px)}}
+
+/* ---------- счётчик символов ---------- */
+.counter{font-size:.82rem;color:var(--ink-3);text-align:right;font-variant-numeric:tabular-nums}
+.counter.over{color:#b4342b}
+</template>
+<template id="src4" data-name="app.js" data-lang="javascript" data-bytes="4855">/* Клюев и партнёры — общий скрипт для всех страниц. */
+(function () {
+  'use strict';
+
+  /* Переход по якорю с поправкой на липкие панели.
+     scroll-margin-top работает не везде одинаково: при плавной прокрутке
+     и меняющейся высоте шапки браузер промахивается мимо цели, иногда
+     улетая в самый низ страницы. Поэтому считаем смещение сами. */
+  function stickyOffset() {
+    var h = 0;
+    ['.top', '.topbar', '.subnav'].forEach(function (sel) {
+      var el = document.querySelector(sel);
+      if (!el) return;
+      var pos = getComputedStyle(el).position;
+      if (pos === 'sticky' || pos === 'fixed') h += el.getBoundingClientRect().height;
+    });
+    return h + 16;
+  }
+
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest ? e.target.closest('a[href^="#"]') : null;
+    if (!a) return;
+    var id = a.getAttribute('href').slice(1);
+    if (!id) return;
+    var target = document.getElementById(id);
+    if (!target) return;
+    e.preventDefault();
+    var y = target.getBoundingClientRect().top + window.pageYOffset - stickyOffset();
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    try { history.replaceState(null, '', '#' + id); } catch (err) { /* песочница */ }
+  });
+
+  /* мобильное меню */
+  var burger = document.getElementById('burger');
+  var nav = document.getElementById('nav');
+  if (burger &amp;&amp; nav) {
+    burger.addEventListener('click', function () {
+      var open = nav.classList.toggle('is-open');
+      burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    nav.addEventListener('click', function (e) {
+      if (e.target.tagName === 'A') {
+        nav.classList.remove('is-open');
+        burger.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  /* подсветка текущей практики в липкой полосе на странице «Практики» */
+  var subnav = document.querySelector('.subnav');
+  if (subnav &amp;&amp; window.IntersectionObserver) {
+    var links = Array.prototype.slice.call(subnav.querySelectorAll('a'));
+    var secs = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        var i = secs.indexOf(en.target);
+        links.forEach(function (a, n) { a.classList.toggle('is-active', n === i); });
+      });
+    }, { rootMargin: '-35% 0px -55% 0px' });
+
+    secs.forEach(function (s) { if (s) io.observe(s); });
+
+    /* клик подсвечивает сразу, не дожидаясь прокрутки */
+    subnav.addEventListener('click', function (e) {
+      var a = e.target.closest('a');
+      if (!a) return;
+      links.forEach(function (x) { x.classList.toggle('is-active', x === a); });
+    });
+  }
+
+  /* форма обратной связи на странице контактов */
+  var form = document.getElementById('lead');
+  if (form) {
+    var msg = document.getElementById('msg');
+    var counter = document.getElementById('counter');
+    var LIMIT = 1200;
+
+    if (msg &amp;&amp; counter) {
+      var sync = function () {
+        var n = msg.value.length;
+        counter.textContent = n + ' / ' + LIMIT;
+        counter.classList.toggle('over', n &gt; LIMIT);
+      };
+      msg.addEventListener('input', sync);
+      sync();
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var out = document.getElementById('msgout');
+      var name = document.getElementById('name').value.trim();
+      var mail = document.getElementById('mail').value.trim();
+      var text = msg.value.trim();
+
+      if (!name) { out.textContent = 'Укажите, как к вам обращаться.'; document.getElementById('name').focus(); return; }
+      if (!mail) { out.textContent = 'Оставьте почту или телефон — иначе мы не сможем ответить.'; document.getElementById('mail').focus(); return; }
+      if (text.length &lt; 30) { out.textContent = 'Опишите ситуацию подробнее: сейчас ' + text.length + ' символов из 30 минимальных.'; msg.focus(); return; }
+      if (text.length &gt; LIMIT) { out.textContent = 'Слишком длинно. Сократите до ' + LIMIT + ' символов или приложите документы файлом.'; msg.focus(); return; }
+
+      out.textContent = 'Форма прошла проверку. Это демо — заявка никуда не отправлена.';
+    });
+  }
+})();
+</template>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var codeEl = document.getElementById('code');
+  var gutter = document.getElementById('gutter');
+  var stat   = document.getElementById('stat');
+  var copyBtn = document.getElementById('copy');
+  var tabs   = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  var currentText = '';
+
+  function sourceOf(id) {
+    var node = document.getElementById(id);
+    // Источники лежат в <template>, поэтому берём текст из его содержимого.
+    return node.content ? node.content.textContent : node.textContent;
+  }
+
+  function show(id) {
+    var node = document.getElementById(id);
+    var text = sourceOf(id);
+    var lang = node.dataset.lang;
+    currentText = text;
+
+    var painted = false;
+    if (window.hljs && typeof hljs.highlight === 'function') {
+      try {
+        codeEl.innerHTML = hljs.highlight(text, { language: lang }).value;
+        painted = true;
+      } catch (e) {
+        painted = false;
+      }
+    }
+    // Без подсветки код всё равно должен быть виден.
+    if (!painted) codeEl.textContent = text;
+
+    var lines = text.split('\n').length;
+    var nums = '';
+    for (var i = 1; i <= lines; i++) nums += i + '\n';
+    gutter.textContent = nums;
+
+    var bytes = node.dataset.bytes;
+    stat.textContent = node.dataset.name + ' · ' + lines + ' строк · ' +
+      (bytes < 1024 ? bytes + ' Б' : (bytes / 1024).toFixed(1) + ' КБ');
+  }
+
+  function select(tab) {
+    tabs.forEach(function (x) { x.setAttribute('aria-selected', x === tab ? 'true' : 'false'); });
+    show(tab.dataset.src);
+  }
+
+  tabs.forEach(function (t, i) {
+    t.addEventListener('click', function () { select(t); });
+    t.addEventListener('keydown', function (e) {
+      var n = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : -1;
+      if (n < 0 || n >= tabs.length) return;
+      tabs[n].focus(); select(tabs[n]); e.preventDefault();
+    });
+  });
+
+  copyBtn.addEventListener('click', function () {
+    var reset = function (text, ms) {
+      copyBtn.textContent = text;
+      setTimeout(function () {
+        copyBtn.textContent = 'Скопировать файл';
+        copyBtn.classList.remove('ok');
+      }, ms);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(currentText).then(function () {
+        copyBtn.classList.add('ok');
+        reset('Скопировано', 1600);
+      }, function () {
+        reset('Не вышло — выделите вручную', 2200);
+      });
+    } else {
+      reset('Буфер недоступен', 2200);
+    }
+  });
+
+  select(tabs[0]);
+})();
+</script>
+</body>
+</html>

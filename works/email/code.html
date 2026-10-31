@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Код · Рассылка «Обжарка»</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#0e1113; --panel:#161a1d; --panel-2:#12161a; --line:#262c2f; --line-2:#394144;
+    --ink:#e8ebe6; --ink-2:#9aa39e; --ink-3:#79837f;
+    --accent:#8b7bff; --mark:#e0ab43;
+    --f-d:"Unbounded","Trebuchet MS",sans-serif;
+    --f-b:"Golos Text","Segoe UI",system-ui,sans-serif;
+    --f-m:"JetBrains Mono",ui-monospace,Consolas,monospace;
+    color-scheme:dark;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:400 .98rem/1.6 var(--f-b);
+    -webkit-font-smoothing:antialiased}
+  h1{margin:0;font-family:var(--f-d);font-weight:600;letter-spacing:-.03em;
+    font-size:clamp(1.35rem,1.1rem+1.3vw,2rem);line-height:1.1}
+  p{margin:0}
+  a{color:var(--accent)}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+  .wrap{width:min(1280px,100%);margin-inline:auto;padding-inline:clamp(16px,3vw,32px)}
+  .mono{font-family:var(--f-m);font-size:.82rem;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+
+  .bar{border-bottom:1px solid var(--line);padding-block:11px;font-size:.82rem}
+  .bar .wrap{display:flex;gap:10px 20px;flex-wrap:wrap;align-items:center}
+  .bar .sep{margin-left:auto}
+  .bar a{font-weight:500;text-decoration:none}
+  .bar a:hover{text-decoration:underline}
+
+  header.head{padding-block:clamp(24px,4vw,40px) 20px}
+  .kind{color:var(--mark);text-transform:uppercase;letter-spacing:.14em;margin-bottom:1em}
+  .note{color:var(--ink-2);max-width:72ch;margin-top:1em}
+
+  .toolbar{position:sticky;top:0;z-index:10;background:var(--bg);
+    border-bottom:1px solid var(--line);margin-bottom:14px}
+  .toolbar::before{content:"";position:absolute;left:0;right:0;top:-18px;height:18px;
+    background:var(--bg)}
+  .tabs{display:flex;flex-wrap:wrap;gap:6px;padding-block:14px 0}
+  .tab{background:transparent;border:1px solid var(--line-2);color:var(--ink-2);
+    padding:9px 15px;font:400 .84rem var(--f-m);cursor:pointer;white-space:nowrap}
+  .tab:hover{color:var(--ink);border-color:var(--ink-3)}
+  .tab[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .tab em{font-style:normal;opacity:.6;margin-left:7px}
+
+  .meta{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;
+    padding:12px 0;color:var(--ink-3)}
+  .copy{margin-left:auto;background:transparent;border:1px solid var(--line-2);color:var(--ink-2);
+    padding:9px 14px;font:400 .82rem var(--f-m);cursor:pointer}
+  .copy:hover{color:var(--ink);border-color:var(--ink-3)}
+  .copy.ok{color:var(--accent);border-color:var(--accent)}
+
+  .viewer{display:flex;border:1px solid var(--line);background:var(--panel);margin-bottom:44px}
+  /* white-space:pre обязателен: это div, а не pre. Без него переносы строк
+     схлопываются в пробелы, колонка номеров растягивается на всю ширину
+     и выдавливает код в нулевую ширину. */
+  .gutter{flex:none;white-space:pre;padding:18px 12px 18px 16px;
+    border-right:1px solid var(--line);color:var(--ink-3);text-align:right;
+    user-select:none;background:var(--panel-2)}
+  .gutter,.viewer pre{font:400 .82rem/1.72 var(--f-m);margin:0}
+  /* min-width:0 обязателен: без него flex-элемент не сжимается
+     ниже ширины содержимого и страница уезжает по горизонтали. */
+  .viewer pre{flex:1;min-width:0;padding:18px 20px;overflow-x:auto;white-space:pre;tab-size:2}
+  .viewer code{font:inherit;background:none;padding:0;display:block}
+
+  .warn{border:1px solid var(--mark);color:var(--mark);padding:14px 16px;margin-bottom:20px;
+    font-size:.88rem}
+
+  /* подсветка */
+  .hljs-comment,.hljs-quote{color:#6b7671;font-style:italic}
+  .hljs-tag,.hljs-punctuation{color:#9aa39e}
+  .hljs-name,.hljs-selector-tag{color:#8b7bff}
+  .hljs-attr,.hljs-attribute,.hljs-selector-class,.hljs-selector-id{color:#e0ab43}
+  .hljs-string,.hljs-meta .hljs-string{color:#8fc9a8}
+  .hljs-number,.hljs-literal{color:#d98fb0}
+  .hljs-keyword,.hljs-selector-pseudo{color:#7fb7e8}
+  .hljs-built_in,.hljs-title,.hljs-title.function_{color:#e8ebe6}
+  .hljs-variable,.hljs-property,.hljs-params{color:#c9d1cb}
+  .hljs-meta{color:#79837f}
+
+  footer.foot{border-top:1px solid var(--line);padding-block:24px;color:var(--ink-3);font-size:.86rem}
+  footer.foot .wrap{display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
+  @media(max-width:620px){.gutter{display:none}}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="wrap">
+    <span class="mono" style="color:var(--ink-3)">Исходный код демо-проекта</span>
+    <span class="sep"></span>
+    <a href="index.html">← Открыть сам сайт</a>
+    <a href="../../index.html">В портфолио</a>
+  </div>
+</div>
+
+<header class="head">
+  <div class="wrap">
+    <p class="kind mono">Письмо</p>
+    <h1>Рассылка «Обжарка»</h1>
+    <p class="note">Само письмо — внутри index.html между комментариями «НАЧАЛО ПИСЬМА» и «КОНЕЦ ПИСЬМА». Все его стили стоят прямо в тегах, потому что внешний CSS почтовые клиенты вырезают. styles.css и app.js относятся только к окну-просмотрщику.</p>
+  </div>
+</header>
+
+<div class="wrap">
+  <noscript>
+    <p class="warn">Для подсветки и переключения файлов нужен JavaScript. Исходники всё равно
+      можно прочитать: они лежат в этой же странице ниже.</p>
+  </noscript>
+
+  <div class="toolbar">
+    <div class="tabs" role="tablist" aria-label="Файлы проекта">
+      <button class="tab" role="tab" data-src="src0" aria-selected="true">index.html<em>272</em></button>
+      <button class="tab" role="tab" data-src="src1" aria-selected="false">styles.css<em>173</em></button>
+      <button class="tab" role="tab" data-src="src2" aria-selected="false">app.js<em>128</em></button>
+    </div>
+
+    <div class="meta mono">
+      <span id="stat"></span>
+      <button class="copy" type="button" id="copy">Скопировать файл</button>
+    </div>
+  </div>
+
+  <div class="viewer">
+    <div class="gutter" id="gutter" aria-hidden="true"></div>
+    <pre><code id="code"></code></pre>
+  </div>
+</div>
+
+<footer class="foot">
+  <div class="wrap">
+    <p>Демо-проект из портфолио верстальщика</p>
+    <p class="mono">3 файла · 573 строк · 29.4 КБ</p>
+  </div>
+</footer>
+
+<template id="src0" data-name="index.html" data-lang="xml" data-bytes="15274">&lt;!DOCTYPE html&gt;
+&lt;html lang="ru"&gt;
+&lt;head&gt;
+&lt;meta charset="utf-8"&gt;
+&lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+&lt;title&gt;Письмо «Обжарка» — верстка рассылки&lt;/title&gt;
+&lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;
+&lt;link rel="preconnect" href="https://fonts.gstatic.com" crossorigin&gt;
+&lt;link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap"&gt;
+&lt;link rel="stylesheet" href="styles.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+&lt;div class="demobar"&gt;
+  &lt;div class="wrap"&gt;
+    &lt;span&gt;Демо-проект для портфолио. Письмо сверстано на таблицах, как требуют почтовые клиенты.&lt;/span&gt;
+    &lt;span class="sep"&gt;&lt;/span&gt;
+    &lt;a href="code.html"&gt;Смотреть код&lt;/a&gt;
+    &lt;a href="../../index.html"&gt;← В портфолио&lt;/a&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="wrap intro"&gt;
+  &lt;p class="eyeb mono"&gt;Email-верстка&lt;/p&gt;
+  &lt;h1&gt;Рассылка для кофейни «Обжарка»&lt;/h1&gt;
+  &lt;p class="lead"&gt;Письма нельзя верстать как сайты: Outlook не понимает flexbox, Gmail вырезает внешние стили, а тёмная тема в почте iOS перекрашивает фон за вас. Поэтому здесь таблицы, атрибуты ширины и стили прямо в тегах — та самая верстка двадцатилетней давности, которая до сих пор единственная работает.&lt;/p&gt;
+  &lt;ul class="meta mono"&gt;
+    &lt;li&gt;table-layout&lt;/li&gt;&lt;li&gt;inline CSS&lt;/li&gt;&lt;li&gt;600 px&lt;/li&gt;&lt;li&gt;Gmail · Outlook · Mail.ru&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;!-- ---------- окно почтового клиента ---------- --&gt;
+&lt;div class="wrap"&gt;
+  &lt;div class="app" id="app" data-pane="mail"&gt;
+
+    &lt;!-- строка заголовка приложения --&gt;
+    &lt;div class="app__bar"&gt;
+      &lt;span class="app__dots" aria-hidden="true"&gt;&lt;i&gt;&lt;/i&gt;&lt;i&gt;&lt;/i&gt;&lt;i&gt;&lt;/i&gt;&lt;/span&gt;
+      &lt;span class="app__name mono"&gt;Почта — demo@example.ru&lt;/span&gt;
+      &lt;span class="app__tools"&gt;
+        &lt;button class="tbtn" type="button" data-view="desktop" aria-pressed="true"&gt;600&lt;/button&gt;
+        &lt;button class="tbtn" type="button" data-view="mobile" aria-pressed="false"&gt;360&lt;/button&gt;
+        &lt;span class="app__div" aria-hidden="true"&gt;&lt;/span&gt;
+        &lt;button class="tbtn" type="button" id="theme" aria-pressed="false"&gt;Тёмная тема&lt;/button&gt;
+      &lt;/span&gt;
+    &lt;/div&gt;
+
+    &lt;div class="app__body"&gt;
+
+      &lt;!-- папки --&gt;
+      &lt;nav class="folders" aria-label="Папки"&gt;
+        &lt;button class="compose" type="button"&gt;Написать&lt;/button&gt;
+        &lt;ul&gt;
+          &lt;li&gt;&lt;a href="#" class="is-current"&gt;Входящие &lt;b&gt;3&lt;/b&gt;&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="#"&gt;Помеченные&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="#"&gt;Отправленные&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="#"&gt;Черновики &lt;b&gt;1&lt;/b&gt;&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="#"&gt;Спам&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="#"&gt;Корзина&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;p class="folders__note mono"&gt;Панель папок скрывается, когда окну не хватает ширины.&lt;/p&gt;
+      &lt;/nav&gt;
+
+      &lt;!-- список писем --&gt;
+      &lt;div class="list" id="list"&gt;
+        &lt;div class="list__head"&gt;
+          &lt;span class="mono"&gt;Входящие · 4 письма&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;ul&gt;
+          &lt;li&gt;
+            &lt;button class="msg is-open" type="button" data-msg="1"&gt;
+              &lt;span class="msg__top"&gt;&lt;b&gt;Обжарка&lt;/b&gt;&lt;span class="msg__t mono"&gt;09:14&lt;/span&gt;&lt;/span&gt;
+              &lt;span class="msg__s"&gt;Новая партия эфиопии уже в обжарке&lt;/span&gt;
+              &lt;span class="msg__p"&gt;Партия 12 кг приехала на прошлой неделе. Обжарили светло…&lt;/span&gt;
+              &lt;span class="msg__dot" aria-label="Непрочитанное"&gt;&lt;/span&gt;
+            &lt;/button&gt;
+          &lt;/li&gt;
+          &lt;li&gt;
+            &lt;button class="msg" type="button" data-msg="2"&gt;
+              &lt;span class="msg__top"&gt;&lt;b&gt;СДЭК&lt;/b&gt;&lt;span class="msg__t mono"&gt;08:02&lt;/span&gt;&lt;/span&gt;
+              &lt;span class="msg__s"&gt;Посылка 1098234 передана курьеру&lt;/span&gt;
+              &lt;span class="msg__p"&gt;Доставим сегодня с 14:00 до 18:00…&lt;/span&gt;
+              &lt;span class="msg__dot" aria-label="Непрочитанное"&gt;&lt;/span&gt;
+            &lt;/button&gt;
+          &lt;/li&gt;
+          &lt;li&gt;
+            &lt;button class="msg" type="button" data-msg="3"&gt;
+              &lt;span class="msg__top"&gt;&lt;b&gt;Анна Ковалёва&lt;/b&gt;&lt;span class="msg__t mono"&gt;вчера&lt;/span&gt;&lt;/span&gt;
+              &lt;span class="msg__s"&gt;Профиль обжарки на вторник&lt;/span&gt;
+              &lt;span class="msg__p"&gt;Скинула таблицу с температурами, посмотри до цеха…&lt;/span&gt;
+              &lt;span class="msg__dot" aria-label="Непрочитанное"&gt;&lt;/span&gt;
+            &lt;/button&gt;
+          &lt;/li&gt;
+          &lt;li&gt;
+            &lt;button class="msg" type="button" data-msg="4"&gt;
+              &lt;span class="msg__top"&gt;&lt;b&gt;Хостинг&lt;/b&gt;&lt;span class="msg__t mono"&gt;28 сен&lt;/span&gt;&lt;/span&gt;
+              &lt;span class="msg__s"&gt;Счёт за октябрь оплачен&lt;/span&gt;
+              &lt;span class="msg__p"&gt;Платёж на 540 ₽ прошёл, домен продлён до…&lt;/span&gt;
+            &lt;/button&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/div&gt;
+
+      &lt;!-- чтение письма --&gt;
+      &lt;div class="read" id="read"&gt;
+        &lt;div class="read__head"&gt;
+          &lt;button class="back" type="button" id="back"&gt;← К письмам&lt;/button&gt;
+          &lt;h2 class="read__subj"&gt;Новая партия эфиопии уже в обжарке&lt;/h2&gt;
+          &lt;dl class="read__from"&gt;
+            &lt;div&gt;&lt;dt&gt;От&lt;/dt&gt;&lt;dd&gt;Обжарка &amp;lt;hello@obzharka.example&amp;gt;&lt;/dd&gt;&lt;/div&gt;
+            &lt;div&gt;&lt;dt&gt;Кому&lt;/dt&gt;&lt;dd&gt;demo@example.ru&lt;/dd&gt;&lt;/div&gt;
+            &lt;div&gt;&lt;dt&gt;Когда&lt;/dt&gt;&lt;dd&gt;сегодня, 09:14&lt;/dd&gt;&lt;/div&gt;
+          &lt;/dl&gt;
+        &lt;/div&gt;
+
+        &lt;div class="read__body"&gt;
+          &lt;div class="stage" id="stage" data-view="desktop"&gt;
+
+&lt;!-- ================= НАЧАЛО ПИСЬМА ================= --&gt;
+&lt;table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"&gt;
+  &lt;tr&gt;
+    &lt;td align="center" style="padding:0;"&gt;
+      &lt;table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" class="mail" style="border-collapse:collapse;width:100%;max-width:600px;background-color:#ffffff;font-family:Arial,Helvetica,sans-serif;"&gt;
+
+        &lt;!-- шапка --&gt;
+        &lt;tr&gt;
+          &lt;td align="center" bgcolor="#241812" style="padding:26px 24px;"&gt;
+            &lt;span style="font-family:Georgia,'Times New Roman',serif;font-size:24px;color:#f3eadf;letter-spacing:1px;"&gt;Об&lt;span style="color:#b5652f;"&gt;жар&lt;/span&gt;ка&lt;/span&gt;
+          &lt;/td&gt;
+        &lt;/tr&gt;
+
+        &lt;!-- герой --&gt;
+        &lt;tr&gt;
+          &lt;td style="padding:32px 32px 18px 32px;" class="pad"&gt;
+            &lt;h1 style="margin:0 0 14px 0;font-family:Georgia,'Times New Roman',serif;font-size:28px;line-height:1.2;color:#241812;font-weight:normal;"&gt;Эфиопия Иргачеффе&lt;br&gt;вернулась в ротацию&lt;/h1&gt;
+            &lt;p style="margin:0;font-size:16px;line-height:1.6;color:#4a3b31;"&gt;Партия 12 кг приехала на прошлой неделе. Обжарили светло — под фильтр и воронку. В чашке жасмин, лимонная цедра и послевкусие чёрного чая.&lt;/p&gt;
+          &lt;/td&gt;
+        &lt;/tr&gt;
+
+        &lt;!-- кнопка --&gt;
+        &lt;tr&gt;
+          &lt;td style="padding:6px 32px 30px 32px;" class="pad"&gt;
+            &lt;table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"&gt;
+              &lt;tr&gt;
+                &lt;td bgcolor="#b5652f" style="padding:0;"&gt;
+                  &lt;a href="#" style="display:block;padding:14px 30px;font-size:15px;color:#ffffff;text-decoration:none;font-weight:bold;"&gt;Заказать 250 г — 890 ₽&lt;/a&gt;
+                &lt;/td&gt;
+              &lt;/tr&gt;
+            &lt;/table&gt;
+          &lt;/td&gt;
+        &lt;/tr&gt;
+
+        &lt;!-- две колонки --&gt;
+        &lt;tr&gt;
+          &lt;td style="padding:0 32px 8px 32px;" class="pad"&gt;
+            &lt;table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;border-top:1px solid #e6d8c6;"&gt;
+              &lt;tr&gt;
+                &lt;td width="50%" valign="top" class="col" style="padding:22px 12px 22px 0;"&gt;
+                  &lt;p style="margin:0 0 6px 0;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#b5652f;"&gt;Обжарка&lt;/p&gt;
+                  &lt;p style="margin:0;font-size:15px;line-height:1.5;color:#4a3b31;"&gt;Светлая, снята сразу после первого крэка — на 13-й минуте.&lt;/p&gt;
+                &lt;/td&gt;
+                &lt;td width="50%" valign="top" class="col" style="padding:22px 0 22px 12px;"&gt;
+                  &lt;p style="margin:0 0 6px 0;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#b5652f;"&gt;Отправка&lt;/p&gt;
+                  &lt;p style="margin:0;font-size:15px;line-height:1.5;color:#4a3b31;"&gt;В день заказа, если оформить до 15:00 по Москве.&lt;/p&gt;
+                &lt;/td&gt;
+              &lt;/tr&gt;
+            &lt;/table&gt;
+          &lt;/td&gt;
+        &lt;/tr&gt;
+
+        &lt;!-- цитата --&gt;
+        &lt;tr&gt;
+          &lt;td style="padding:8px 32px 28px 32px;" class="pad"&gt;
+            &lt;table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;background-color:#f3eadf;"&gt;
+              &lt;tr&gt;
+                &lt;td style="padding:20px 22px;border-left:3px solid #b5652f;"&gt;
+                  &lt;p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:17px;line-height:1.5;color:#241812;font-style:italic;"&gt;«Берём ровно столько, сколько успеваем попробовать сами».&lt;/p&gt;
+                  &lt;p style="margin:10px 0 0 0;font-size:13px;color:#8c7561;"&gt;Анна Ковалёва, обжарщик&lt;/p&gt;
+                &lt;/td&gt;
+              &lt;/tr&gt;
+            &lt;/table&gt;
+          &lt;/td&gt;
+        &lt;/tr&gt;
+
+        &lt;!-- две карточки товара --&gt;
+        &lt;tr&gt;
+          &lt;td style="padding:0 32px 30px 32px;" class="pad"&gt;
+            &lt;p style="margin:0 0 14px 0;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#b5652f;"&gt;Тоже в наличии&lt;/p&gt;
+            &lt;table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"&gt;
+              &lt;tr&gt;
+                &lt;td width="50%" valign="top" class="col" style="padding:0 8px 0 0;"&gt;
+                  &lt;table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;border:1px solid #e6d8c6;"&gt;
+                    &lt;tr&gt;&lt;td style="padding:16px;"&gt;
+                      &lt;p style="margin:0 0 4px 0;font-size:15px;font-weight:bold;color:#241812;"&gt;Колумбия Уила&lt;/p&gt;
+                      &lt;p style="margin:0 0 10px 0;font-size:13px;line-height:1.5;color:#8c7561;"&gt;шоколад, слива, орех&lt;/p&gt;
+                      &lt;p style="margin:0;font-family:Georgia,serif;font-size:19px;color:#b5652f;"&gt;740 ₽&lt;/p&gt;
+                    &lt;/td&gt;&lt;/tr&gt;
+                  &lt;/table&gt;
+                &lt;/td&gt;
+                &lt;td width="50%" valign="top" class="col" style="padding:0 0 0 8px;"&gt;
+                  &lt;table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;border:1px solid #e6d8c6;"&gt;
+                    &lt;tr&gt;&lt;td style="padding:16px;"&gt;
+                      &lt;p style="margin:0 0 4px 0;font-size:15px;font-weight:bold;color:#241812;"&gt;Бразилия Серрадо&lt;/p&gt;
+                      &lt;p style="margin:0 0 10px 0;font-size:13px;line-height:1.5;color:#8c7561;"&gt;карамель, арахис, изюм&lt;/p&gt;
+                      &lt;p style="margin:0;font-family:Georgia,serif;font-size:19px;color:#b5652f;"&gt;690 ₽&lt;/p&gt;
+                    &lt;/td&gt;&lt;/tr&gt;
+                  &lt;/table&gt;
+                &lt;/td&gt;
+              &lt;/tr&gt;
+            &lt;/table&gt;
+          &lt;/td&gt;
+        &lt;/tr&gt;
+
+        &lt;!-- подвал --&gt;
+        &lt;tr&gt;
+          &lt;td bgcolor="#241812" style="padding:24px 32px;" class="pad"&gt;
+            &lt;p style="margin:0 0 8px 0;font-size:13px;line-height:1.6;color:#c9b8a4;"&gt;Обжарка · Ярославль, ул. Свободы 12 · +7 900 000-00-00&lt;/p&gt;
+            &lt;p style="margin:0;font-size:12px;line-height:1.6;color:#8c7561;"&gt;Вы получили письмо, потому что подписались на рассылку. &lt;a href="#" style="color:#d98a4e;"&gt;Отписаться&lt;/a&gt;&lt;/p&gt;
+          &lt;/td&gt;
+        &lt;/tr&gt;
+
+      &lt;/table&gt;
+    &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;
+&lt;!-- ================= КОНЕЦ ПИСЬМА ================= --&gt;
+
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div class="app__foot mono" id="status"&gt;Ширина письма 600 px · светлая тема клиента&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- ---------- что внутри ---------- --&gt;
+&lt;div class="wrap notes"&gt;
+  &lt;h2&gt;Три решения, без которых письмо развалится&lt;/h2&gt;
+  &lt;div class="notes__grid"&gt;
+    &lt;article class="note"&gt;
+      &lt;p class="note__n mono"&gt;01&lt;/p&gt;
+      &lt;h3&gt;Ширина задана дважды&lt;/h3&gt;
+      &lt;p&gt;Атрибут &lt;code&gt;width="600"&lt;/code&gt; для Outlook, который игнорирует CSS, и &lt;code&gt;max-width&lt;/code&gt; в стиле для всех остальных. Одного мало: без атрибута письмо в Outlook расползается на всю ширину окна.&lt;/p&gt;
+    &lt;/article&gt;
+    &lt;article class="note"&gt;
+      &lt;p class="note__n mono"&gt;02&lt;/p&gt;
+      &lt;h3&gt;Кнопка — это таблица&lt;/h3&gt;
+      &lt;p&gt;Фон кладётся на ячейку через &lt;code&gt;bgcolor&lt;/code&gt;, а ссылка внутри растягивается через &lt;code&gt;display:block&lt;/code&gt;. Тег &lt;code&gt;button&lt;/code&gt; в письме не работает, а ссылка без растягивания кликается только по тексту.&lt;/p&gt;
+    &lt;/article&gt;
+    &lt;article class="note"&gt;
+      &lt;p class="note__n mono"&gt;03&lt;/p&gt;
+      &lt;h3&gt;Колонки схлопываются условно&lt;/h3&gt;
+      &lt;p&gt;Медиазапрос в &lt;code&gt;head&lt;/code&gt; письма превращает ячейки в блоки на узком экране. Gmail его читает, Outlook игнорирует и оставляет две колонки — поэтому обе версии должны выглядеть прилично.&lt;/p&gt;
+    &lt;/article&gt;
+  &lt;/div&gt;
+  &lt;p class="notes__cta"&gt;
+    &lt;a class="btn" href="code.html"&gt;Открыть исходный код письма&lt;/a&gt;
+  &lt;/p&gt;
+&lt;/div&gt;
+
+&lt;footer class="foot"&gt;
+  &lt;div class="wrap"&gt;
+    &lt;p&gt;Демо-верстка для портфолио. Компания и письма вымышлены.&lt;/p&gt;
+    &lt;p class="mono"&gt;3 файла · таблицы · без зависимостей&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/footer&gt;
+
+&lt;script src="app.js"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</template>
+<template id="src1" data-name="styles.css" data-lang="css" data-bytes="9762">/* Письмо «Обжарка» — стили просмотрщика.
+   Само письмо своих стилей не имеет: они внутри его тегов.
+   Здесь только обёртка — окно почтового клиента на три панели.
+
+   1. Токены  2. База  3. Вступление  4. Окно клиента
+   5. Папки  6. Список писем  7. Чтение  8. Тёмная тема
+   9. Разбор  10. Подвал */
+
+/* ---------- 1. Токены ---------- */
+/* Дизайн намеренно светлый. Объявляем схему явно, иначе авто-тёмная
+   тема браузера затемняет фон, оставляя тёмным и текст. */
+:root{
+  color-scheme:light;
+  --bg:#e8ebee; --panel:#ffffff; --panel-2:#f4f6f8; --ink:#171a1d;
+  --ink-2:#555f68; --ink-3:#8b959e; --line:#d8dde2; --line-2:#c2c9d0;
+  --accent:#0f766e; --accent-2:#0b5a54; --unread:#0f766e;
+  --f-b:"Golos Text","Segoe UI",system-ui,sans-serif;
+  --f-m:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+
+/* ---------- 2. База ---------- */
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:400 clamp(.96rem,.94rem+.1vw,1.02rem)/1.6 var(--f-b);-webkit-font-smoothing:antialiased}
+h1,h2,h3{margin:0;line-height:1.15;text-wrap:balance}
+p{margin:0 0 .8em}p:last-child{margin-bottom:0}
+ul,dl,dd{margin:0;padding:0}li{list-style:none}
+a{color:var(--accent)}
+code{font:400 .88em var(--f-m);background:var(--panel-2);border:1px solid var(--line);
+  padding:1px 5px;white-space:nowrap}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{width:min(1240px,100%);margin-inline:auto;padding-inline:clamp(16px,3.4vw,32px)}
+.mono{font-family:var(--f-m);font-size:.8rem;letter-spacing:.01em;font-variant-numeric:tabular-nums}
+
+.demobar{background:var(--ink);color:#c3ccd4;font-size:.8rem;padding:9px 0}
+.demobar .wrap{display:flex;gap:10px 20px;flex-wrap:wrap;align-items:center}
+.demobar a{color:#5fd4c8;font-weight:500}
+.demobar .sep{margin-left:auto}
+
+/* ---------- 3. Вступление ---------- */
+.intro{padding-block:clamp(26px,4vw,46px) 24px}
+.eyeb{color:var(--accent);letter-spacing:.16em;text-transform:uppercase;margin-bottom:1.1em}
+.intro h1{font-size:clamp(1.5rem,1.2rem+1.6vw,2.3rem);letter-spacing:-.02em}
+.lead{color:var(--ink-2);max-width:72ch;margin-top:.9em}
+.meta{display:flex;flex-wrap:wrap;gap:7px;margin-top:18px}
+.meta li{border:1px solid var(--line);background:var(--panel);padding:5px 10px;color:var(--ink-2);
+  font-family:var(--f-m);font-size:.8rem}
+
+/* ---------- 4. Окно клиента ---------- */
+.app{border:1px solid var(--line-2);background:var(--panel);margin-bottom:46px;
+  box-shadow:0 18px 40px rgba(23,26,29,.1);overflow:hidden}
+
+.app__bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:11px 14px;background:var(--panel-2);border-bottom:1px solid var(--line)}
+.app__dots{display:flex;gap:6px;flex:none}
+.app__dots i{width:9px;height:9px;border-radius:50%;background:var(--line-2);display:block}
+.app__name{color:var(--ink-3)}
+.app__tools{margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.app__div{width:1px;height:20px;background:var(--line-2);margin-inline:4px}
+.tbtn{font:400 .84rem var(--f-b);border:1px solid var(--line-2);background:var(--panel);
+  color:var(--ink-2);padding:7px 13px;cursor:pointer}
+.tbtn:hover{border-color:var(--ink-2);color:var(--ink)}
+.tbtn[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* Три панели на широком экране, две на планшете, одна на телефоне. */
+.app__body{display:grid;min-height:560px}
+@media(min-width:1140px){.app__body{grid-template-columns:186px 300px minmax(0,1fr)}}
+@media(min-width:780px) and (max-width:1139px){.app__body{grid-template-columns:272px minmax(0,1fr)}}
+
+.app__foot{padding:10px 14px;background:var(--panel-2);border-top:1px solid var(--line);
+  color:var(--ink-3)}
+
+/* ---------- 5. Папки ---------- */
+.folders{border-right:1px solid var(--line);padding:14px 12px;background:var(--panel-2);
+  display:flex;flex-direction:column;gap:14px}
+@media(max-width:1139px){.folders{display:none}}
+.compose{background:var(--accent);border:1px solid var(--accent);color:#fff;padding:11px;
+  font:500 .9rem var(--f-b);cursor:pointer;width:100%}
+.compose:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.folders a{display:flex;justify-content:space-between;gap:8px;text-decoration:none;
+  color:var(--ink-2);font-size:.92rem;padding:8px 10px}
+.folders a:hover{background:var(--panel);color:var(--ink)}
+.folders a.is-current{background:var(--panel);color:var(--ink);font-weight:500;
+  box-shadow:inset 2px 0 0 var(--accent)}
+.folders b{color:var(--accent);font-variant-numeric:tabular-nums}
+.folders__note{margin-top:auto;color:var(--ink-3);line-height:1.5;font-size:.72rem}
+
+/* ---------- 6. Список писем ---------- */
+.list{border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0}
+.list__head{padding:12px 14px;border-bottom:1px solid var(--line);color:var(--ink-3)}
+.list ul{overflow-y:auto}
+.msg{position:relative;width:100%;text-align:left;background:var(--panel);border:none;
+  border-bottom:1px solid var(--line);padding:13px 16px 13px 22px;cursor:pointer;
+  display:flex;flex-direction:column;gap:3px;font-family:var(--f-b);min-width:0}
+.msg:hover{background:var(--panel-2)}
+.msg.is-open{background:#eef7f6;box-shadow:inset 3px 0 0 var(--accent)}
+.msg__top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.msg__top b{font-size:.94rem;font-weight:600}
+.msg__t{color:var(--ink-3);flex:none;font-family:var(--f-m);font-size:.74rem}
+.msg__s{font-size:.9rem;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.msg__p{font-size:.84rem;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.msg__dot{position:absolute;left:9px;top:19px;width:6px;height:6px;border-radius:50%;
+  background:var(--unread)}
+
+/* ---------- 7. Чтение ---------- */
+.read{display:flex;flex-direction:column;min-width:0}
+.read__head{padding:16px clamp(14px,2vw,22px);border-bottom:1px solid var(--line)}
+.back{display:none;background:none;border:1px solid var(--line-2);color:var(--ink-2);
+  padding:8px 13px;font:500 .85rem var(--f-b);cursor:pointer;margin-bottom:12px}
+.back:hover{border-color:var(--ink);color:var(--ink)}
+.read__subj{font-size:clamp(1.05rem,1rem+.5vw,1.3rem);font-weight:600}
+.read__from{margin-top:12px;display:grid;gap:3px}
+.read__from &gt; div{display:grid;gap:2px 12px;font-size:.86rem}
+@media(min-width:420px){.read__from &gt; div{grid-template-columns:62px minmax(0,1fr)}}
+.read__from dt{color:var(--ink-3)}
+.read__from dd{color:var(--ink-2);word-break:break-word}
+
+.read__body{flex:1;background:#f1ede6;padding:clamp(12px,2.4vw,26px);overflow-x:auto;
+  transition:background-color .2s}
+.stage{margin-inline:auto;transition:max-width .25s}
+.stage[data-view="desktop"]{max-width:600px}
+.stage[data-view="mobile"]{max-width:360px}
+
+/* Поведение письма при переключении на 360 px — тот же результат,
+   что даёт медиазапрос внутри самого письма. */
+.stage[data-view="mobile"] .col{display:block!important;width:100%!important;padding:16px 0!important}
+.stage[data-view="mobile"] .pad{padding-left:20px!important;padding-right:20px!important}
+.stage[data-view="mobile"] h1{font-size:23px!important}
+
+/* Реальный медиазапрос письма: на узком экране срабатывает сам. */
+@media screen and (max-width:480px){
+  .stage .col{display:block!important;width:100%!important;padding:16px 0!important}
+  .stage .pad{padding-left:20px!important;padding-right:20px!important}
+  .stage h1{font-size:23px!important}
+}
+
+/* Одна панель на телефоне: список и чтение меняются местами. */
+@media(max-width:779px){
+  .app__body{grid-template-columns:1fr}
+  .back{display:inline-block}
+  .app[data-pane="mail"] .list{display:none}
+  .app[data-pane="list"] .read{display:none}
+  .list{border-right:none}
+}
+
+/* ---------- 8. Тёмная тема клиента ---------- */
+.app.dark{--panel:#171b1f;--panel-2:#1f242a;--line:#2b3238;--line-2:#39424a;
+  --ink:#e3e8ec;--ink-2:#a7b1ba;--ink-3:#79838c;background:#171b1f}
+.app.dark .msg.is-open{background:#15302d}
+.app.dark .read__body{background:#0f1316}
+.app.dark .app__dots i{background:#39424a}
+
+/* ---------- 9. Разбор ---------- */
+.notes{padding-bottom:50px}
+.notes h2{font-size:clamp(1.3rem,1.1rem+1vw,1.9rem);letter-spacing:-.02em;margin-bottom:1.2em}
+.notes__grid{display:grid;gap:1px;background:var(--line);border:1px solid var(--line)}
+@media(min-width:620px){.notes__grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:980px){.notes__grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.note{background:var(--panel);padding:clamp(20px,2.4vw,26px)}
+.note__n{color:var(--accent);margin-bottom:1em}
+.note h3{font-size:1.1rem;font-weight:600;margin-bottom:.5em}
+.note p{color:var(--ink-2);font-size:.94rem}
+.notes__cta{margin-top:26px}
+.btn{display:inline-block;background:var(--ink);color:#fff;text-decoration:none;
+  padding:14px 26px;font-weight:500}
+.btn:hover{background:var(--accent);color:#fff}
+
+/* ---------- 10. Подвал ---------- */
+.foot{background:var(--ink);color:#8b959e;padding-block:26px;font-size:.88rem}
+.foot .wrap{display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
+
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</template>
+<template id="src2" data-name="app.js" data-lang="javascript" data-bytes="5076">/* Письмо «Обжарка» — скрипты просмотрщика.
+   Переключение ширины, тёмная тема клиента и выбор письма.
+   Само письмо скриптов не содержит: в почте JavaScript не работает. */
+
+(function () {
+  'use strict';
+
+  var $ = function (s) { return document.querySelector(s); };
+
+  var app = $('#app');
+  var stage = $('#stage');
+  var status = $('#status');
+  var themeBtn = $('#theme');
+
+  var LETTERS = {
+    '1': {
+      from: 'Обжарка &amp;lt;hello@obzharka.example&amp;gt;',
+      when: 'сегодня, 09:14',
+      subj: 'Новая партия эфиопии уже в обжарке'
+    },
+    '2': {
+      from: 'СДЭК &amp;lt;no-reply@cdek.example&amp;gt;',
+      when: 'сегодня, 08:02',
+      subj: 'Посылка 1098234 передана курьеру'
+    },
+    '3': {
+      from: 'Анна Ковалёва &amp;lt;anna@obzharka.example&amp;gt;',
+      when: 'вчера, 19:41',
+      subj: 'Профиль обжарки на вторник'
+    },
+    '4': {
+      from: 'Хостинг &amp;lt;billing@host.example&amp;gt;',
+      when: '28 сентября, 11:20',
+      subj: 'Счёт за октябрь оплачен'
+    }
+  };
+
+  /* ---------- строка состояния ---------- */
+  function updateStatus() {
+    var width = stage.dataset.view === 'mobile' ? '360 px' : '600 px';
+    var theme = app.classList.contains('dark') ? 'тёмная' : 'светлая';
+    status.textContent = 'Ширина письма ' + width + ' · ' + theme + ' тема клиента';
+  }
+
+  /* ---------- ширина письма ---------- */
+  document.querySelectorAll('.tbtn[data-view]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.tbtn[data-view]').forEach(function (x) {
+        x.setAttribute('aria-pressed', x === b ? 'true' : 'false');
+      });
+      stage.dataset.view = b.dataset.view;
+      updateStatus();
+    });
+  });
+
+  /* ---------- тёмная тема ---------- */
+  themeBtn.addEventListener('click', function () {
+    var on = themeBtn.getAttribute('aria-pressed') !== 'true';
+    themeBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    themeBtn.textContent = on ? 'Светлая тема' : 'Тёмная тема';
+    app.classList.toggle('dark', on);
+    updateStatus();
+  });
+
+  /* ---------- выбор письма ----------
+     Вёрстано только одно письмо — остальные показывают заглушку,
+     чтобы было видно, что список рабочий, а не картинка. */
+  var readBody = $('.read__body');
+  var original = readBody.innerHTML;
+
+  document.querySelectorAll('.msg').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.msg').forEach(function (x) { x.classList.remove('is-open'); });
+      btn.classList.add('is-open');
+
+      var dot = btn.querySelector('.msg__dot');
+      if (dot) dot.remove();
+
+      var id = btn.dataset.msg;
+      var L = LETTERS[id];
+
+      $('.read__subj').textContent = L.subj;
+      $('.read__from').innerHTML =
+        '&lt;div&gt;&lt;dt&gt;От&lt;/dt&gt;&lt;dd&gt;' + L.from + '&lt;/dd&gt;&lt;/div&gt;' +
+        '&lt;div&gt;&lt;dt&gt;Кому&lt;/dt&gt;&lt;dd&gt;demo@example.ru&lt;/dd&gt;&lt;/div&gt;' +
+        '&lt;div&gt;&lt;dt&gt;Когда&lt;/dt&gt;&lt;dd&gt;' + L.when + '&lt;/dd&gt;&lt;/div&gt;';
+
+      if (id === '1') {
+        readBody.innerHTML = original;
+        stage = $('#stage');
+        var active = document.querySelector('.tbtn[data-view][aria-pressed="true"]');
+        stage.dataset.view = active ? active.dataset.view : 'desktop';
+      } else {
+        readBody.innerHTML =
+          '&lt;p style="max-width:52ch;margin-inline:auto;padding:40px 10px;text-align:center;' +
+          'color:var(--ink-3);font-size:.94rem"&gt;В этом демо сверстано одно письмо — рассылка ' +
+          '«Обжарки». Остальные в списке нужны, чтобы показать, что клиент вокруг письма ' +
+          'тоже рабочий: панели переключаются, непрочитанные отмечаются прочитанными.&lt;/p&gt;';
+      }
+
+      app.dataset.pane = 'mail';
+      updateStatus();
+    });
+  });
+
+  /* ---------- возврат к списку на телефоне ---------- */
+  $('#back').addEventListener('click', function () {
+    app.dataset.pane = 'list';
+  });
+
+  /* ---------- папки: это демо ---------- */
+  document.querySelectorAll('.folders a').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      document.querySelectorAll('.folders a').forEach(function (x) { x.classList.remove('is-current'); });
+      a.classList.add('is-current');
+    });
+  });
+
+  $('.compose').addEventListener('click', function () {
+    var b = this;
+    b.textContent = 'Это демо';
+    setTimeout(function () { b.textContent = 'Написать'; }, 1400);
+  });
+
+  updateStatus();
+})();
+</template>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var codeEl = document.getElementById('code');
+  var gutter = document.getElementById('gutter');
+  var stat   = document.getElementById('stat');
+  var copyBtn = document.getElementById('copy');
+  var tabs   = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  var currentText = '';
+
+  function sourceOf(id) {
+    var node = document.getElementById(id);
+    // Источники лежат в <template>, поэтому берём текст из его содержимого.
+    return node.content ? node.content.textContent : node.textContent;
+  }
+
+  function show(id) {
+    var node = document.getElementById(id);
+    var text = sourceOf(id);
+    var lang = node.dataset.lang;
+    currentText = text;
+
+    var painted = false;
+    if (window.hljs && typeof hljs.highlight === 'function') {
+      try {
+        codeEl.innerHTML = hljs.highlight(text, { language: lang }).value;
+        painted = true;
+      } catch (e) {
+        painted = false;
+      }
+    }
+    // Без подсветки код всё равно должен быть виден.
+    if (!painted) codeEl.textContent = text;
+
+    var lines = text.split('\n').length;
+    var nums = '';
+    for (var i = 1; i <= lines; i++) nums += i + '\n';
+    gutter.textContent = nums;
+
+    var bytes = node.dataset.bytes;
+    stat.textContent = node.dataset.name + ' · ' + lines + ' строк · ' +
+      (bytes < 1024 ? bytes + ' Б' : (bytes / 1024).toFixed(1) + ' КБ');
+  }
+
+  function select(tab) {
+    tabs.forEach(function (x) { x.setAttribute('aria-selected', x === tab ? 'true' : 'false'); });
+    show(tab.dataset.src);
+  }
+
+  tabs.forEach(function (t, i) {
+    t.addEventListener('click', function () { select(t); });
+    t.addEventListener('keydown', function (e) {
+      var n = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : -1;
+      if (n < 0 || n >= tabs.length) return;
+      tabs[n].focus(); select(tabs[n]); e.preventDefault();
+    });
+  });
+
+  copyBtn.addEventListener('click', function () {
+    var reset = function (text, ms) {
+      copyBtn.textContent = text;
+      setTimeout(function () {
+        copyBtn.textContent = 'Скопировать файл';
+        copyBtn.classList.remove('ok');
+      }, ms);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(currentText).then(function () {
+        copyBtn.classList.add('ok');
+        reset('Скопировано', 1600);
+      }, function () {
+        reset('Не вышло — выделите вручную', 2200);
+      });
+    } else {
+      reset('Буфер недоступен', 2200);
+    }
+  });
+
+  select(tabs[0]);
+})();
+</script>
+</body>
+</html>

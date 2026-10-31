@@ -1,0 +1,172 @@
+/* Письмо «Обжарка» — стили просмотрщика.
+   Само письмо своих стилей не имеет: они внутри его тегов.
+   Здесь только обёртка — окно почтового клиента на три панели.
+
+   1. Токены  2. База  3. Вступление  4. Окно клиента
+   5. Папки  6. Список писем  7. Чтение  8. Тёмная тема
+   9. Разбор  10. Подвал */
+
+/* ---------- 1. Токены ---------- */
+/* Дизайн намеренно светлый. Объявляем схему явно, иначе авто-тёмная
+   тема браузера затемняет фон, оставляя тёмным и текст. */
+:root{
+  color-scheme:light;
+  --bg:#e8ebee; --panel:#ffffff; --panel-2:#f4f6f8; --ink:#171a1d;
+  --ink-2:#555f68; --ink-3:#8b959e; --line:#d8dde2; --line-2:#c2c9d0;
+  --accent:#0f766e; --accent-2:#0b5a54; --unread:#0f766e;
+  --f-b:"Golos Text","Segoe UI",system-ui,sans-serif;
+  --f-m:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+
+/* ---------- 2. База ---------- */
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:400 clamp(.96rem,.94rem+.1vw,1.02rem)/1.6 var(--f-b);-webkit-font-smoothing:antialiased}
+h1,h2,h3{margin:0;line-height:1.15;text-wrap:balance}
+p{margin:0 0 .8em}p:last-child{margin-bottom:0}
+ul,dl,dd{margin:0;padding:0}li{list-style:none}
+a{color:var(--accent)}
+code{font:400 .88em var(--f-m);background:var(--panel-2);border:1px solid var(--line);
+  padding:1px 5px;white-space:nowrap}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{width:min(1240px,100%);margin-inline:auto;padding-inline:clamp(16px,3.4vw,32px)}
+.mono{font-family:var(--f-m);font-size:.8rem;letter-spacing:.01em;font-variant-numeric:tabular-nums}
+
+.demobar{background:var(--ink);color:#c3ccd4;font-size:.8rem;padding:9px 0}
+.demobar .wrap{display:flex;gap:10px 20px;flex-wrap:wrap;align-items:center}
+.demobar a{color:#5fd4c8;font-weight:500}
+.demobar .sep{margin-left:auto}
+
+/* ---------- 3. Вступление ---------- */
+.intro{padding-block:clamp(26px,4vw,46px) 24px}
+.eyeb{color:var(--accent);letter-spacing:.16em;text-transform:uppercase;margin-bottom:1.1em}
+.intro h1{font-size:clamp(1.5rem,1.2rem+1.6vw,2.3rem);letter-spacing:-.02em}
+.lead{color:var(--ink-2);max-width:72ch;margin-top:.9em}
+.meta{display:flex;flex-wrap:wrap;gap:7px;margin-top:18px}
+.meta li{border:1px solid var(--line);background:var(--panel);padding:5px 10px;color:var(--ink-2);
+  font-family:var(--f-m);font-size:.8rem}
+
+/* ---------- 4. Окно клиента ---------- */
+.app{border:1px solid var(--line-2);background:var(--panel);margin-bottom:46px;
+  box-shadow:0 18px 40px rgba(23,26,29,.1);overflow:hidden}
+
+.app__bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:11px 14px;background:var(--panel-2);border-bottom:1px solid var(--line)}
+.app__dots{display:flex;gap:6px;flex:none}
+.app__dots i{width:9px;height:9px;border-radius:50%;background:var(--line-2);display:block}
+.app__name{color:var(--ink-3)}
+.app__tools{margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.app__div{width:1px;height:20px;background:var(--line-2);margin-inline:4px}
+.tbtn{font:400 .84rem var(--f-b);border:1px solid var(--line-2);background:var(--panel);
+  color:var(--ink-2);padding:7px 13px;cursor:pointer}
+.tbtn:hover{border-color:var(--ink-2);color:var(--ink)}
+.tbtn[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* Три панели на широком экране, две на планшете, одна на телефоне. */
+.app__body{display:grid;min-height:560px}
+@media(min-width:1140px){.app__body{grid-template-columns:186px 300px minmax(0,1fr)}}
+@media(min-width:780px) and (max-width:1139px){.app__body{grid-template-columns:272px minmax(0,1fr)}}
+
+.app__foot{padding:10px 14px;background:var(--panel-2);border-top:1px solid var(--line);
+  color:var(--ink-3)}
+
+/* ---------- 5. Папки ---------- */
+.folders{border-right:1px solid var(--line);padding:14px 12px;background:var(--panel-2);
+  display:flex;flex-direction:column;gap:14px}
+@media(max-width:1139px){.folders{display:none}}
+.compose{background:var(--accent);border:1px solid var(--accent);color:#fff;padding:11px;
+  font:500 .9rem var(--f-b);cursor:pointer;width:100%}
+.compose:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.folders a{display:flex;justify-content:space-between;gap:8px;text-decoration:none;
+  color:var(--ink-2);font-size:.92rem;padding:8px 10px}
+.folders a:hover{background:var(--panel);color:var(--ink)}
+.folders a.is-current{background:var(--panel);color:var(--ink);font-weight:500;
+  box-shadow:inset 2px 0 0 var(--accent)}
+.folders b{color:var(--accent);font-variant-numeric:tabular-nums}
+.folders__note{margin-top:auto;color:var(--ink-3);line-height:1.5;font-size:.72rem}
+
+/* ---------- 6. Список писем ---------- */
+.list{border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0}
+.list__head{padding:12px 14px;border-bottom:1px solid var(--line);color:var(--ink-3)}
+.list ul{overflow-y:auto}
+.msg{position:relative;width:100%;text-align:left;background:var(--panel);border:none;
+  border-bottom:1px solid var(--line);padding:13px 16px 13px 22px;cursor:pointer;
+  display:flex;flex-direction:column;gap:3px;font-family:var(--f-b);min-width:0}
+.msg:hover{background:var(--panel-2)}
+.msg.is-open{background:#eef7f6;box-shadow:inset 3px 0 0 var(--accent)}
+.msg__top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.msg__top b{font-size:.94rem;font-weight:600}
+.msg__t{color:var(--ink-3);flex:none;font-family:var(--f-m);font-size:.74rem}
+.msg__s{font-size:.9rem;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.msg__p{font-size:.84rem;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.msg__dot{position:absolute;left:9px;top:19px;width:6px;height:6px;border-radius:50%;
+  background:var(--unread)}
+
+/* ---------- 7. Чтение ---------- */
+.read{display:flex;flex-direction:column;min-width:0}
+.read__head{padding:16px clamp(14px,2vw,22px);border-bottom:1px solid var(--line)}
+.back{display:none;background:none;border:1px solid var(--line-2);color:var(--ink-2);
+  padding:8px 13px;font:500 .85rem var(--f-b);cursor:pointer;margin-bottom:12px}
+.back:hover{border-color:var(--ink);color:var(--ink)}
+.read__subj{font-size:clamp(1.05rem,1rem+.5vw,1.3rem);font-weight:600}
+.read__from{margin-top:12px;display:grid;gap:3px}
+.read__from > div{display:grid;gap:2px 12px;font-size:.86rem}
+@media(min-width:420px){.read__from > div{grid-template-columns:62px minmax(0,1fr)}}
+.read__from dt{color:var(--ink-3)}
+.read__from dd{color:var(--ink-2);word-break:break-word}
+
+.read__body{flex:1;background:#f1ede6;padding:clamp(12px,2.4vw,26px);overflow-x:auto;
+  transition:background-color .2s}
+.stage{margin-inline:auto;transition:max-width .25s}
+.stage[data-view="desktop"]{max-width:600px}
+.stage[data-view="mobile"]{max-width:360px}
+
+/* Поведение письма при переключении на 360 px — тот же результат,
+   что даёт медиазапрос внутри самого письма. */
+.stage[data-view="mobile"] .col{display:block!important;width:100%!important;padding:16px 0!important}
+.stage[data-view="mobile"] .pad{padding-left:20px!important;padding-right:20px!important}
+.stage[data-view="mobile"] h1{font-size:23px!important}
+
+/* Реальный медиазапрос письма: на узком экране срабатывает сам. */
+@media screen and (max-width:480px){
+  .stage .col{display:block!important;width:100%!important;padding:16px 0!important}
+  .stage .pad{padding-left:20px!important;padding-right:20px!important}
+  .stage h1{font-size:23px!important}
+}
+
+/* Одна панель на телефоне: список и чтение меняются местами. */
+@media(max-width:779px){
+  .app__body{grid-template-columns:1fr}
+  .back{display:inline-block}
+  .app[data-pane="mail"] .list{display:none}
+  .app[data-pane="list"] .read{display:none}
+  .list{border-right:none}
+}
+
+/* ---------- 8. Тёмная тема клиента ---------- */
+.app.dark{--panel:#171b1f;--panel-2:#1f242a;--line:#2b3238;--line-2:#39424a;
+  --ink:#e3e8ec;--ink-2:#a7b1ba;--ink-3:#79838c;background:#171b1f}
+.app.dark .msg.is-open{background:#15302d}
+.app.dark .read__body{background:#0f1316}
+.app.dark .app__dots i{background:#39424a}
+
+/* ---------- 9. Разбор ---------- */
+.notes{padding-bottom:50px}
+.notes h2{font-size:clamp(1.3rem,1.1rem+1vw,1.9rem);letter-spacing:-.02em;margin-bottom:1.2em}
+.notes__grid{display:grid;gap:1px;background:var(--line);border:1px solid var(--line)}
+@media(min-width:620px){.notes__grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:980px){.notes__grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.note{background:var(--panel);padding:clamp(20px,2.4vw,26px)}
+.note__n{color:var(--accent);margin-bottom:1em}
+.note h3{font-size:1.1rem;font-weight:600;margin-bottom:.5em}
+.note p{color:var(--ink-2);font-size:.94rem}
+.notes__cta{margin-top:26px}
+.btn{display:inline-block;background:var(--ink);color:#fff;text-decoration:none;
+  padding:14px 26px;font-weight:500}
+.btn:hover{background:var(--accent);color:#fff}
+
+/* ---------- 10. Подвал ---------- */
+.foot{background:var(--ink);color:#8b959e;padding-block:26px;font-size:.88rem}
+.foot .wrap{display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
+
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}

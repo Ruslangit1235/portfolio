@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Код · Высота — расписание фитнес-клуба</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#0e1113; --panel:#161a1d; --panel-2:#12161a; --line:#262c2f; --line-2:#394144;
+    --ink:#e8ebe6; --ink-2:#9aa39e; --ink-3:#79837f;
+    --accent:#8b7bff; --mark:#e0ab43;
+    --f-d:"Unbounded","Trebuchet MS",sans-serif;
+    --f-b:"Golos Text","Segoe UI",system-ui,sans-serif;
+    --f-m:"JetBrains Mono",ui-monospace,Consolas,monospace;
+    color-scheme:dark;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:400 .98rem/1.6 var(--f-b);
+    -webkit-font-smoothing:antialiased}
+  h1{margin:0;font-family:var(--f-d);font-weight:600;letter-spacing:-.03em;
+    font-size:clamp(1.35rem,1.1rem+1.3vw,2rem);line-height:1.1}
+  p{margin:0}
+  a{color:var(--accent)}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+  .wrap{width:min(1280px,100%);margin-inline:auto;padding-inline:clamp(16px,3vw,32px)}
+  .mono{font-family:var(--f-m);font-size:.82rem;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+
+  .bar{border-bottom:1px solid var(--line);padding-block:11px;font-size:.82rem}
+  .bar .wrap{display:flex;gap:10px 20px;flex-wrap:wrap;align-items:center}
+  .bar .sep{margin-left:auto}
+  .bar a{font-weight:500;text-decoration:none}
+  .bar a:hover{text-decoration:underline}
+
+  header.head{padding-block:clamp(24px,4vw,40px) 20px}
+  .kind{color:var(--mark);text-transform:uppercase;letter-spacing:.14em;margin-bottom:1em}
+  .note{color:var(--ink-2);max-width:72ch;margin-top:1em}
+
+  .toolbar{position:sticky;top:0;z-index:10;background:var(--bg);
+    border-bottom:1px solid var(--line);margin-bottom:14px}
+  .toolbar::before{content:"";position:absolute;left:0;right:0;top:-18px;height:18px;
+    background:var(--bg)}
+  .tabs{display:flex;flex-wrap:wrap;gap:6px;padding-block:14px 0}
+  .tab{background:transparent;border:1px solid var(--line-2);color:var(--ink-2);
+    padding:9px 15px;font:400 .84rem var(--f-m);cursor:pointer;white-space:nowrap}
+  .tab:hover{color:var(--ink);border-color:var(--ink-3)}
+  .tab[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .tab em{font-style:normal;opacity:.6;margin-left:7px}
+
+  .meta{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;
+    padding:12px 0;color:var(--ink-3)}
+  .copy{margin-left:auto;background:transparent;border:1px solid var(--line-2);color:var(--ink-2);
+    padding:9px 14px;font:400 .82rem var(--f-m);cursor:pointer}
+  .copy:hover{color:var(--ink);border-color:var(--ink-3)}
+  .copy.ok{color:var(--accent);border-color:var(--accent)}
+
+  .viewer{display:flex;border:1px solid var(--line);background:var(--panel);margin-bottom:44px}
+  /* white-space:pre обязателен: это div, а не pre. Без него переносы строк
+     схлопываются в пробелы, колонка номеров растягивается на всю ширину
+     и выдавливает код в нулевую ширину. */
+  .gutter{flex:none;white-space:pre;padding:18px 12px 18px 16px;
+    border-right:1px solid var(--line);color:var(--ink-3);text-align:right;
+    user-select:none;background:var(--panel-2)}
+  .gutter,.viewer pre{font:400 .82rem/1.72 var(--f-m);margin:0}
+  /* min-width:0 обязателен: без него flex-элемент не сжимается
+     ниже ширины содержимого и страница уезжает по горизонтали. */
+  .viewer pre{flex:1;min-width:0;padding:18px 20px;overflow-x:auto;white-space:pre;tab-size:2}
+  .viewer code{font:inherit;background:none;padding:0;display:block}
+
+  .warn{border:1px solid var(--mark);color:var(--mark);padding:14px 16px;margin-bottom:20px;
+    font-size:.88rem}
+
+  /* подсветка */
+  .hljs-comment,.hljs-quote{color:#6b7671;font-style:italic}
+  .hljs-tag,.hljs-punctuation{color:#9aa39e}
+  .hljs-name,.hljs-selector-tag{color:#8b7bff}
+  .hljs-attr,.hljs-attribute,.hljs-selector-class,.hljs-selector-id{color:#e0ab43}
+  .hljs-string,.hljs-meta .hljs-string{color:#8fc9a8}
+  .hljs-number,.hljs-literal{color:#d98fb0}
+  .hljs-keyword,.hljs-selector-pseudo{color:#7fb7e8}
+  .hljs-built_in,.hljs-title,.hljs-title.function_{color:#e8ebe6}
+  .hljs-variable,.hljs-property,.hljs-params{color:#c9d1cb}
+  .hljs-meta{color:#79837f}
+
+  footer.foot{border-top:1px solid var(--line);padding-block:24px;color:var(--ink-3);font-size:.86rem}
+  footer.foot .wrap{display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
+  @media(max-width:620px){.gutter{display:none}}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="wrap">
+    <span class="mono" style="color:var(--ink-3)">Исходный код демо-проекта</span>
+    <span class="sep"></span>
+    <a href="index.html">← Открыть сам сайт</a>
+    <a href="../../index.html">В портфолио</a>
+  </div>
+</div>
+
+<header class="head">
+  <div class="wrap">
+    <p class="kind mono">Расписание</p>
+    <h1>Высота — расписание фитнес-клуба</h1>
+    <p class="note">Расписание рисуется из одного массива занятий. Семь колонок по дням там, где они влезают, и один день с вкладками там, где нет — переключение описано в CSS, скрипт про ширину экрана ничего не знает.</p>
+  </div>
+</header>
+
+<div class="wrap">
+  <noscript>
+    <p class="warn">Для подсветки и переключения файлов нужен JavaScript. Исходники всё равно
+      можно прочитать: они лежат в этой же странице ниже.</p>
+  </noscript>
+
+  <div class="toolbar">
+    <div class="tabs" role="tablist" aria-label="Файлы проекта">
+      <button class="tab" role="tab" data-src="src0" aria-selected="true">index.html<em>335</em></button>
+      <button class="tab" role="tab" data-src="src1" aria-selected="false">styles.css<em>287</em></button>
+      <button class="tab" role="tab" data-src="src2" aria-selected="false">app.js<em>333</em></button>
+    </div>
+
+    <div class="meta mono">
+      <span id="stat"></span>
+      <button class="copy" type="button" id="copy">Скопировать файл</button>
+    </div>
+  </div>
+
+  <div class="viewer">
+    <div class="gutter" id="gutter" aria-hidden="true"></div>
+    <pre><code id="code"></code></pre>
+  </div>
+</div>
+
+<footer class="foot">
+  <div class="wrap">
+    <p>Демо-проект из портфолио верстальщика</p>
+    <p class="mono">3 файла · 955 строк · 48.5 КБ</p>
+  </div>
+</footer>
+
+<template id="src0" data-name="index.html" data-lang="xml" data-bytes="16236">&lt;!DOCTYPE html&gt;
+&lt;html lang="ru"&gt;
+&lt;head&gt;
+&lt;meta charset="utf-8"&gt;
+&lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+&lt;title&gt;Высота — фитнес-клуб в Екатеринбурге&lt;/title&gt;
+&lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;
+&lt;link rel="preconnect" href="https://fonts.gstatic.com" crossorigin&gt;
+&lt;link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&amp;family=Golos+Text:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap"&gt;
+&lt;link rel="stylesheet" href="styles.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+&lt;div class="demobar"&gt;
+  &lt;div class="wrap"&gt;
+    &lt;span&gt;Демо-проект для портфолио. Клуб вымышленный, расписание и запись работают.&lt;/span&gt;
+    &lt;span class="sep"&gt;&lt;/span&gt;
+    &lt;a href="code.html"&gt;Смотреть код&lt;/a&gt;
+    &lt;a href="../../index.html"&gt;← В портфолио&lt;/a&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;header class="top"&gt;
+  &lt;div class="wrap"&gt;
+    &lt;a class="logo" href="#top"&gt;Высо&lt;span&gt;та&lt;/span&gt;&lt;/a&gt;
+    &lt;button class="burger" id="burger" type="button" aria-expanded="false" aria-controls="nav"&gt;
+      &lt;i&gt;&lt;/i&gt;&lt;i&gt;&lt;/i&gt;&lt;i&gt;&lt;/i&gt;&lt;span class="vh"&gt;Меню&lt;/span&gt;
+    &lt;/button&gt;
+    &lt;nav id="nav" class="nav" aria-label="Разделы"&gt;
+      &lt;a href="#sched"&gt;Расписание&lt;/a&gt;
+      &lt;a href="#dirs"&gt;Направления&lt;/a&gt;
+      &lt;a href="#coaches"&gt;Тренеры&lt;/a&gt;
+      &lt;a href="#prices"&gt;Абонементы&lt;/a&gt;
+      &lt;a href="#faq"&gt;Вопросы&lt;/a&gt;
+    &lt;/nav&gt;
+    &lt;a class="cta" href="#sched"&gt;Записаться&lt;/a&gt;
+  &lt;/div&gt;
+&lt;/header&gt;
+
+&lt;main id="top"&gt;
+
+  &lt;!-- ---------- герой ---------- --&gt;
+  &lt;section class="hero"&gt;
+    &lt;div class="wrap"&gt;
+      &lt;div class="hero__text"&gt;
+        &lt;p class="kicker"&gt;Екатеринбург · ул. Малышева 71 · круглосуточно&lt;/p&gt;
+        &lt;h1&gt;Занятие&lt;br&gt;начинается&lt;br&gt;&lt;span&gt;через час&lt;/span&gt;&lt;/h1&gt;
+        &lt;p class="lead"&gt;Сорок групповых занятий в неделю, четыре зала и бассейн на 25 метров. Запись открывается за семь дней, отмена — за два часа без списания.&lt;/p&gt;
+        &lt;div class="btns"&gt;
+          &lt;a class="btn btn--fill" href="#sched"&gt;Выбрать занятие&lt;/a&gt;
+          &lt;a class="btn btn--line" href="#prices"&gt;Абонементы&lt;/a&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;dl class="facts"&gt;
+        &lt;div&gt;&lt;dt&gt;Групповых занятий&lt;/dt&gt;&lt;dd&gt;40 в неделю&lt;/dd&gt;&lt;/div&gt;
+        &lt;div&gt;&lt;dt&gt;Залов&lt;/dt&gt;&lt;dd&gt;4 + бассейн&lt;/dd&gt;&lt;/div&gt;
+        &lt;div&gt;&lt;dt&gt;Тренеров&lt;/dt&gt;&lt;dd&gt;12&lt;/dd&gt;&lt;/div&gt;
+        &lt;div&gt;&lt;dt&gt;Первое занятие&lt;/dt&gt;&lt;dd&gt;бесплатно&lt;/dd&gt;&lt;/div&gt;
+      &lt;/dl&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;!-- ---------- расписание ---------- --&gt;
+  &lt;section class="sec" id="sched"&gt;
+    &lt;div class="wrap"&gt;
+      &lt;div class="sec__head"&gt;
+        &lt;p class="eyeb"&gt;Расписание&lt;/p&gt;
+        &lt;h2&gt;Неделя целиком&lt;/h2&gt;
+        &lt;p&gt;Нажмите на занятие, чтобы записаться. Свободные места обновляются сразу — это демо, но счётчик настоящий.&lt;/p&gt;
+      &lt;/div&gt;
+
+      &lt;!-- фильтры --&gt;
+      &lt;div class="filters"&gt;
+        &lt;div class="filters__row"&gt;
+          &lt;span class="filters__lbl"&gt;Направление&lt;/span&gt;
+          &lt;div class="chips" id="dirchips"&gt;
+            &lt;button class="chip" type="button" data-dir="Силовые" aria-pressed="false"&gt;Силовые&lt;/button&gt;
+            &lt;button class="chip" type="button" data-dir="Йога" aria-pressed="false"&gt;Йога&lt;/button&gt;
+            &lt;button class="chip" type="button" data-dir="Кардио" aria-pressed="false"&gt;Кардио&lt;/button&gt;
+            &lt;button class="chip" type="button" data-dir="Бассейн" aria-pressed="false"&gt;Бассейн&lt;/button&gt;
+            &lt;button class="chip" type="button" data-dir="Единоборства" aria-pressed="false"&gt;Единоборства&lt;/button&gt;
+            &lt;button class="chip" type="button" data-dir="Танцы" aria-pressed="false"&gt;Танцы&lt;/button&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;div class="filters__row filters__row--inline"&gt;
+          &lt;label class="sel"&gt;Тренер
+            &lt;select id="coach"&gt;
+              &lt;option value=""&gt;любой&lt;/option&gt;
+              &lt;option&gt;Орлов&lt;/option&gt;
+              &lt;option&gt;Зимина&lt;/option&gt;
+              &lt;option&gt;Карпов&lt;/option&gt;
+              &lt;option&gt;Шульга&lt;/option&gt;
+            &lt;/select&gt;
+          &lt;/label&gt;
+          &lt;label class="sel"&gt;Время
+            &lt;select id="part"&gt;
+              &lt;option value=""&gt;весь день&lt;/option&gt;
+              &lt;option value="morning"&gt;утро, до 12:00&lt;/option&gt;
+              &lt;option value="day"&gt;день, 12:00–17:00&lt;/option&gt;
+              &lt;option value="evening"&gt;вечер, после 17:00&lt;/option&gt;
+            &lt;/select&gt;
+          &lt;/label&gt;
+          &lt;label class="check"&gt;
+            &lt;input type="checkbox" id="free"&gt;
+            &lt;span&gt;только со свободными местами&lt;/span&gt;
+          &lt;/label&gt;
+          &lt;button class="reset" type="button" id="reset"&gt;Сбросить&lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;p class="found mono" id="found"&gt;Показано 25 занятий из 25&lt;/p&gt;
+
+      &lt;!-- вкладки дней: только на узком экране --&gt;
+      &lt;div class="days" id="days" role="tablist" aria-label="День недели"&gt;&lt;/div&gt;
+
+      &lt;div class="schedwrap"&gt;
+        &lt;div class="sched" id="sched-grid"&gt;&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;p class="scrollnote mono" id="scrollnote"&gt;Сетка листается вправо →&lt;/p&gt;
+
+      &lt;div class="empty" id="empty" hidden&gt;
+        &lt;h3&gt;Ничего не нашлось&lt;/h3&gt;
+        &lt;p&gt;Снимите часть фильтров — например, выберите «весь день» или другого тренера.&lt;/p&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;!-- ---------- направления ---------- --&gt;
+  &lt;section class="sec sec--tint" id="dirs"&gt;
+    &lt;div class="wrap"&gt;
+      &lt;div class="sec__head"&gt;
+        &lt;p class="eyeb"&gt;Направления&lt;/p&gt;
+        &lt;h2&gt;Шесть групп занятий&lt;/h2&gt;
+      &lt;/div&gt;
+      &lt;div class="cards"&gt;
+        &lt;article class="card"&gt;
+          &lt;h3&gt;Силовые&lt;/h3&gt;
+          &lt;p&gt;Штанга, гантели, работа с собственным весом. Группы до 12 человек, тренер ставит технику каждому.&lt;/p&gt;
+          &lt;p class="card__m mono"&gt;Большой зал · 55 мин&lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class="card"&gt;
+          &lt;h3&gt;Йога&lt;/h3&gt;
+          &lt;p&gt;Хатха и виньяса. Коврики и блоки клубные, приходить можно без своего инвентаря.&lt;/p&gt;
+          &lt;p class="card__m mono"&gt;Малый зал · 75 мин&lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class="card"&gt;
+          &lt;h3&gt;Кардио&lt;/h3&gt;
+          &lt;p&gt;Интервальные тренировки и степ. Пульсометры выдаём на входе, нагрузку считаем по зонам.&lt;/p&gt;
+          &lt;p class="card__m mono"&gt;Большой зал · 45 мин&lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class="card"&gt;
+          &lt;h3&gt;Бассейн&lt;/h3&gt;
+          &lt;p&gt;Аквааэробика и техника плавания. Пять дорожек по 25 метров, вода 27 градусов.&lt;/p&gt;
+          &lt;p class="card__m mono"&gt;Бассейн · 45 мин&lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class="card"&gt;
+          &lt;h3&gt;Единоборства&lt;/h3&gt;
+          &lt;p&gt;Бокс и кикбоксинг. Перчатки и бинты есть в прокате, спарринги только по желанию.&lt;/p&gt;
+          &lt;p class="card__m mono"&gt;Ринг · 60 мин&lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class="card"&gt;
+          &lt;h3&gt;Танцы&lt;/h3&gt;
+          &lt;p&gt;Латина и современная хореография. Начинающие и продолжающие занимаются раздельно.&lt;/p&gt;
+          &lt;p class="card__m mono"&gt;Малый зал · 60 мин&lt;/p&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;!-- ---------- тренеры ---------- --&gt;
+  &lt;section class="sec" id="coaches"&gt;
+    &lt;div class="wrap"&gt;
+      &lt;div class="sec__head"&gt;
+        &lt;p class="eyeb"&gt;Команда&lt;/p&gt;
+        &lt;h2&gt;Кто ведёт занятия&lt;/h2&gt;
+      &lt;/div&gt;
+      &lt;div class="coaches"&gt;
+        &lt;article class="coach"&gt;
+          &lt;div class="coach__ph"&gt;&lt;span&gt;ДО&lt;/span&gt;&lt;/div&gt;
+          &lt;h3&gt;Дмитрий Орлов&lt;/h3&gt;
+          &lt;p&gt;Силовые, кроссфит. Мастер спорта по тяжёлой атлетике, в клубе 7 лет.&lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class="coach"&gt;
+          &lt;div class="coach__ph"&gt;&lt;span&gt;МЗ&lt;/span&gt;&lt;/div&gt;
+          &lt;h3&gt;Марина Зимина&lt;/h3&gt;
+          &lt;p&gt;Йога, растяжка. Сертификат Yoga Alliance, 500 часов практики преподавания.&lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class="coach"&gt;
+          &lt;div class="coach__ph"&gt;&lt;span&gt;АК&lt;/span&gt;&lt;/div&gt;
+          &lt;h3&gt;Антон Карпов&lt;/h3&gt;
+          &lt;p&gt;Бокс, кикбоксинг. Кандидат в мастера спорта, работает с подростками.&lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class="coach"&gt;
+          &lt;div class="coach__ph"&gt;&lt;span&gt;ОШ&lt;/span&gt;&lt;/div&gt;
+          &lt;h3&gt;Ольга Шульга&lt;/h3&gt;
+          &lt;p&gt;Плавание, аквааэробика. Тренер первой категории, реабилитация после травм.&lt;/p&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;!-- ---------- абонементы ---------- --&gt;
+  &lt;section class="sec sec--tint" id="prices"&gt;
+    &lt;div class="wrap"&gt;
+      &lt;div class="sec__head"&gt;
+        &lt;p class="eyeb"&gt;Абонементы&lt;/p&gt;
+        &lt;h2&gt;Сколько стоит&lt;/h2&gt;
+        &lt;p&gt;Заморозка до 30 дней в год входит в любой абонемент. Первое занятие бесплатное, записаться можно без карты.&lt;/p&gt;
+      &lt;/div&gt;
+      &lt;div class="plans"&gt;
+        &lt;article class="plan"&gt;
+          &lt;h3&gt;Утренний&lt;/h3&gt;
+          &lt;p class="plan__p"&gt;2 900 ₽&lt;span&gt;в месяц&lt;/span&gt;&lt;/p&gt;
+          &lt;ul class="ticks"&gt;
+            &lt;li&gt;Доступ с 7:00 до 12:00&lt;/li&gt;
+            &lt;li&gt;Групповые занятия утром&lt;/li&gt;
+            &lt;li&gt;Бассейн без ограничений&lt;/li&gt;
+          &lt;/ul&gt;
+          &lt;button class="plan__b" type="button"&gt;Оформить&lt;/button&gt;
+        &lt;/article&gt;
+        &lt;article class="plan plan--pick"&gt;
+          &lt;p class="plan__badge mono"&gt;Берут чаще всего&lt;/p&gt;
+          &lt;h3&gt;Полный день&lt;/h3&gt;
+          &lt;p class="plan__p"&gt;4 400 ₽&lt;span&gt;в месяц&lt;/span&gt;&lt;/p&gt;
+          &lt;ul class="ticks"&gt;
+            &lt;li&gt;Круглосуточный доступ&lt;/li&gt;
+            &lt;li&gt;Все групповые занятия&lt;/li&gt;
+            &lt;li&gt;Бассейн и сауна&lt;/li&gt;
+            &lt;li&gt;Две персональные тренировки&lt;/li&gt;
+          &lt;/ul&gt;
+          &lt;button class="plan__b plan__b--fill" type="button"&gt;Оформить&lt;/button&gt;
+        &lt;/article&gt;
+        &lt;article class="plan"&gt;
+          &lt;h3&gt;Годовой&lt;/h3&gt;
+          &lt;p class="plan__p"&gt;38 000 ₽&lt;span&gt;за год&lt;/span&gt;&lt;/p&gt;
+          &lt;ul class="ticks"&gt;
+            &lt;li&gt;Всё из «Полного дня»&lt;/li&gt;
+            &lt;li&gt;Экономия 14 800 ₽&lt;/li&gt;
+            &lt;li&gt;Заморозка до 60 дней&lt;/li&gt;
+          &lt;/ul&gt;
+          &lt;button class="plan__b" type="button"&gt;Оформить&lt;/button&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;!-- ---------- вопросы ---------- --&gt;
+  &lt;section class="sec" id="faq"&gt;
+    &lt;div class="wrap"&gt;
+      &lt;div class="sec__head"&gt;
+        &lt;p class="eyeb"&gt;Вопросы&lt;/p&gt;
+        &lt;h2&gt;Что спрашивают чаще всего&lt;/h2&gt;
+      &lt;/div&gt;
+      &lt;div class="faq"&gt;
+        &lt;details&gt;
+          &lt;summary&gt;За сколько открывается запись?&lt;/summary&gt;
+          &lt;p&gt;За семь дней до занятия в 10:00. На популярные направления — силовые по вечерам и бокс — места расходятся за первые сутки, поэтому записывайтесь сразу.&lt;/p&gt;
+        &lt;/details&gt;
+        &lt;details&gt;
+          &lt;summary&gt;Что если не смогу прийти?&lt;/summary&gt;
+          &lt;p&gt;Отмените запись в приложении не позднее чем за два часа. Если отменить позже или не прийти, занятие спишется с абонемента. Три пропуска подряд — и запись на неделю блокируется.&lt;/p&gt;
+        &lt;/details&gt;
+        &lt;details&gt;
+          &lt;summary&gt;Нужна ли справка от врача?&lt;/summary&gt;
+          &lt;p&gt;Для тренажёрного зала и групповых занятий не нужна. В бассейн — да, справка о состоянии кожи действует 6 месяцев, её можно получить у нашего врача по вторникам.&lt;/p&gt;
+        &lt;/details&gt;
+        &lt;details&gt;
+          &lt;summary&gt;Есть ли занятия для начинающих?&lt;/summary&gt;
+          &lt;p&gt;В расписании такие занятия помечены уровнем. На силовых и в танцах группы разделены, на йоге и в кардио тренер даёт два варианта упражнений сразу.&lt;/p&gt;
+        &lt;/details&gt;
+        &lt;details&gt;
+          &lt;summary&gt;Можно прийти один раз?&lt;/summary&gt;
+          &lt;p&gt;Да, разовое занятие — 650 ₽, бассейн — 500 ₽. Первое групповое занятие бесплатно: выберите в расписании и приходите за 15 минут до начала с паспортом.&lt;/p&gt;
+        &lt;/details&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+&lt;/main&gt;
+
+&lt;!-- ---------- модалка записи ---------- --&gt;
+&lt;div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="m-title"&gt;
+  &lt;div class="modal__bg" data-close&gt;&lt;/div&gt;
+  &lt;div class="modal__box"&gt;
+    &lt;button class="modal__x" type="button" data-close aria-label="Закрыть"&gt;✕&lt;/button&gt;
+    &lt;p class="modal__dir mono" id="m-dir"&gt;&lt;/p&gt;
+    &lt;h2 id="m-title"&gt;&lt;/h2&gt;
+    &lt;dl class="modal__specs" id="m-specs"&gt;&lt;/dl&gt;
+    &lt;form id="m-form" novalidate&gt;
+      &lt;div class="field"&gt;
+        &lt;label for="m-name"&gt;Имя&lt;/label&gt;
+        &lt;input id="m-name" type="text" autocomplete="name"&gt;
+      &lt;/div&gt;
+      &lt;div class="field"&gt;
+        &lt;label for="m-tel"&gt;Телефон&lt;/label&gt;
+        &lt;input id="m-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 900 000-00-00"&gt;
+      &lt;/div&gt;
+      &lt;button class="modal__btn" type="submit" id="m-submit"&gt;Записаться&lt;/button&gt;
+      &lt;p class="modal__msg" id="m-msg" role="status"&gt;&lt;/p&gt;
+    &lt;/form&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;footer class="foot"&gt;
+  &lt;div class="wrap"&gt;
+    &lt;div&gt;
+      &lt;h4&gt;Высота&lt;/h4&gt;
+      &lt;p&gt;Екатеринбург, ул. Малышева 71&lt;br&gt;Вход со стороны парковки&lt;br&gt;Работаем круглосуточно&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;h4&gt;Разделы&lt;/h4&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href="#sched"&gt;Расписание&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="#dirs"&gt;Направления&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="#coaches"&gt;Тренеры&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="#prices"&gt;Абонементы&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;h4&gt;Связь&lt;/h4&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href="tel:+73430000000"&gt;+7 343 000-00-00&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="mailto:club@example.ru"&gt;club@example.ru&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;Телеграм: @example&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="wrap"&gt;&lt;p class="foot__note"&gt;Демо-верстка для портфолио. Клуб, тренеры и цены вымышлены.&lt;/p&gt;&lt;/div&gt;
+&lt;/footer&gt;
+
+&lt;script src="app.js"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</template>
+<template id="src1" data-name="styles.css" data-lang="css" data-bytes="16410">/* Высота — стили фитнес-клуба.
+   1. Токены  2. База  3. Шапка  4. Герой  5. Фильтры
+   6. Расписание  7. Направления и тренеры  8. Абонементы
+   9. Вопросы  10. Модалка  11. Подвал */
+
+/* ---------- 1. Токены ---------- */
+/* Дизайн намеренно светлый. Объявляем схему явно, иначе авто-тёмная
+   тема браузера затемняет фон, оставляя тёмным и текст. */
+:root{
+  color-scheme:light;
+  --bg:#f5f5f3; --surface:#ffffff; --tint:#ececeb; --ink:#151618;
+  --ink-2:#5c6066; --ink-3:#8b9097; --line:#e0e0dd; --line-2:#c6c6c2;
+  --accent:#1b4dff; --accent-2:#0b2fb3; --full:#c0362c; --ok:#16875a;
+  --f-d:"Oswald",Impact,sans-serif;
+  --f-b:"Golos Text","Segoe UI",system-ui,sans-serif;
+  --f-m:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+
+/* ---------- 2. База ---------- */
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:400 clamp(.98rem,.95rem+.12vw,1.04rem)/1.62 var(--f-b);-webkit-font-smoothing:antialiased}
+body.locked{overflow:hidden}
+h1,h2,h3,h4{margin:0;font-family:var(--f-d);font-weight:500;line-height:1.08;
+  text-transform:uppercase;letter-spacing:.005em;text-wrap:balance}
+p{margin:0 0 .8em}p:last-child{margin-bottom:0}
+ul,ol,dl,dd{margin:0;padding:0}li{list-style:none}
+a{color:var(--accent)}
+svg{max-width:100%}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.wrap{width:min(1280px,100%);margin-inline:auto;padding-inline:clamp(16px,3.4vw,36px)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.mono{font-family:var(--f-m);font-size:.82rem;letter-spacing:.01em;font-variant-numeric:tabular-nums}
+
+.demobar{background:var(--ink);color:#c9ccd2;font-size:.8rem;padding:9px 0}
+.demobar .wrap{display:flex;gap:10px 20px;flex-wrap:wrap;align-items:center}
+.demobar a{color:#8fa6ff;font-weight:500}
+.demobar .sep{margin-left:auto}
+
+/* ---------- 3. Шапка ---------- */
+/* Шапка непрозрачная: сквозь полупрозрачную просвечивало содержимое. */
+.top{position:sticky;top:0;z-index:40;background:var(--bg);
+  border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:18px;min-height:66px}
+.logo{font-family:var(--f-d);font-size:1.6rem;font-weight:600;text-decoration:none;
+  text-transform:uppercase;color:var(--ink);letter-spacing:.02em}
+.logo span{color:var(--accent)}
+.nav{margin-left:auto;display:flex;gap:24px}
+.nav a{text-decoration:none;color:var(--ink-2);font-size:.93rem;padding-block:6px;
+  border-bottom:2px solid transparent}
+.nav a:hover,.nav a.is-active{color:var(--ink);border-bottom-color:var(--accent)}
+.top .cta{background:var(--accent);color:#fff;text-decoration:none;padding:12px 20px;
+  font-size:.92rem;font-weight:500;white-space:nowrap}
+.top .cta:hover{background:var(--accent-2)}
+.burger{display:none;width:42px;height:38px;border:1px solid var(--line-2);background:var(--surface);
+  position:relative;cursor:pointer;padding:0;margin-left:auto}
+.burger i{position:absolute;left:12px;right:12px;height:1.5px;background:var(--ink);
+  transition:transform .2s,opacity .2s}
+.burger i:nth-child(1){top:12px}.burger i:nth-child(2){top:18px}.burger i:nth-child(3){top:24px}
+.burger[aria-expanded="true"] i:nth-child(1){transform:translateY(6px) rotate(45deg)}
+.burger[aria-expanded="true"] i:nth-child(2){opacity:0}
+.burger[aria-expanded="true"] i:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
+@media(max-width:940px){
+  .burger{display:block}
+  .nav{position:absolute;left:0;right:0;top:100%;margin-left:0;flex-direction:column;gap:0;
+    background:var(--surface);border-bottom:1px solid var(--line);
+    padding:4px clamp(16px,3.4vw,36px) 12px}
+  .nav:not(.is-open){display:none}
+  .nav a{padding-block:13px;border-bottom:1px solid var(--line);border-bottom-width:1px}
+  .top .cta{display:none}
+}
+
+/* ---------- 4. Герой ---------- */
+.hero{padding-block:clamp(38px,5vw,76px) clamp(34px,4.5vw,64px)}
+.hero .wrap{display:grid;gap:clamp(30px,4vw,54px);align-items:end}
+@media(min-width:960px){.hero .wrap{grid-template-columns:1.15fr .85fr}}
+.kicker{font-family:var(--f-m);font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:1.4em}
+.hero h1{font-size:clamp(2.3rem,1.3rem+3.6vw,4.2rem);line-height:.98;letter-spacing:-.01em}
+.hero h1 span{color:var(--accent)}
+.lead{font-size:1.08rem;color:var(--ink-2);max-width:46ch;margin-top:1.2em}
+.btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+.btn{display:inline-block;text-decoration:none;padding:15px 28px;font:500 .98rem var(--f-b);
+  border:1px solid var(--ink);cursor:pointer;transition:background-color .15s,color .15s,border-color .15s}
+.btn--fill{background:var(--ink);color:#fff}
+.btn--fill:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn--line{background:transparent;color:var(--ink)}
+.btn--line:hover{background:var(--ink);color:#fff}
+
+.facts{display:grid;gap:1px;background:var(--line);border:1px solid var(--line)}
+@media(min-width:420px){.facts{grid-template-columns:repeat(2,1fr)}}
+.facts &gt; div{background:var(--surface);padding:18px 20px}
+.facts dt{font-family:var(--f-m);font-size:.76rem;color:var(--ink-3);letter-spacing:.04em}
+.facts dd{font-family:var(--f-d);font-size:1.5rem;margin-top:4px;text-transform:uppercase}
+
+/* ---------- Секции ---------- */
+.sec{padding-block:clamp(44px,6vw,86px);border-top:1px solid var(--line)}
+.sec--tint{background:var(--tint)}
+.sec__head{max-width:60ch;margin-bottom:clamp(24px,3.4vw,40px)}
+.sec h2{font-size:clamp(1.8rem,1.3rem+2vw,2.9rem)}
+.sec__head p{margin-top:.8em;color:var(--ink-2)}
+.eyeb{font-family:var(--f-m);font-size:.76rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:1.1em}
+
+/* ---------- 5. Фильтры ---------- */
+.filters{background:var(--surface);border:1px solid var(--line);
+  padding:clamp(16px,2.2vw,22px);margin-bottom:18px}
+.filters__row{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.filters__row + .filters__row{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.filters__lbl{font-family:var(--f-m);font-size:.76rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);flex:none}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);
+  padding:7px 13px;font:400 .86rem var(--f-b);cursor:pointer}
+.chip:hover{border-color:var(--ink);color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+.filters__row--inline{gap:10px 14px}
+.sel{display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--ink-2)}
+.sel select{font:400 .88rem var(--f-b);padding:9px 10px;border:1px solid var(--line-2);
+  background:var(--surface);color:var(--ink)}
+.check{display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--ink-2);cursor:pointer}
+.check input{accent-color:var(--accent);width:16px;height:16px;margin:0}
+.reset{margin-left:auto;background:none;border:1px solid var(--line-2);color:var(--ink-2);
+  padding:9px 14px;font:500 .86rem var(--f-b);cursor:pointer}
+.reset:hover{border-color:var(--ink);color:var(--ink)}
+@media(max-width:620px){.reset{margin-left:0;width:100%}}
+
+.found{color:var(--ink-3);padding-bottom:12px}
+
+/* ---------- 6. Расписание ---------- */
+/* Вкладки дней нужны только там, где семь колонок не влезают. */
+.days{display:none;gap:6px;padding-bottom:14px;overflow-x:auto}
+.day-tab{flex:none;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);
+  padding:10px 14px;font:500 .88rem var(--f-b);cursor:pointer;white-space:nowrap;text-align:center}
+.day-tab b{display:block;font-family:var(--f-d);font-size:1.05rem;text-transform:uppercase}
+.day-tab span{font-family:var(--f-m);font-size:.74rem;color:var(--ink-3)}
+.day-tab[aria-selected="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.day-tab[aria-selected="true"] span{color:#b9bdc4}
+
+.schedwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;
+  border:1px solid var(--line);background:var(--line)}
+.sched{display:grid;gap:1px;min-width:1050px;
+  grid-template-columns:repeat(7,minmax(146px,1fr))}
+.scrollnote{color:var(--ink-3);padding-top:10px}
+
+.col{background:var(--bg);display:flex;flex-direction:column}
+.col__h{background:var(--surface);border-bottom:1px solid var(--line);
+  padding:12px 14px}
+.col__h b{display:block;font-family:var(--f-d);font-size:1.05rem;text-transform:uppercase}
+.col__h span{font-family:var(--f-m);font-size:.74rem;color:var(--ink-3)}
+.col__h.is-today b{color:var(--accent)}
+.col__list{display:flex;flex-direction:column;gap:1px;background:var(--line);flex:1}
+.col__none{background:var(--bg);padding:18px 14px;color:var(--ink-3);font-size:.84rem}
+
+.cls{background:var(--surface);border:none;border-left:3px solid var(--line-2);
+  text-align:left;width:100%;padding:12px 13px;cursor:pointer;font-family:var(--f-b);
+  display:flex;flex-direction:column;gap:4px;transition:background-color .14s}
+.cls:hover{background:#f4f6ff}
+.cls[disabled]{cursor:not-allowed;opacity:.62}
+.cls[disabled]:hover{background:var(--surface)}
+.cls__t{font-family:var(--f-m);font-size:.84rem;font-weight:500;color:var(--ink)}
+.cls__n{font-family:var(--f-d);font-size:1.02rem;text-transform:uppercase;line-height:1.1;color:var(--ink)}
+.cls__meta{font-size:.78rem;color:var(--ink-3)}
+.cls__seats{font-family:var(--f-m);font-size:.76rem;margin-top:2px;color:var(--ok)}
+.cls__seats.low{color:#b5661a}
+.cls__seats.none{color:var(--full)}
+.cls--power{border-left-color:#1b4dff}
+.cls--yoga{border-left-color:#16875a}
+.cls--cardio{border-left-color:#d9681a}
+.cls--pool{border-left-color:#0f8fa8}
+.cls--fight{border-left-color:#8a2be2}
+.cls--dance{border-left-color:#c42a6b}
+
+/* Семь колонок не влезают — переключаемся на один день с вкладками. */
+@media(max-width:1100px){
+  .days{display:flex}
+  .schedwrap{overflow-x:visible;background:var(--surface)}
+  .sched{min-width:0;grid-template-columns:1fr}
+  .scrollnote{display:none}
+  .col:not(.is-shown){display:none}
+  .cls{padding:14px 16px}
+  .cls__n{font-size:1.1rem}
+}
+@media(min-width:1101px){.days{display:none!important}}
+
+.empty{background:var(--surface);border:1px solid var(--line);padding:46px 24px;text-align:center}
+.empty h3{font-size:1.25rem;margin-bottom:.5em}
+.empty p{color:var(--ink-2)}
+
+/* ---------- 7. Направления и тренеры ---------- */
+.cards{display:grid;gap:1px;background:var(--line);border:1px solid var(--line)}
+@media(min-width:560px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:960px){.cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.card{background:var(--surface);padding:clamp(20px,2.4vw,28px)}
+.card h3{font-size:1.3rem;margin-bottom:.5em}
+.card p{color:var(--ink-2);font-size:.95rem}
+.card__m{color:var(--ink-3);margin-top:1.1em}
+
+.coaches{display:grid;gap:clamp(18px,2.4vw,28px)}
+@media(min-width:520px){.coaches{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:980px){.coaches{grid-template-columns:repeat(4,1fr)}}
+.coach__ph{aspect-ratio:1;background:var(--tint);border:1px solid var(--line);
+  display:grid;place-items:center;margin-bottom:14px}
+.coach__ph span{font-family:var(--f-d);font-size:2.4rem;color:var(--accent)}
+.coach h3{font-size:1.12rem}
+.coach p{color:var(--ink-2);font-size:.9rem;margin-top:.4em}
+
+/* ---------- 8. Абонементы ---------- */
+.plans{display:grid;gap:1px;background:var(--line);border:1px solid var(--line)}
+@media(min-width:680px){.plans{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.plan{background:var(--surface);padding:clamp(22px,2.6vw,30px);display:flex;flex-direction:column}
+.plan--pick{background:#f4f6ff;border-top:3px solid var(--accent)}
+.plan__badge{color:var(--accent);text-transform:uppercase;letter-spacing:.1em;margin-bottom:1em}
+.plan h3{font-size:1.4rem}
+.plan__p{font-family:var(--f-d);font-size:2.2rem;margin:.3em 0 1.1em;
+  font-variant-numeric:tabular-nums;line-height:1}
+.plan__p span{display:block;font-family:var(--f-b);font-size:.86rem;color:var(--ink-3);
+  margin-top:6px;font-weight:400}
+.ticks{display:grid;gap:9px;margin-bottom:1.6em}
+.ticks li{position:relative;padding-left:22px;color:var(--ink-2);font-size:.94rem}
+.ticks li::before{content:"";position:absolute;left:0;top:.62em;width:10px;height:1px;
+  background:var(--accent)}
+.plan__b{margin-top:auto;background:none;border:1px solid var(--ink);color:var(--ink);
+  padding:14px;font:500 .95rem var(--f-b);cursor:pointer}
+.plan__b:hover{background:var(--ink);color:#fff}
+.plan__b--fill{background:var(--accent);border-color:var(--accent);color:#fff}
+.plan__b--fill:hover{background:var(--accent-2);border-color:var(--accent-2)}
+
+/* ---------- 9. Вопросы ---------- */
+.faq{border-top:1px solid var(--line)}
+.faq details{border-bottom:1px solid var(--line)}
+.faq summary{cursor:pointer;list-style:none;padding:19px 36px 19px 0;position:relative;
+  font-size:1.08rem;font-weight:500}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"";position:absolute;right:6px;top:50%;width:10px;height:10px;
+  border-right:1.5px solid var(--accent);border-bottom:1.5px solid var(--accent);
+  transform:translateY(-70%) rotate(45deg);transition:transform .2s}
+.faq details[open] summary::after{transform:translateY(-30%) rotate(-135deg)}
+.faq summary:hover{color:var(--accent)}
+.faq p{color:var(--ink-2);max-width:68ch;padding-bottom:21px}
+
+/* ---------- 10. Модалка ---------- */
+.modal{position:fixed;inset:0;z-index:70;display:grid;place-items:center;padding:16px}
+.modal[hidden]{display:none}
+.modal__bg{position:absolute;inset:0;background:rgba(21,22,24,.55)}
+.modal__box{position:relative;background:var(--surface);border:1px solid var(--line);
+  width:min(480px,100%);max-height:90vh;overflow-y:auto;padding:clamp(22px,3vw,32px)}
+.modal__x{position:absolute;right:10px;top:10px;background:var(--surface);
+  border:1px solid var(--line-2);width:34px;height:34px;cursor:pointer;
+  font-size:1.05rem;line-height:1;color:var(--ink-2)}
+.modal__x:hover{border-color:var(--ink);color:var(--ink)}
+.modal__dir{color:var(--accent);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.8em}
+.modal__box h2{font-size:1.6rem;margin-bottom:.7em}
+.modal__specs{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);
+  margin-bottom:20px}
+.modal__specs &gt; div{background:var(--surface);display:flex;justify-content:space-between;
+  gap:14px;padding:11px 14px;font-size:.9rem}
+.modal__specs dt{color:var(--ink-3)}
+.modal__specs dd{font-weight:500;text-align:right;font-variant-numeric:tabular-nums}
+.field{display:grid;gap:6px;margin-bottom:14px}
+.field label{font-size:.86rem;color:var(--ink-2)}
+.field input{font:400 1rem var(--f-b);padding:13px 14px;border:1px solid var(--line-2);
+  background:var(--surface);color:var(--ink)}
+.field input:focus{border-color:var(--accent)}
+.field input.bad{border-color:var(--full)}
+.modal__btn{width:100%;background:var(--accent);border:1px solid var(--accent);color:#fff;
+  padding:15px;font:500 1rem var(--f-b);cursor:pointer}
+.modal__btn:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.modal__msg{margin-top:12px;font-size:.88rem;min-height:1.3em;color:var(--full)}
+.modal__msg.ok{color:var(--ok)}
+
+/* ---------- 11. Подвал ---------- */
+.foot{background:var(--ink);color:#9ba1a9;padding-block:clamp(30px,4vw,50px);font-size:.9rem}
+.foot .wrap{display:grid;gap:24px}
+@media(min-width:560px){.foot .wrap{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:880px){.foot .wrap{grid-template-columns:1.5fr 1fr 1fr}}
+.foot h4{margin:0 0 .9em;color:#fff;font-family:var(--f-b);font-size:.76rem;
+  letter-spacing:.16em;text-transform:uppercase;font-weight:600}
+.foot a{color:#9ba1a9;text-decoration:none}
+.foot a:hover{color:#8fa6ff}
+.foot li{padding-block:3px}
+.foot__note{border-top:1px solid rgba(255,255,255,.12);margin-top:24px;padding-top:18px;
+  font-size:.84rem;color:#6e747c}
+
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+</template>
+<template id="src2" data-name="app.js" data-lang="javascript" data-bytes="16981">/* Высота — скрипты фитнес-клуба.
+   Расписание рисуется из массива занятий: семь колонок по дням,
+   а там, где они не влезают, — один день и вкладки сверху. */
+
+(function () {
+  'use strict';
+
+  /* Переход по якорю с поправкой на липкие панели.
+     scroll-margin-top работает не везде одинаково: при плавной прокрутке
+     и меняющейся высоте шапки браузер промахивается мимо цели, иногда
+     улетая в самый низ страницы. Поэтому считаем смещение сами. */
+  function stickyOffset() {
+    var h = 0;
+    ['.top', '.topbar', '.subnav'].forEach(function (sel) {
+      var el = document.querySelector(sel);
+      if (!el) return;
+      var pos = getComputedStyle(el).position;
+      if (pos === 'sticky' || pos === 'fixed') h += el.getBoundingClientRect().height;
+    });
+    return h + 16;
+  }
+
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest ? e.target.closest('a[href^="#"]') : null;
+    if (!a) return;
+    var id = a.getAttribute('href').slice(1);
+    if (!id) return;
+    var target = document.getElementById(id);
+    if (!target) return;
+    e.preventDefault();
+    var y = target.getBoundingClientRect().top + window.pageYOffset - stickyOffset();
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    try { history.replaceState(null, '', '#' + id); } catch (err) { /* песочница */ }
+  });
+
+  var $ = function (s) { return document.querySelector(s); };
+
+  /* ---------- данные ---------- */
+  // Латинские слаги для имён классов: цвет полосы зависит от направления.
+  var SLUG = {
+    'Силовые': 'power', 'Йога': 'yoga', 'Кардио': 'cardio',
+    'Бассейн': 'pool', 'Единоборства': 'fight', 'Танцы': 'dance'
+  };
+
+  var DAYS = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
+  var SHORT = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+
+  // d — день недели (0 = понедельник), cap — всего мест, taken — занято
+  var classes = [
+    { d:0, t:'07:00', dur:45, n:'Кардио-микс',      dir:'Кардио',       coach:'Орлов',  hall:'Большой зал', lvl:'любой',       cap:20, taken:14 },
+    { d:0, t:'09:30', dur:75, n:'Хатха-йога',       dir:'Йога',         coach:'Зимина', hall:'Малый зал',   lvl:'начинающий',  cap:14, taken:9  },
+    { d:0, t:'18:00', dur:55, n:'Силовая база',     dir:'Силовые',      coach:'Орлов',  hall:'Большой зал', lvl:'начинающий',  cap:12, taken:12 },
+    { d:0, t:'19:30', dur:60, n:'Бокс',             dir:'Единоборства', coach:'Карпов', hall:'Ринг',        lvl:'любой',       cap:16, taken:11 },
+
+    { d:1, t:'08:00', dur:45, n:'Аквааэробика',     dir:'Бассейн',      coach:'Шульга', hall:'Бассейн',     lvl:'любой',       cap:15, taken:7  },
+    { d:1, t:'12:30', dur:60, n:'Латина',           dir:'Танцы',        coach:'Зимина', hall:'Малый зал',   lvl:'начинающий',  cap:18, taken:5  },
+    { d:1, t:'18:30', dur:55, n:'Штанга',           dir:'Силовые',      coach:'Орлов',  hall:'Большой зал', lvl:'продолжающий',cap:12, taken:10 },
+    { d:1, t:'20:00', dur:75, n:'Виньяса',          dir:'Йога',         coach:'Зимина', hall:'Малый зал',   lvl:'продолжающий',cap:14, taken:13 },
+
+    { d:2, t:'07:00', dur:45, n:'Интервальная',     dir:'Кардио',       coach:'Орлов',  hall:'Большой зал', lvl:'любой',       cap:20, taken:16 },
+    { d:2, t:'10:00', dur:45, n:'Техника плавания', dir:'Бассейн',      coach:'Шульга', hall:'Бассейн',     lvl:'начинающий',  cap:10, taken:4  },
+    { d:2, t:'18:00', dur:60, n:'Кикбоксинг',       dir:'Единоборства', coach:'Карпов', hall:'Ринг',        lvl:'продолжающий',cap:16, taken:16 },
+    { d:2, t:'19:30', dur:55, n:'Силовая база',     dir:'Силовые',      coach:'Орлов',  hall:'Большой зал', lvl:'начинающий',  cap:12, taken:6  },
+
+    { d:3, t:'08:00', dur:75, n:'Хатха-йога',       dir:'Йога',         coach:'Зимина', hall:'Малый зал',   lvl:'любой',       cap:14, taken:8  },
+    { d:3, t:'13:00', dur:45, n:'Степ',             dir:'Кардио',       coach:'Шульга', hall:'Большой зал', lvl:'начинающий',  cap:20, taken:3  },
+    { d:3, t:'18:30', dur:55, n:'Гантели и вес',    dir:'Силовые',      coach:'Орлов',  hall:'Большой зал', lvl:'любой',       cap:12, taken:9  },
+    { d:3, t:'20:00', dur:60, n:'Современная',      dir:'Танцы',        coach:'Зимина', hall:'Малый зал',   lvl:'продолжающий',cap:18, taken:14 },
+
+    { d:4, t:'07:30', dur:45, n:'Аквааэробика',     dir:'Бассейн',      coach:'Шульга', hall:'Бассейн',     lvl:'любой',       cap:15, taken:11 },
+    { d:4, t:'12:00', dur:45, n:'Кардио-микс',      dir:'Кардио',       coach:'Орлов',  hall:'Большой зал', lvl:'любой',       cap:20, taken:6  },
+    { d:4, t:'18:00', dur:60, n:'Бокс',             dir:'Единоборства', coach:'Карпов', hall:'Ринг',        lvl:'начинающий',  cap:16, taken:8  },
+    { d:4, t:'19:30', dur:55, n:'Штанга',           dir:'Силовые',      coach:'Орлов',  hall:'Большой зал', lvl:'продолжающий',cap:12, taken:11 },
+
+    { d:5, t:'10:00', dur:75, n:'Виньяса',          dir:'Йога',         coach:'Зимина', hall:'Малый зал',   lvl:'любой',       cap:14, taken:5  },
+    { d:5, t:'11:30', dur:60, n:'Латина',           dir:'Танцы',        coach:'Зимина', hall:'Малый зал',   lvl:'любой',       cap:18, taken:9  },
+    { d:5, t:'13:00', dur:55, n:'Силовая база',     dir:'Силовые',      coach:'Карпов', hall:'Большой зал', lvl:'начинающий',  cap:12, taken:4  },
+
+    { d:6, t:'10:30', dur:45, n:'Техника плавания', dir:'Бассейн',      coach:'Шульга', hall:'Бассейн',     lvl:'любой',       cap:10, taken:6  },
+    { d:6, t:'12:00', dur:75, n:'Хатха-йога',       dir:'Йога',         coach:'Зимина', hall:'Малый зал',   lvl:'начинающий',  cap:14, taken:7  }
+  ];
+
+  /* ---------- даты текущей недели ---------- */
+  var monday = (function () {
+    var now = new Date();
+    var shift = (now.getDay() + 6) % 7;       // 0 = понедельник
+    var m = new Date(now);
+    m.setDate(now.getDate() - shift);
+    m.setHours(0, 0, 0, 0);
+    return m;
+  })();
+  var todayIndex = (new Date().getDay() + 6) % 7;
+
+  var MONTHS = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+  function dateLabel(i) {
+    var d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return d.getDate() + ' ' + MONTHS[d.getMonth()];
+  }
+
+  /* ---------- фильтры ---------- */
+  var grid = $('#sched-grid'), daysBox = $('#days'), found = $('#found'),
+      empty = $('#empty'), coachSel = $('#coach'), partSel = $('#part'), freeBox = $('#free');
+  var activeDay = todayIndex;
+
+  function dirs() {
+    return Array.prototype.slice
+      .call(document.querySelectorAll('#dirchips .chip[aria-pressed="true"]'))
+      .map(function (b) { return b.dataset.dir; });
+  }
+
+  function partOf(time) {
+    var h = parseInt(time.slice(0, 2), 10);
+    if (h &lt; 12) return 'morning';
+    if (h &lt; 17) return 'day';
+    return 'evening';
+  }
+
+  function visible() {
+    var ds = dirs(), coach = coachSel.value, part = partSel.value, onlyFree = freeBox.checked;
+    return classes.filter(function (c) {
+      if (ds.length &amp;&amp; ds.indexOf(c.dir) === -1) return false;
+      if (coach &amp;&amp; c.coach !== coach) return false;
+      if (part &amp;&amp; partOf(c.t) !== part) return false;
+      if (onlyFree &amp;&amp; c.taken &gt;= c.cap) return false;
+      return true;
+    });
+  }
+
+  /* ---------- отрисовка ---------- */
+  function seatsText(c) {
+    var left = c.cap - c.taken;
+    if (left &lt;= 0) return { cls: 'none', text: 'мест нет' };
+    if (left &lt;= 3) return { cls: 'low', text: 'осталось ' + left + ' из ' + c.cap };
+    return { cls: '', text: 'свободно ' + left + ' из ' + c.cap };
+  }
+
+  function endTime(c) {
+    var h = parseInt(c.t.slice(0, 2), 10), m = parseInt(c.t.slice(3), 10) + c.dur;
+    h += Math.floor(m / 60); m = m % 60;
+    return (h &lt; 10 ? '0' : '') + h + ':' + (m &lt; 10 ? '0' : '') + m;
+  }
+
+  function render() {
+    var list = visible();
+
+    grid.innerHTML = DAYS.map(function (name, i) {
+      var dayItems = list.filter(function (c) { return c.d === i; })
+                         .sort(function (a, b) { return a.t.localeCompare(b.t); });
+
+      var body = dayItems.length
+        ? dayItems.map(function (c) {
+            var s = seatsText(c), full = c.taken &gt;= c.cap;
+            return '&lt;button class="cls cls--' + SLUG[c.dir] + '" type="button" data-id="' + classes.indexOf(c) + '"' +
+                   (full ? ' disabled' : '') + '&gt;' +
+                     '&lt;span class="cls__t"&gt;' + c.t + '–' + endTime(c) + '&lt;/span&gt;' +
+                     '&lt;span class="cls__n"&gt;' + c.n + '&lt;/span&gt;' +
+                     '&lt;span class="cls__meta"&gt;' + c.coach + ' · ' + c.hall + '&lt;/span&gt;' +
+                     '&lt;span class="cls__seats ' + s.cls + '"&gt;' + s.text + '&lt;/span&gt;' +
+                   '&lt;/button&gt;';
+          }).join('')
+        : '&lt;p class="col__none"&gt;Занятий нет&lt;/p&gt;';
+
+      return '&lt;div class="col' + (i === activeDay ? ' is-shown' : '') + '" data-d="' + i + '"&gt;' +
+               '&lt;div class="col__h' + (i === todayIndex ? ' is-today' : '') + '"&gt;' +
+                 '&lt;b&gt;' + name + '&lt;/b&gt;&lt;span&gt;' + dateLabel(i) +
+                 (i === todayIndex ? ' · сегодня' : '') + '&lt;/span&gt;' +
+               '&lt;/div&gt;' +
+               '&lt;div class="col__list"&gt;' + body + '&lt;/div&gt;' +
+             '&lt;/div&gt;';
+    }).join('');
+
+    daysBox.innerHTML = SHORT.map(function (s, i) {
+      var n = list.filter(function (c) { return c.d === i; }).length;
+      return '&lt;button class="day-tab" type="button" role="tab" data-d="' + i + '"' +
+             ' aria-selected="' + (i === activeDay) + '"&gt;' +
+               '&lt;b&gt;' + s + '&lt;/b&gt;&lt;span&gt;' + (n ? n + ' зан.' : '—') + '&lt;/span&gt;' +
+             '&lt;/button&gt;';
+    }).join('');
+
+    found.textContent = 'Показано ' + list.length + ' занятий из ' + classes.length;
+    empty.hidden = list.length &gt; 0;
+    $('.schedwrap').hidden = list.length === 0;
+  }
+
+  /* ---------- переключение дня ---------- */
+  daysBox.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-d]');
+    if (!b) return;
+    activeDay = parseInt(b.dataset.d, 10);
+    render();
+  });
+
+  /* ---------- модалка записи ---------- */
+  var modal = $('#modal'), form = $('#m-form'), msg = $('#m-msg'),
+      nameIn = $('#m-name'), telIn = $('#m-tel'), lastFocus = null, currentId = -1;
+
+  function openModal(id) {
+    currentId = id;
+    var c = classes[id], s = seatsText(c);
+    lastFocus = document.activeElement;
+
+    $('#m-dir').textContent = c.dir + ' · уровень: ' + c.lvl;
+    $('#m-title').textContent = c.n;
+    $('#m-specs').innerHTML =
+      '&lt;div&gt;&lt;dt&gt;Когда&lt;/dt&gt;&lt;dd&gt;' + DAYS[c.d] + ', ' + dateLabel(c.d) + '&lt;/dd&gt;&lt;/div&gt;' +
+      '&lt;div&gt;&lt;dt&gt;Время&lt;/dt&gt;&lt;dd&gt;' + c.t + '–' + endTime(c) + ' · ' + c.dur + ' мин&lt;/dd&gt;&lt;/div&gt;' +
+      '&lt;div&gt;&lt;dt&gt;Тренер&lt;/dt&gt;&lt;dd&gt;' + c.coach + '&lt;/dd&gt;&lt;/div&gt;' +
+      '&lt;div&gt;&lt;dt&gt;Зал&lt;/dt&gt;&lt;dd&gt;' + c.hall + '&lt;/dd&gt;&lt;/div&gt;' +
+      '&lt;div&gt;&lt;dt&gt;Места&lt;/dt&gt;&lt;dd&gt;' + s.text + '&lt;/dd&gt;&lt;/div&gt;';
+
+    msg.textContent = ''; msg.classList.remove('ok');
+    nameIn.value = ''; telIn.value = '';
+    nameIn.classList.remove('bad'); telIn.classList.remove('bad');
+    $('#m-submit').disabled = false;
+    $('#m-submit').textContent = 'Записаться';
+
+    modal.hidden = false;
+    document.body.classList.add('locked');
+    nameIn.focus();
+  }
+
+  function closeModal() {
+    modal.hidden = true;
+    document.body.classList.remove('locked');
+    if (lastFocus) lastFocus.focus();
+  }
+
+  grid.addEventListener('click', function (e) {
+    var b = e.target.closest('.cls');
+    if (b &amp;&amp; !b.disabled) openModal(parseInt(b.dataset.id, 10));
+  });
+
+  modal.addEventListener('click', function (e) {
+    if (e.target.closest('[data-close]')) closeModal();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' &amp;&amp; !modal.hidden) closeModal();
+  });
+
+  /* фокус не уходит за пределы открытой модалки */
+  modal.addEventListener('keydown', function (e) {
+    if (e.key !== 'Tab') return;
+    var able = modal.querySelectorAll('button, input, [href]');
+    var first = able[0], last = able[able.length - 1];
+    if (e.shiftKey &amp;&amp; document.activeElement === first) { last.focus(); e.preventDefault(); }
+    else if (!e.shiftKey &amp;&amp; document.activeElement === last) { first.focus(); e.preventDefault(); }
+  });
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = nameIn.value.trim();
+    var tel = telIn.value.replace(/[^\d+]/g, '');
+
+    nameIn.classList.remove('bad'); telIn.classList.remove('bad');
+    msg.classList.remove('ok');
+
+    if (name.length &lt; 2) {
+      msg.textContent = 'Напишите имя — хотя бы две буквы.';
+      nameIn.classList.add('bad'); nameIn.focus(); return;
+    }
+    if (tel.replace(/\D/g, '').length &lt; 11) {
+      msg.textContent = 'Телефон нужен из 11 цифр, вместе с кодом страны.';
+      telIn.classList.add('bad'); telIn.focus(); return;
+    }
+
+    var c = classes[currentId];
+    c.taken = Math.min(c.cap, c.taken + 1);
+
+    msg.classList.add('ok');
+    msg.textContent = 'Записали. Это демо — заявка никуда не ушла, но счётчик мест уменьшился.';
+    $('#m-submit').disabled = true;
+    $('#m-submit').textContent = 'Готово';
+    render();
+  });
+
+  /* ---------- слушатели фильтров ---------- */
+  document.querySelectorAll('#dirchips .chip').forEach(function (b) {
+    b.addEventListener('click', function () {
+      b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+      render();
+    });
+  });
+  coachSel.addEventListener('change', render);
+  partSel.addEventListener('change', render);
+  freeBox.addEventListener('change', render);
+  $('#reset').addEventListener('click', function () {
+    document.querySelectorAll('#dirchips .chip').forEach(function (b) {
+      b.setAttribute('aria-pressed', 'false');
+    });
+    coachSel.value = ''; partSel.value = ''; freeBox.checked = false;
+    render();
+  });
+
+  /* ---------- бургер и подсветка раздела ---------- */
+  var burger = $('#burger'), nav = $('#nav');
+  burger.addEventListener('click', function () {
+    var open = nav.classList.toggle('is-open');
+    burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  nav.addEventListener('click', function (e) {
+    if (e.target.tagName === 'A') {
+      nav.classList.remove('is-open');
+      burger.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  var links = Array.prototype.slice.call(nav.querySelectorAll('a'));
+  var secs = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+  if (window.IntersectionObserver) {
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        var i = secs.indexOf(en.target);
+        links.forEach(function (a, n) { a.classList.toggle('is-active', n === i); });
+      });
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    secs.forEach(function (s) { if (s) io.observe(s); });
+  }
+
+  /* ---------- кнопки абонементов ---------- */
+  document.querySelectorAll('.plan__b').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var was = b.textContent;
+      b.textContent = 'Это демо';
+      setTimeout(function () { b.textContent = was; }, 1500);
+    });
+  });
+
+  render();
+})();
+</template>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var codeEl = document.getElementById('code');
+  var gutter = document.getElementById('gutter');
+  var stat   = document.getElementById('stat');
+  var copyBtn = document.getElementById('copy');
+  var tabs   = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  var currentText = '';
+
+  function sourceOf(id) {
+    var node = document.getElementById(id);
+    // Источники лежат в <template>, поэтому берём текст из его содержимого.
+    return node.content ? node.content.textContent : node.textContent;
+  }
+
+  function show(id) {
+    var node = document.getElementById(id);
+    var text = sourceOf(id);
+    var lang = node.dataset.lang;
+    currentText = text;
+
+    var painted = false;
+    if (window.hljs && typeof hljs.highlight === 'function') {
+      try {
+        codeEl.innerHTML = hljs.highlight(text, { language: lang }).value;
+        painted = true;
+      } catch (e) {
+        painted = false;
+      }
+    }
+    // Без подсветки код всё равно должен быть виден.
+    if (!painted) codeEl.textContent = text;
+
+    var lines = text.split('\n').length;
+    var nums = '';
+    for (var i = 1; i <= lines; i++) nums += i + '\n';
+    gutter.textContent = nums;
+
+    var bytes = node.dataset.bytes;
+    stat.textContent = node.dataset.name + ' · ' + lines + ' строк · ' +
+      (bytes < 1024 ? bytes + ' Б' : (bytes / 1024).toFixed(1) + ' КБ');
+  }
+
+  function select(tab) {
+    tabs.forEach(function (x) { x.setAttribute('aria-selected', x === tab ? 'true' : 'false'); });
+    show(tab.dataset.src);
+  }
+
+  tabs.forEach(function (t, i) {
+    t.addEventListener('click', function () { select(t); });
+    t.addEventListener('keydown', function (e) {
+      var n = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : -1;
+      if (n < 0 || n >= tabs.length) return;
+      tabs[n].focus(); select(tabs[n]); e.preventDefault();
+    });
+  });
+
+  copyBtn.addEventListener('click', function () {
+    var reset = function (text, ms) {
+      copyBtn.textContent = text;
+      setTimeout(function () {
+        copyBtn.textContent = 'Скопировать файл';
+        copyBtn.classList.remove('ok');
+      }, ms);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(currentText).then(function () {
+        copyBtn.classList.add('ok');
+        reset('Скопировано', 1600);
+      }, function () {
+        reset('Не вышло — выделите вручную', 2200);
+      });
+    } else {
+      reset('Буфер недоступен', 2200);
+    }
+  });
+
+  select(tabs[0]);
+})();
+</script>
+</body>
+</html>

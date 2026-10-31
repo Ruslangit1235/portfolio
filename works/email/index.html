@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Письмо «Обжарка» — верстка рассылки</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="demobar">
+  <div class="wrap">
+    <span>Демо-проект для портфолио. Письмо сверстано на таблицах, как требуют почтовые клиенты.</span>
+    <span class="sep"></span>
+    <a href="code.html">Смотреть код</a>
+    <a href="../../index.html">← В портфолио</a>
+  </div>
+</div>
+
+<div class="wrap intro">
+  <p class="eyeb mono">Email-верстка</p>
+  <h1>Рассылка для кофейни «Обжарка»</h1>
+  <p class="lead">Письма нельзя верстать как сайты: Outlook не понимает flexbox, Gmail вырезает внешние стили, а тёмная тема в почте iOS перекрашивает фон за вас. Поэтому здесь таблицы, атрибуты ширины и стили прямо в тегах — та самая верстка двадцатилетней давности, которая до сих пор единственная работает.</p>
+  <ul class="meta mono">
+    <li>table-layout</li><li>inline CSS</li><li>600 px</li><li>Gmail · Outlook · Mail.ru</li>
+  </ul>
+</div>
+
+<!-- ---------- окно почтового клиента ---------- -->
+<div class="wrap">
+  <div class="app" id="app" data-pane="mail">
+
+    <!-- строка заголовка приложения -->
+    <div class="app__bar">
+      <span class="app__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="app__name mono">Почта — demo@example.ru</span>
+      <span class="app__tools">
+        <button class="tbtn" type="button" data-view="desktop" aria-pressed="true">600</button>
+        <button class="tbtn" type="button" data-view="mobile" aria-pressed="false">360</button>
+        <span class="app__div" aria-hidden="true"></span>
+        <button class="tbtn" type="button" id="theme" aria-pressed="false">Тёмная тема</button>
+      </span>
+    </div>
+
+    <div class="app__body">
+
+      <!-- папки -->
+      <nav class="folders" aria-label="Папки">
+        <button class="compose" type="button">Написать</button>
+        <ul>
+          <li><a href="#" class="is-current">Входящие <b>3</b></a></li>
+          <li><a href="#">Помеченные</a></li>
+          <li><a href="#">Отправленные</a></li>
+          <li><a href="#">Черновики <b>1</b></a></li>
+          <li><a href="#">Спам</a></li>
+          <li><a href="#">Корзина</a></li>
+        </ul>
+        <p class="folders__note mono">Панель папок скрывается, когда окну не хватает ширины.</p>
+      </nav>
+
+      <!-- список писем -->
+      <div class="list" id="list">
+        <div class="list__head">
+          <span class="mono">Входящие · 4 письма</span>
+        </div>
+        <ul>
+          <li>
+            <button class="msg is-open" type="button" data-msg="1">
+              <span class="msg__top"><b>Обжарка</b><span class="msg__t mono">09:14</span></span>
+              <span class="msg__s">Новая партия эфиопии уже в обжарке</span>
+              <span class="msg__p">Партия 12 кг приехала на прошлой неделе. Обжарили светло…</span>
+              <span class="msg__dot" aria-label="Непрочитанное"></span>
+            </button>
+          </li>
+          <li>
+            <button class="msg" type="button" data-msg="2">
+              <span class="msg__top"><b>СДЭК</b><span class="msg__t mono">08:02</span></span>
+              <span class="msg__s">Посылка 1098234 передана курьеру</span>
+              <span class="msg__p">Доставим сегодня с 14:00 до 18:00…</span>
+              <span class="msg__dot" aria-label="Непрочитанное"></span>
+            </button>
+          </li>
+          <li>
+            <button class="msg" type="button" data-msg="3">
+              <span class="msg__top"><b>Анна Ковалёва</b><span class="msg__t mono">вчера</span></span>
+              <span class="msg__s">Профиль обжарки на вторник</span>
+              <span class="msg__p">Скинула таблицу с температурами, посмотри до цеха…</span>
+              <span class="msg__dot" aria-label="Непрочитанное"></span>
+            </button>
+          </li>
+          <li>
+            <button class="msg" type="button" data-msg="4">
+              <span class="msg__top"><b>Хостинг</b><span class="msg__t mono">28 сен</span></span>
+              <span class="msg__s">Счёт за октябрь оплачен</span>
+              <span class="msg__p">Платёж на 540 ₽ прошёл, домен продлён до…</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <!-- чтение письма -->
+      <div class="read" id="read">
+        <div class="read__head">
+          <button class="back" type="button" id="back">← К письмам</button>
+          <h2 class="read__subj">Новая партия эфиопии уже в обжарке</h2>
+          <dl class="read__from">
+            <div><dt>От</dt><dd>Обжарка &lt;hello@obzharka.example&gt;</dd></div>
+            <div><dt>Кому</dt><dd>demo@example.ru</dd></div>
+            <div><dt>Когда</dt><dd>сегодня, 09:14</dd></div>
+          </dl>
+        </div>
+
+        <div class="read__body">
+          <div class="stage" id="stage" data-view="desktop">
+
+<!-- ================= НАЧАЛО ПИСЬМА ================= -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+  <tr>
+    <td align="center" style="padding:0;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" class="mail" style="border-collapse:collapse;width:100%;max-width:600px;background-color:#ffffff;font-family:Arial,Helvetica,sans-serif;">
+
+        <!-- шапка -->
+        <tr>
+          <td align="center" bgcolor="#241812" style="padding:26px 24px;">
+            <span style="font-family:Georgia,'Times New Roman',serif;font-size:24px;color:#f3eadf;letter-spacing:1px;">Об<span style="color:#b5652f;">жар</span>ка</span>
+          </td>
+        </tr>
+
+        <!-- герой -->
+        <tr>
+          <td style="padding:32px 32px 18px 32px;" class="pad">
+            <h1 style="margin:0 0 14px 0;font-family:Georgia,'Times New Roman',serif;font-size:28px;line-height:1.2;color:#241812;font-weight:normal;">Эфиопия Иргачеффе<br>вернулась в ротацию</h1>
+            <p style="margin:0;font-size:16px;line-height:1.6;color:#4a3b31;">Партия 12 кг приехала на прошлой неделе. Обжарили светло — под фильтр и воронку. В чашке жасмин, лимонная цедра и послевкусие чёрного чая.</p>
+          </td>
+        </tr>
+
+        <!-- кнопка -->
+        <tr>
+          <td style="padding:6px 32px 30px 32px;" class="pad">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+              <tr>
+                <td bgcolor="#b5652f" style="padding:0;">
+                  <a href="#" style="display:block;padding:14px 30px;font-size:15px;color:#ffffff;text-decoration:none;font-weight:bold;">Заказать 250 г — 890 ₽</a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- две колонки -->
+        <tr>
+          <td style="padding:0 32px 8px 32px;" class="pad">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;border-top:1px solid #e6d8c6;">
+              <tr>
+                <td width="50%" valign="top" class="col" style="padding:22px 12px 22px 0;">
+                  <p style="margin:0 0 6px 0;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#b5652f;">Обжарка</p>
+                  <p style="margin:0;font-size:15px;line-height:1.5;color:#4a3b31;">Светлая, снята сразу после первого крэка — на 13-й минуте.</p>
+                </td>
+                <td width="50%" valign="top" class="col" style="padding:22px 0 22px 12px;">
+                  <p style="margin:0 0 6px 0;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#b5652f;">Отправка</p>
+                  <p style="margin:0;font-size:15px;line-height:1.5;color:#4a3b31;">В день заказа, если оформить до 15:00 по Москве.</p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- цитата -->
+        <tr>
+          <td style="padding:8px 32px 28px 32px;" class="pad">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;background-color:#f3eadf;">
+              <tr>
+                <td style="padding:20px 22px;border-left:3px solid #b5652f;">
+                  <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:17px;line-height:1.5;color:#241812;font-style:italic;">«Берём ровно столько, сколько успеваем попробовать сами».</p>
+                  <p style="margin:10px 0 0 0;font-size:13px;color:#8c7561;">Анна Ковалёва, обжарщик</p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- две карточки товара -->
+        <tr>
+          <td style="padding:0 32px 30px 32px;" class="pad">
+            <p style="margin:0 0 14px 0;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#b5652f;">Тоже в наличии</p>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+              <tr>
+                <td width="50%" valign="top" class="col" style="padding:0 8px 0 0;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;border:1px solid #e6d8c6;">
+                    <tr><td style="padding:16px;">
+                      <p style="margin:0 0 4px 0;font-size:15px;font-weight:bold;color:#241812;">Колумбия Уила</p>
+                      <p style="margin:0 0 10px 0;font-size:13px;line-height:1.5;color:#8c7561;">шоколад, слива, орех</p>
+                      <p style="margin:0;font-family:Georgia,serif;font-size:19px;color:#b5652f;">740 ₽</p>
+                    </td></tr>
+                  </table>
+                </td>
+                <td width="50%" valign="top" class="col" style="padding:0 0 0 8px;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;border:1px solid #e6d8c6;">
+                    <tr><td style="padding:16px;">
+                      <p style="margin:0 0 4px 0;font-size:15px;font-weight:bold;color:#241812;">Бразилия Серрадо</p>
+                      <p style="margin:0 0 10px 0;font-size:13px;line-height:1.5;color:#8c7561;">карамель, арахис, изюм</p>
+                      <p style="margin:0;font-family:Georgia,serif;font-size:19px;color:#b5652f;">690 ₽</p>
+                    </td></tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- подвал -->
+        <tr>
+          <td bgcolor="#241812" style="padding:24px 32px;" class="pad">
+            <p style="margin:0 0 8px 0;font-size:13px;line-height:1.6;color:#c9b8a4;">Обжарка · Ярославль, ул. Свободы 12 · +7 900 000-00-00</p>
+            <p style="margin:0;font-size:12px;line-height:1.6;color:#8c7561;">Вы получили письмо, потому что подписались на рассылку. <a href="#" style="color:#d98a4e;">Отписаться</a></p>
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ================= КОНЕЦ ПИСЬМА ================= -->
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="app__foot mono" id="status">Ширина письма 600 px · светлая тема клиента</div>
+  </div>
+</div>
+
+<!-- ---------- что внутри ---------- -->
+<div class="wrap notes">
+  <h2>Три решения, без которых письмо развалится</h2>
+  <div class="notes__grid">
+    <article class="note">
+      <p class="note__n mono">01</p>
+      <h3>Ширина задана дважды</h3>
+      <p>Атрибут <code>width="600"</code> для Outlook, который игнорирует CSS, и <code>max-width</code> в стиле для всех остальных. Одного мало: без атрибута письмо в Outlook расползается на всю ширину окна.</p>
+    </article>
+    <article class="note">
+      <p class="note__n mono">02</p>
+      <h3>Кнопка — это таблица</h3>
+      <p>Фон кладётся на ячейку через <code>bgcolor</code>, а ссылка внутри растягивается через <code>display:block</code>. Тег <code>button</code> в письме не работает, а ссылка без растягивания кликается только по тексту.</p>
+    </article>
+    <article class="note">
+      <p class="note__n mono">03</p>
+      <h3>Колонки схлопываются условно</h3>
+      <p>Медиазапрос в <code>head</code> письма превращает ячейки в блоки на узком экране. Gmail его читает, Outlook игнорирует и оставляет две колонки — поэтому обе версии должны выглядеть прилично.</p>
+    </article>
+  </div>
+  <p class="notes__cta">
+    <a class="btn" href="code.html">Открыть исходный код письма</a>
+  </p>
+</div>
+
+<footer class="foot">
+  <div class="wrap">
+    <p>Демо-верстка для портфолио. Компания и письма вымышлены.</p>
+    <p class="mono">3 файла · таблицы · без зависимостей</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

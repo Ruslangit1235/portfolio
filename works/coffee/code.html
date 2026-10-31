@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Код · Обжарка — кофе малыми партиями</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#0e1113; --panel:#161a1d; --panel-2:#12161a; --line:#262c2f; --line-2:#394144;
+    --ink:#e8ebe6; --ink-2:#9aa39e; --ink-3:#79837f;
+    --accent:#8b7bff; --mark:#e0ab43;
+    --f-d:"Unbounded","Trebuchet MS",sans-serif;
+    --f-b:"Golos Text","Segoe UI",system-ui,sans-serif;
+    --f-m:"JetBrains Mono",ui-monospace,Consolas,monospace;
+    color-scheme:dark;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:400 .98rem/1.6 var(--f-b);
+    -webkit-font-smoothing:antialiased}
+  h1{margin:0;font-family:var(--f-d);font-weight:600;letter-spacing:-.03em;
+    font-size:clamp(1.35rem,1.1rem+1.3vw,2rem);line-height:1.1}
+  p{margin:0}
+  a{color:var(--accent)}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+  .wrap{width:min(1280px,100%);margin-inline:auto;padding-inline:clamp(16px,3vw,32px)}
+  .mono{font-family:var(--f-m);font-size:.82rem;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+
+  .bar{border-bottom:1px solid var(--line);padding-block:11px;font-size:.82rem}
+  .bar .wrap{display:flex;gap:10px 20px;flex-wrap:wrap;align-items:center}
+  .bar .sep{margin-left:auto}
+  .bar a{font-weight:500;text-decoration:none}
+  .bar a:hover{text-decoration:underline}
+
+  header.head{padding-block:clamp(24px,4vw,40px) 20px}
+  .kind{color:var(--mark);text-transform:uppercase;letter-spacing:.14em;margin-bottom:1em}
+  .note{color:var(--ink-2);max-width:72ch;margin-top:1em}
+
+  .toolbar{position:sticky;top:0;z-index:10;background:var(--bg);
+    border-bottom:1px solid var(--line);margin-bottom:14px}
+  .toolbar::before{content:"";position:absolute;left:0;right:0;top:-18px;height:18px;
+    background:var(--bg)}
+  .tabs{display:flex;flex-wrap:wrap;gap:6px;padding-block:14px 0}
+  .tab{background:transparent;border:1px solid var(--line-2);color:var(--ink-2);
+    padding:9px 15px;font:400 .84rem var(--f-m);cursor:pointer;white-space:nowrap}
+  .tab:hover{color:var(--ink);border-color:var(--ink-3)}
+  .tab[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .tab em{font-style:normal;opacity:.6;margin-left:7px}
+
+  .meta{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;
+    padding:12px 0;color:var(--ink-3)}
+  .copy{margin-left:auto;background:transparent;border:1px solid var(--line-2);color:var(--ink-2);
+    padding:9px 14px;font:400 .82rem var(--f-m);cursor:pointer}
+  .copy:hover{color:var(--ink);border-color:var(--ink-3)}
+  .copy.ok{color:var(--accent);border-color:var(--accent)}
+
+  .viewer{display:flex;border:1px solid var(--line);background:var(--panel);margin-bottom:44px}
+  /* white-space:pre обязателен: это div, а не pre. Без него переносы строк
+     схлопываются в пробелы, колонка номеров растягивается на всю ширину
+     и выдавливает код в нулевую ширину. */
+  .gutter{flex:none;white-space:pre;padding:18px 12px 18px 16px;
+    border-right:1px solid var(--line);color:var(--ink-3);text-align:right;
+    user-select:none;background:var(--panel-2)}
+  .gutter,.viewer pre{font:400 .82rem/1.72 var(--f-m);margin:0}
+  /* min-width:0 обязателен: без него flex-элемент не сжимается
+     ниже ширины содержимого и страница уезжает по горизонтали. */
+  .viewer pre{flex:1;min-width:0;padding:18px 20px;overflow-x:auto;white-space:pre;tab-size:2}
+  .viewer code{font:inherit;background:none;padding:0;display:block}
+
+  .warn{border:1px solid var(--mark);color:var(--mark);padding:14px 16px;margin-bottom:20px;
+    font-size:.88rem}
+
+  /* подсветка */
+  .hljs-comment,.hljs-quote{color:#6b7671;font-style:italic}
+  .hljs-tag,.hljs-punctuation{color:#9aa39e}
+  .hljs-name,.hljs-selector-tag{color:#8b7bff}
+  .hljs-attr,.hljs-attribute,.hljs-selector-class,.hljs-selector-id{color:#e0ab43}
+  .hljs-string,.hljs-meta .hljs-string{color:#8fc9a8}
+  .hljs-number,.hljs-literal{color:#d98fb0}
+  .hljs-keyword,.hljs-selector-pseudo{color:#7fb7e8}
+  .hljs-built_in,.hljs-title,.hljs-title.function_{color:#e8ebe6}
+  .hljs-variable,.hljs-property,.hljs-params{color:#c9d1cb}
+  .hljs-meta{color:#79837f}
+
+  footer.foot{border-top:1px solid var(--line);padding-block:24px;color:var(--ink-3);font-size:.86rem}
+  footer.foot .wrap{display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
+  @media(max-width:620px){.gutter{display:none}}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="wrap">
+    <span class="mono" style="color:var(--ink-3)">Исходный код демо-проекта</span>
+    <span class="sep"></span>
+    <a href="index.html">← Открыть сам сайт</a>
+    <a href="../../index.html">В портфолио</a>
+  </div>
+</div>
+
+<header class="head">
+  <div class="wrap">
+    <p class="kind mono">Лендинг</p>
+    <h1>Обжарка — кофе малыми партиями</h1>
+    <p class="note">Разметка, стили и скрипт разнесены по трём файлам. В CSS сверху лежат токены цветов и шрифтов, дальше блоки в том же порядке, в каком идут секции страницы.</p>
+  </div>
+</header>
+
+<div class="wrap">
+  <noscript>
+    <p class="warn">Для подсветки и переключения файлов нужен JavaScript. Исходники всё равно
+      можно прочитать: они лежат в этой же странице ниже.</p>
+  </noscript>
+
+  <div class="toolbar">
+    <div class="tabs" role="tablist" aria-label="Файлы проекта">
+      <button class="tab" role="tab" data-src="src0" aria-selected="true">index.html<em>440</em></button>
+      <button class="tab" role="tab" data-src="src1" aria-selected="false">styles.css<em>241</em></button>
+      <button class="tab" role="tab" data-src="src2" aria-selected="false">app.js<em>113</em></button>
+    </div>
+
+    <div class="meta mono">
+      <span id="stat"></span>
+      <button class="copy" type="button" id="copy">Скопировать файл</button>
+    </div>
+  </div>
+
+  <div class="viewer">
+    <div class="gutter" id="gutter" aria-hidden="true"></div>
+    <pre><code id="code"></code></pre>
+  </div>
+</div>
+
+<footer class="foot">
+  <div class="wrap">
+    <p>Демо-проект из портфолио верстальщика</p>
+    <p class="mono">3 файла · 794 строк · 42.1 КБ</p>
+  </div>
+</footer>
+
+<template id="src0" data-name="index.html" data-lang="xml" data-bytes="23514">&lt;!DOCTYPE html&gt;
+&lt;html lang="ru"&gt;
+&lt;head&gt;
+&lt;meta charset="utf-8"&gt;
+&lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+&lt;title&gt;Обжарка — кофе малыми партиями&lt;/title&gt;
+&lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;
+&lt;link rel="preconnect" href="https://fonts.gstatic.com" crossorigin&gt;
+&lt;link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&amp;family=Golos+Text:wght@400;500;600&amp;display=swap"&gt;
+&lt;link rel="stylesheet" href="styles.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+&lt;div class="demobar"&gt;
+  &lt;div class="wrap"&gt;
+    &lt;span&gt;Демо-проект для портфолио. Компания вымышленная.&lt;/span&gt;
+    &lt;span class="sep"&gt;&lt;/span&gt;
+    &lt;a href="code.html"&gt;Смотреть код&lt;/a&gt;
+    &lt;a href="../../index.html"&gt;← В портфолио&lt;/a&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;header class="top"&gt;
+  &lt;div class="wrap"&gt;
+    &lt;a class="logo" href="#top"&gt;Об&lt;em&gt;жар&lt;/em&gt;ка&lt;/a&gt;
+    &lt;button class="burger" id="burger" type="button" aria-expanded="false" aria-controls="menu"&gt;
+      &lt;i&gt;&lt;/i&gt;&lt;i&gt;&lt;/i&gt;&lt;i&gt;&lt;/i&gt;&lt;span class="vh"&gt;Меню&lt;/span&gt;
+    &lt;/button&gt;
+    &lt;nav class="menu" id="menu" aria-label="Разделы"&gt;
+      &lt;a href="#beans"&gt;Сорта&lt;/a&gt;
+      &lt;a href="#roast"&gt;Обжарка&lt;/a&gt;
+      &lt;a href="#brew"&gt;Заваривание&lt;/a&gt;
+      &lt;a href="#revs"&gt;Отзывы&lt;/a&gt;
+      &lt;a href="#faq"&gt;Доставка&lt;/a&gt;
+    &lt;/nav&gt;
+    &lt;a class="cta" href="#sub"&gt;Подписка&lt;/a&gt;
+  &lt;/div&gt;
+&lt;/header&gt;
+
+&lt;main id="top"&gt;
+
+  &lt;section class="hero"&gt;
+    &lt;div class="wrap"&gt;
+      &lt;div&gt;
+        &lt;p class="kicker"&gt;Обжариваем в Ярославле с 2019 года&lt;/p&gt;
+        &lt;h1&gt;Партия — &lt;em&gt;12 кг.&lt;/em&gt;&lt;br&gt;Не больше.&lt;/h1&gt;
+        &lt;p class="hero__sub"&gt;Маленький барабан, ручной контроль профиля и отправка в тот же день, когда зерно остыло. Кофе приезжает к вам моложе, чем стоит на полке магазина.&lt;/p&gt;
+        &lt;div class="btns"&gt;
+          &lt;a class="btn btn--fill" href="#beans"&gt;Выбрать зерно&lt;/a&gt;
+          &lt;a class="btn btn--line" href="#roast"&gt;Как мы обжариваем&lt;/a&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;div class="heroart"&gt;
+        &lt;svg class="beansvg" viewBox="0 0 420 380" role="img" aria-label="Кофейное зерно в разрезе"&gt;
+          &lt;defs&gt;
+            &lt;radialGradient id="g1" cx="38%" cy="30%"&gt;
+              &lt;stop offset="0%" stop-color="#6b4527"/&gt;
+              &lt;stop offset="55%" stop-color="#43291a"/&gt;
+              &lt;stop offset="100%" stop-color="#1e120b"/&gt;
+            &lt;/radialGradient&gt;
+            &lt;linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"&gt;
+              &lt;stop offset="0%" stop-color="#d98a4e"/&gt;
+              &lt;stop offset="100%" stop-color="#8d4a1f"/&gt;
+            &lt;/linearGradient&gt;
+          &lt;/defs&gt;
+          &lt;ellipse cx="210" cy="196" rx="150" ry="150" fill="url(#g1)"/&gt;
+          &lt;path d="M210 52 C150 120 150 272 210 340 C268 272 268 120 210 52 Z" fill="#170d07" opacity=".55"/&gt;
+          &lt;path d="M210 60 C162 124 162 268 210 332" fill="none" stroke="url(#g2)" stroke-width="3" opacity=".9"/&gt;
+          &lt;ellipse cx="210" cy="196" rx="150" ry="150" fill="none" stroke="rgba(243,234,223,.16)"/&gt;
+          &lt;ellipse cx="210" cy="196" rx="118" ry="118" fill="none" stroke="rgba(181,101,47,.45)"/&gt;
+          &lt;g opacity=".5" stroke="#b5652f" stroke-width="2" stroke-linecap="round"&gt;
+            &lt;path d="M196 26 C186 16 196 8 190 0" fill="none"/&gt;
+            &lt;path d="M222 30 C212 20 222 12 216 4" fill="none"/&gt;
+          &lt;/g&gt;
+        &lt;/svg&gt;
+        &lt;dl class="batch"&gt;
+          &lt;div&gt;
+            &lt;dt&gt;Когда уезжает к вам&lt;/dt&gt;
+            &lt;dd&gt;&lt;b&gt;на 3-й день&lt;/b&gt;после обжарки&lt;/dd&gt;
+          &lt;/div&gt;
+          &lt;div&gt;
+            &lt;dt&gt;Партия этой недели&lt;/dt&gt;
+            &lt;dd&gt;Эфиопия Иргачеффе&lt;br&gt;12 кг&lt;/dd&gt;
+          &lt;/div&gt;
+          &lt;div&gt;
+            &lt;dt&gt;День обжарки&lt;/dt&gt;
+            &lt;dd&gt;каждый вторник&lt;/dd&gt;
+          &lt;/div&gt;
+        &lt;/dl&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;!-- сорта --&gt;
+  &lt;section class="sec sec--white" id="beans"&gt;
+    &lt;div class="wrap"&gt;
+      &lt;div class="sec__head"&gt;
+        &lt;p class="eyeb"&gt;Ассортимент&lt;/p&gt;
+        &lt;h2&gt;Три сорта в ротации&lt;/h2&gt;
+        &lt;p&gt;Меняем позиции, когда заканчивается партия зелёного зерна, а не когда захотелось обновить сайт. Шкала под описанием показывает степень обжарки.&lt;/p&gt;
+      &lt;/div&gt;
+
+      &lt;div class="beans"&gt;
+        &lt;article class="bean"&gt;
+          &lt;p class="bean__o"&gt;Эфиопия&lt;/p&gt;
+          &lt;h3&gt;Иргачеффе&lt;/h3&gt;
+          &lt;p class="bean__d"&gt;Мытая обработка, высота 1900 м. Светлая обжарка под фильтр: кислотность заметная, тело лёгкое.&lt;/p&gt;
+          &lt;ul class="bean__notes"&gt;&lt;li&gt;жасмин&lt;/li&gt;&lt;li&gt;лимон&lt;/li&gt;&lt;li&gt;чёрный чай&lt;/li&gt;&lt;/ul&gt;
+          &lt;div class="roastmeter"&gt;
+            &lt;div class="roastmeter__l"&gt;&lt;span&gt;светлая&lt;/span&gt;&lt;span&gt;тёмная&lt;/span&gt;&lt;/div&gt;
+            &lt;div class="roastmeter__t"&gt;&lt;span class="roastmeter__p" style="left:18%"&gt;&lt;/span&gt;&lt;/div&gt;
+          &lt;/div&gt;
+          &lt;div class="bean__f"&gt;&lt;span class="bean__p"&gt;890 ₽&lt;/span&gt;&lt;button class="bean__b" type="button"&gt;250 г&lt;/button&gt;&lt;/div&gt;
+        &lt;/article&gt;
+
+        &lt;article class="bean"&gt;
+          &lt;p class="bean__o"&gt;Колумбия&lt;/p&gt;
+          &lt;h3&gt;Уила&lt;/h3&gt;
+          &lt;p class="bean__d"&gt;Классика для эспрессо и для турки. Средняя обжарка, прощает ошибки в помоле и температуре воды.&lt;/p&gt;
+          &lt;ul class="bean__notes"&gt;&lt;li&gt;тёмный шоколад&lt;/li&gt;&lt;li&gt;слива&lt;/li&gt;&lt;li&gt;орех&lt;/li&gt;&lt;/ul&gt;
+          &lt;div class="roastmeter"&gt;
+            &lt;div class="roastmeter__l"&gt;&lt;span&gt;светлая&lt;/span&gt;&lt;span&gt;тёмная&lt;/span&gt;&lt;/div&gt;
+            &lt;div class="roastmeter__t"&gt;&lt;span class="roastmeter__p" style="left:54%"&gt;&lt;/span&gt;&lt;/div&gt;
+          &lt;/div&gt;
+          &lt;div class="bean__f"&gt;&lt;span class="bean__p"&gt;740 ₽&lt;/span&gt;&lt;button class="bean__b" type="button"&gt;250 г&lt;/button&gt;&lt;/div&gt;
+        &lt;/article&gt;
+
+        &lt;article class="bean"&gt;
+          &lt;p class="bean__o"&gt;Бразилия&lt;/p&gt;
+          &lt;h3&gt;Серрадо&lt;/h3&gt;
+          &lt;p class="bean__d"&gt;Натуральная обработка. Плотное тело и сладость, хорошо держит молоко — берут для капучино.&lt;/p&gt;
+          &lt;ul class="bean__notes"&gt;&lt;li&gt;карамель&lt;/li&gt;&lt;li&gt;арахис&lt;/li&gt;&lt;li&gt;изюм&lt;/li&gt;&lt;/ul&gt;
+          &lt;div class="roastmeter"&gt;
+            &lt;div class="roastmeter__l"&gt;&lt;span&gt;светлая&lt;/span&gt;&lt;span&gt;тёмная&lt;/span&gt;&lt;/div&gt;
+            &lt;div class="roastmeter__t"&gt;&lt;span class="roastmeter__p" style="left:76%"&gt;&lt;/span&gt;&lt;/div&gt;
+          &lt;/div&gt;
+          &lt;div class="bean__f"&gt;&lt;span class="bean__p"&gt;690 ₽&lt;/span&gt;&lt;button class="bean__b" type="button"&gt;250 г&lt;/button&gt;&lt;/div&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;!-- обжарка --&gt;
+  &lt;section class="sec sec--dark" id="roast"&gt;
+    &lt;div class="wrap"&gt;
+      &lt;div class="sec__head"&gt;
+        &lt;p class="eyeb"&gt;Процесс&lt;/p&gt;
+        &lt;h2&gt;Что происходит с зерном&lt;/h2&gt;
+        &lt;p&gt;Восемнадцать минут, за которые зелёное зерно становится тем, что вы мелете утром. Ниже — реальный профиль последней партии эфиопии.&lt;/p&gt;
+      &lt;/div&gt;
+
+      &lt;figure class="profile" style="margin:0"&gt;
+        &lt;figcaption&gt;
+          &lt;span&gt;Профиль обжарки · Эфиопия Иргачеффе · 12 кг&lt;/span&gt;
+          &lt;span class="profile__leg"&gt;
+            &lt;span&gt;&lt;i&gt;&lt;/i&gt; температура зерна&lt;/span&gt;
+            &lt;span&gt;&lt;i class="dot"&gt;&lt;/i&gt; ключевые точки&lt;/span&gt;
+          &lt;/span&gt;
+        &lt;/figcaption&gt;
+
+        &lt;div class="chartwrap"&gt;
+        &lt;svg class="chart" viewBox="0 0 660 272" role="img"
+             aria-label="График: температура зерна растёт от 90 градусов на первой минуте до 208 градусов на восемнадцатой"&gt;
+          &lt;!-- сетка и подписи оси Y --&gt;
+          &lt;line class="grid" x1="56" y1="210" x2="616" y2="210"/&gt;
+          &lt;line class="grid" x1="56" y1="151.5" x2="616" y2="151.5"/&gt;
+          &lt;line class="grid" x1="56" y1="93.1" x2="616" y2="93.1"/&gt;
+          &lt;line class="grid" x1="56" y1="34.6" x2="616" y2="34.6"/&gt;
+          &lt;text class="lbl" x="48" y="214" text-anchor="end"&gt;80°&lt;/text&gt;
+          &lt;text class="lbl" x="48" y="155.5" text-anchor="end"&gt;120°&lt;/text&gt;
+          &lt;text class="lbl" x="48" y="97.1" text-anchor="end"&gt;160°&lt;/text&gt;
+          &lt;text class="lbl" x="48" y="38.6" text-anchor="end"&gt;200°&lt;/text&gt;
+
+          &lt;!-- ось X --&gt;
+          &lt;line class="axis" x1="56" y1="210" x2="616" y2="210"/&gt;
+          &lt;text class="lbl" x="56"  y="230" text-anchor="middle"&gt;0&lt;/text&gt;
+          &lt;text class="lbl" x="149" y="230" text-anchor="middle"&gt;3&lt;/text&gt;
+          &lt;text class="lbl" x="242" y="230" text-anchor="middle"&gt;6&lt;/text&gt;
+          &lt;text class="lbl" x="335" y="230" text-anchor="middle"&gt;9&lt;/text&gt;
+          &lt;text class="lbl" x="429" y="230" text-anchor="middle"&gt;12&lt;/text&gt;
+          &lt;text class="lbl" x="522" y="230" text-anchor="middle"&gt;15&lt;/text&gt;
+          &lt;text class="lbl" x="616" y="230" text-anchor="middle"&gt;18&lt;/text&gt;
+          &lt;text class="lbl" x="336" y="252" text-anchor="middle"&gt;минуты от загрузки&lt;/text&gt;
+
+          &lt;!-- кривая --&gt;
+          &lt;polyline class="curve"
+            points="56,63.8 87,195.4 149,166.2 242,122.3 335,85.8 460,40.5 523,31.7 616,22.9"/&gt;
+
+          &lt;!-- ключевые точки --&gt;
+          &lt;circle class="mark" cx="87" cy="195.4" r="4.5"/&gt;
+          &lt;text class="note" x="99" y="199"&gt;поворотная точка · 90°&lt;/text&gt;
+          &lt;circle class="mark" cx="242" cy="122.3" r="4.5"/&gt;
+          &lt;text class="note" x="254" y="126"&gt;начало Майяра · 140°&lt;/text&gt;
+          &lt;circle class="mark" cx="460" cy="40.5" r="4.5"/&gt;
+          &lt;text class="note" x="452" y="30" text-anchor="end"&gt;первый крэк · 196°&lt;/text&gt;
+        &lt;/svg&gt;
+        &lt;/div&gt;
+        &lt;p class="chartnote"&gt;График листается вправо →&lt;/p&gt;
+      &lt;/figure&gt;
+
+      &lt;div class="stages"&gt;
+        &lt;article class="stage"&gt;
+          &lt;p class="stage__n"&gt;01&lt;/p&gt;
+          &lt;h3&gt;Сушка · 0–6 мин&lt;/h3&gt;
+          &lt;p&gt;Зерно отдаёт влагу и желтеет. Здесь важна ровная температура: скачок — и обжарка пойдёт пятнами.&lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class="stage"&gt;
+          &lt;p class="stage__n"&gt;02&lt;/p&gt;
+          &lt;h3&gt;Майяр · 6–13 мин&lt;/h3&gt;
+          &lt;p&gt;Появляются сахара и запах хлеба. На этом отрезке решается, каким будет вкус в чашке.&lt;/p&gt;
+        &lt;/article&gt;
+        &lt;article class="stage"&gt;
+          &lt;p class="stage__n"&gt;03&lt;/p&gt;
+          &lt;h3&gt;Первый крэк · 13–18 мин&lt;/h3&gt;
+          &lt;p&gt;Зерно щёлкает и растёт в объёме. Снимаем сразу после — или держим дольше, если нужен эспрессо.&lt;/p&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;!-- заваривание --&gt;
+  &lt;section class="sec" id="brew"&gt;
+    &lt;div class="wrap"&gt;
+      &lt;div class="sec__head"&gt;
+        &lt;p class="eyeb"&gt;Рецепты&lt;/p&gt;
+        &lt;h2&gt;Как заварить дома&lt;/h2&gt;
+        &lt;p&gt;Три способа, которыми пьём сами. Пропорции даны для 250 г пачки — хватит примерно на двадцать порций.&lt;/p&gt;
+      &lt;/div&gt;
+
+      &lt;div class="tabs" role="tablist" aria-label="Способы заваривания"&gt;
+        &lt;button class="tab" role="tab" id="t-v60"  aria-controls="p-v60"  aria-selected="true"&gt;Воронка V60&lt;/button&gt;
+        &lt;button class="tab" role="tab" id="t-aero" aria-controls="p-aero" aria-selected="false"&gt;Аэропресс&lt;/button&gt;
+        &lt;button class="tab" role="tab" id="t-turk" aria-controls="p-turk" aria-selected="false"&gt;Турка&lt;/button&gt;
+      &lt;/div&gt;
+
+      &lt;div class="brew" role="tabpanel" id="p-v60" aria-labelledby="t-v60"&gt;
+        &lt;div class="brew__fig"&gt;
+          &lt;svg viewBox="0 0 160 160" width="150" height="150" role="img" aria-label="Воронка V60"&gt;
+            &lt;path d="M34 42 L126 42 L80 126 Z" fill="none" stroke="#241812" stroke-width="3" stroke-linejoin="round"/&gt;
+            &lt;path d="M46 58 L114 58 L80 118 Z" fill="#b5652f" opacity=".2"/&gt;
+            &lt;line x1="26" y1="42" x2="134" y2="42" stroke="#241812" stroke-width="3" stroke-linecap="round"/&gt;
+            &lt;rect x="62" y="126" width="36" height="8" fill="#241812"/&gt;
+            &lt;path d="M70 134 L90 134 L94 150 L66 150 Z" fill="none" stroke="#241812" stroke-width="3" stroke-linejoin="round"/&gt;
+          &lt;/svg&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;dl&gt;
+            &lt;div&gt;&lt;dt&gt;Кофе&lt;/dt&gt;&lt;dd&gt;15 г&lt;/dd&gt;&lt;/div&gt;
+            &lt;div&gt;&lt;dt&gt;Вода&lt;/dt&gt;&lt;dd&gt;250 мл, 93 °C&lt;/dd&gt;&lt;/div&gt;
+            &lt;div&gt;&lt;dt&gt;Помол&lt;/dt&gt;&lt;dd&gt;средний, как поваренная соль&lt;/dd&gt;&lt;/div&gt;
+            &lt;div&gt;&lt;dt&gt;Время&lt;/dt&gt;&lt;dd&gt;2:30&lt;/dd&gt;&lt;/div&gt;
+          &lt;/dl&gt;
+          &lt;ol class="brew__steps"&gt;
+            &lt;li&gt;Промойте фильтр кипятком и слейте воду из чашки.&lt;/li&gt;
+            &lt;li&gt;Влейте 45 мл и дайте зерну раскрыться 30 секунд.&lt;/li&gt;
+            &lt;li&gt;Долейте до 150 мл круговыми движениями от центра.&lt;/li&gt;
+            &lt;li&gt;Долейте до 250 мл и дождитесь, пока вода уйдёт.&lt;/li&gt;
+          &lt;/ol&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;div class="brew" role="tabpanel" id="p-aero" aria-labelledby="t-aero" hidden&gt;
+        &lt;div class="brew__fig"&gt;
+          &lt;svg viewBox="0 0 160 160" width="150" height="150" role="img" aria-label="Аэропресс"&gt;
+            &lt;rect x="56" y="34" width="48" height="86" fill="none" stroke="#241812" stroke-width="3"/&gt;
+            &lt;rect x="60" y="70" width="40" height="46" fill="#b5652f" opacity=".2"/&gt;
+            &lt;rect x="64" y="14" width="32" height="22" fill="none" stroke="#241812" stroke-width="3"/&gt;
+            &lt;line x1="50" y1="120" x2="110" y2="120" stroke="#241812" stroke-width="3" stroke-linecap="round"/&gt;
+            &lt;path d="M66 126 L94 126 L98 150 L62 150 Z" fill="none" stroke="#241812" stroke-width="3" stroke-linejoin="round"/&gt;
+          &lt;/svg&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;dl&gt;
+            &lt;div&gt;&lt;dt&gt;Кофе&lt;/dt&gt;&lt;dd&gt;16 г&lt;/dd&gt;&lt;/div&gt;
+            &lt;div&gt;&lt;dt&gt;Вода&lt;/dt&gt;&lt;dd&gt;220 мл, 85 °C&lt;/dd&gt;&lt;/div&gt;
+            &lt;div&gt;&lt;dt&gt;Помол&lt;/dt&gt;&lt;dd&gt;мелкий, как сахарная пудра&lt;/dd&gt;&lt;/div&gt;
+            &lt;div&gt;&lt;dt&gt;Время&lt;/dt&gt;&lt;dd&gt;1:40&lt;/dd&gt;&lt;/div&gt;
+          &lt;/dl&gt;
+          &lt;ol class="brew__steps"&gt;
+            &lt;li&gt;Соберите аэропресс в перевёрнутом положении.&lt;/li&gt;
+            &lt;li&gt;Засыпьте кофе, влейте всю воду и размешайте дважды.&lt;/li&gt;
+            &lt;li&gt;Настаивайте минуту, затем закрутите крышку с фильтром.&lt;/li&gt;
+            &lt;li&gt;Переверните на чашку и выдавите за 30 секунд.&lt;/li&gt;
+          &lt;/ol&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;div class="brew" role="tabpanel" id="p-turk" aria-labelledby="t-turk" hidden&gt;
+        &lt;div class="brew__fig"&gt;
+          &lt;svg viewBox="0 0 160 160" width="150" height="150" role="img" aria-label="Турка"&gt;
+            &lt;path d="M52 46 L108 46 L98 122 L62 122 Z" fill="none" stroke="#241812" stroke-width="3" stroke-linejoin="round"/&gt;
+            &lt;path d="M58 76 L102 76 L96 118 L64 118 Z" fill="#b5652f" opacity=".25"/&gt;
+            &lt;path d="M108 52 L140 60" stroke="#241812" stroke-width="3" stroke-linecap="round"/&gt;
+            &lt;path d="M46 44 L58 40 L54 50 Z" fill="#241812"/&gt;
+            &lt;path d="M40 140 Q80 128 120 140" fill="none" stroke="#b5652f" stroke-width="3" stroke-linecap="round"/&gt;
+          &lt;/svg&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;dl&gt;
+            &lt;div&gt;&lt;dt&gt;Кофе&lt;/dt&gt;&lt;dd&gt;8 г&lt;/dd&gt;&lt;/div&gt;
+            &lt;div&gt;&lt;dt&gt;Вода&lt;/dt&gt;&lt;dd&gt;100 мл, холодная&lt;/dd&gt;&lt;/div&gt;
+            &lt;div&gt;&lt;dt&gt;Помол&lt;/dt&gt;&lt;dd&gt;очень мелкий, в пыль&lt;/dd&gt;&lt;/div&gt;
+            &lt;div&gt;&lt;dt&gt;Время&lt;/dt&gt;&lt;dd&gt;4:00 на слабом огне&lt;/dd&gt;&lt;/div&gt;
+          &lt;/dl&gt;
+          &lt;ol class="brew__steps"&gt;
+            &lt;li&gt;Засыпьте кофе в холодную воду и размешайте один раз.&lt;/li&gt;
+            &lt;li&gt;Грейте на малом огне, не отходя от плиты.&lt;/li&gt;
+            &lt;li&gt;Снимите, как только пенка поднимется к краю.&lt;/li&gt;
+            &lt;li&gt;Дайте осесть полминуты и разливайте.&lt;/li&gt;
+          &lt;/ol&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;!-- отзывы --&gt;
+  &lt;section class="sec sec--white" id="revs"&gt;
+    &lt;div class="wrap"&gt;
+      &lt;div class="sec__head"&gt;
+        &lt;p class="eyeb"&gt;Отзывы&lt;/p&gt;
+        &lt;h2&gt;Что пишут подписчики&lt;/h2&gt;
+      &lt;/div&gt;
+      &lt;div class="revs"&gt;
+        &lt;article class="rev"&gt;
+          &lt;p&gt;«Первый раз вижу, чтобы на пачке стояла дата обжарки, а не только срок годности».&lt;/p&gt;
+          &lt;footer&gt;Ирина, Кострома · подписка 6 месяцев&lt;/footer&gt;
+        &lt;/article&gt;
+        &lt;article class="rev"&gt;
+          &lt;p&gt;«Попросил помолоть под турку — помололи и написали от руки, сколько класть».&lt;/p&gt;
+          &lt;footer&gt;Павел, Ярославль · разовый заказ&lt;/footer&gt;
+        &lt;/article&gt;
+        &lt;article class="rev"&gt;
+          &lt;p&gt;«Бразилия в капучино держит вкус даже через овсяное молоко. Беру теперь по два кило».&lt;/p&gt;
+          &lt;footer&gt;Кофейня «Столько-то», Вологда&lt;/footer&gt;
+        &lt;/article&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;!-- подписка --&gt;
+  &lt;section class="sub" id="sub"&gt;
+    &lt;div class="wrap"&gt;
+      &lt;div&gt;
+        &lt;h2&gt;Подписка на кофе&lt;/h2&gt;
+        &lt;p&gt;Присылаем свежую партию с выбранной периодичностью. Сорт выбираете вы или доверяете нам — тогда каждый раз приходит что-то новое.&lt;/p&gt;
+      &lt;/div&gt;
+
+      &lt;form class="form" id="subform" novalidate&gt;
+        &lt;fieldset style="border:none;padding:0;margin:0;flex:1 1 100%"&gt;
+          &lt;legend class="vh"&gt;Как часто присылать&lt;/legend&gt;
+          &lt;div class="opts"&gt;
+            &lt;label class="opt"&gt;
+              &lt;input type="radio" name="freq" value="2" data-price="890" checked&gt;
+              &lt;span&gt;&lt;b&gt;2 недели&lt;/b&gt;890 ₽ за отправку&lt;/span&gt;
+            &lt;/label&gt;
+            &lt;label class="opt"&gt;
+              &lt;input type="radio" name="freq" value="4" data-price="790"&gt;
+              &lt;span&gt;&lt;b&gt;4 недели&lt;/b&gt;790 ₽ за отправку&lt;/span&gt;
+            &lt;/label&gt;
+            &lt;label class="opt"&gt;
+              &lt;input type="radio" name="freq" value="8" data-price="740"&gt;
+              &lt;span&gt;&lt;b&gt;8 недель&lt;/b&gt;740 ₽ за отправку&lt;/span&gt;
+            &lt;/label&gt;
+          &lt;/div&gt;
+        &lt;/fieldset&gt;
+
+        &lt;label class="vh" for="mail"&gt;Электронная почта&lt;/label&gt;
+        &lt;input id="mail" type="email" name="mail" placeholder="Ваша почта" required&gt;
+        &lt;button type="submit"&gt;Оформить&lt;/button&gt;
+        &lt;p class="form__total" id="total"&gt;Раз в 2 недели · 890 ₽ за отправку · примерно 1 930 ₽ в месяц&lt;/p&gt;
+        &lt;p class="form__msg" id="formmsg" role="status"&gt;&lt;/p&gt;
+      &lt;/form&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;!-- доставка --&gt;
+  &lt;section class="sec" id="faq"&gt;
+    &lt;div class="wrap"&gt;
+      &lt;div class="sec__head"&gt;
+        &lt;p class="eyeb"&gt;Доставка и оплата&lt;/p&gt;
+        &lt;h2&gt;Частые вопросы&lt;/h2&gt;
+      &lt;/div&gt;
+      &lt;div class="faq"&gt;
+        &lt;details&gt;
+          &lt;summary&gt;Когда отправляете заказ?&lt;/summary&gt;
+          &lt;p&gt;Обжариваем по вторникам, отправляем в среду утром. Заказ, сделанный до вечера понедельника, попадает в ближайшую партию. Всё, что позже, уедет через неделю — свежим, а не залежавшимся.&lt;/p&gt;
+        &lt;/details&gt;
+        &lt;details&gt;
+          &lt;summary&gt;Сколько идёт посылка?&lt;/summary&gt;
+          &lt;p&gt;По Ярославлю — курьером в день отправки. По России Почтой или СДЭКом: 2–5 дней в центральную часть, до 9 дней за Урал. Трек-номер присылаем в письме.&lt;/p&gt;
+        &lt;/details&gt;
+        &lt;details&gt;
+          &lt;summary&gt;Можно помолоть?&lt;/summary&gt;
+          &lt;p&gt;Да, укажите способ заваривания в комментарии к заказу. Но если дома есть кофемолка — берите зерно: молотый кофе теряет аромат за неделю.&lt;/p&gt;
+        &lt;/details&gt;
+        &lt;details&gt;
+          &lt;summary&gt;Что если кофе не понравился?&lt;/summary&gt;
+          &lt;p&gt;Напишите нам в течение двух недель. Заменим на другой сорт или вернём деньги без вопросов — вскрытая пачка не мешает.&lt;/p&gt;
+        &lt;/details&gt;
+        &lt;details&gt;
+          &lt;summary&gt;Работаете с кофейнями?&lt;/summary&gt;
+          &lt;p&gt;Да, от 5 кг в месяц цена оптовая. Бесплатно настраиваем помол под вашу кофемашину и проводим калибровку на месте, если вы в Ярославской области.&lt;/p&gt;
+        &lt;/details&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+&lt;/main&gt;
+
+&lt;footer class="foot"&gt;
+  &lt;div class="wrap"&gt;
+    &lt;div&gt;
+      &lt;h4&gt;Обжарка&lt;/h4&gt;
+      &lt;p&gt;Ярославль, ул. Свободы 12&lt;br&gt;Обжарочный цех и точка самовывоза&lt;br&gt;Пн–Пт, 9:00–18:00&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;h4&gt;Разделы&lt;/h4&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href="#beans"&gt;Сорта&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="#roast"&gt;Обжарка&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="#brew"&gt;Заваривание&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="#faq"&gt;Доставка&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/div&gt;
+    &lt;div&gt;
+      &lt;h4&gt;Связь&lt;/h4&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href="tel:+79000000000"&gt;+7 900 000-00-00&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="mailto:hello@example.ru"&gt;hello@example.ru&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;Телеграм: @example&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="wrap"&gt;&lt;p class="foot__note"&gt;Демо-верстка для портфолио. Компания, цены и отзывы вымышлены.&lt;/p&gt;&lt;/div&gt;
+&lt;/footer&gt;
+
+&lt;script src="app.js"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</template>
+<template id="src1" data-name="styles.css" data-lang="css" data-bytes="14767">/* Обжарка — стили лендинга.
+   1. Токены  2. База  3. Шапка  4. Герой  5. Сорта
+   6. Профиль обжарки  7. Заваривание  8. Отзывы
+   9. Подписка  10. Вопросы  11. Подвал */
+
+/* Дизайн намеренно светлый. Объявляем схему явно, иначе авто-тёмная
+   тема браузера затемняет фон, оставляя тёмным и текст. */
+:root{
+  color-scheme:light;
+  --bean:#241812; --bean-2:#33231a; --cream:#f3eadf; --cream-2:#e6d8c6; --white:#fffdfa;
+  --copper:#b5652f; --copper-lt:#d98a4e; --muted:#8c7561; --text-2:#4a3b31;
+  --f-d:"Playfair Display",Georgia,serif; --f-b:"Golos Text","Segoe UI",system-ui,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--cream);color:var(--bean);
+  font:400 clamp(1rem,.97rem+.15vw,1.08rem)/1.65 var(--f-b);-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{margin:0;font-family:var(--f-d);font-weight:700;line-height:1.08;text-wrap:balance}
+p{margin:0 0 .85em}p:last-child{margin-bottom:0}
+ul,ol,dl,dd{margin:0;padding:0}li{list-style:none}
+a{color:inherit}
+img,svg{max-width:100%}
+:focus-visible{outline:2px solid var(--copper);outline-offset:3px}
+.wrap{width:min(1140px,100%);margin-inline:auto;padding-inline:clamp(16px,4vw,40px)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+
+.demobar{background:var(--bean);color:var(--cream-2);font-size:.8rem;padding:9px 0}
+.demobar .wrap{display:flex;gap:10px 20px;flex-wrap:wrap;align-items:center}
+.demobar a{color:var(--copper-lt);font-weight:500}
+.demobar .sep{margin-left:auto}
+
+/* ---------- шапка ---------- */
+/* Шапка непрозрачная: при полупрозрачной сквозь неё просвечивало
+   содержимое, которое уезжает под шапку при прокрутке. */
+.top{position:sticky;top:0;z-index:40;background:var(--cream);
+  border-bottom:1px solid var(--cream-2)}
+.top .wrap{display:flex;align-items:center;gap:20px;min-height:70px}
+.logo{font-family:var(--f-d);font-size:1.5rem;font-weight:700;text-decoration:none;letter-spacing:-.01em}
+.logo em{color:var(--copper);font-style:normal}
+.menu{margin-left:auto;display:flex;gap:26px}
+.menu a{text-decoration:none;font-size:.94rem;color:var(--text-2);padding-block:6px;
+  border-bottom:1px solid transparent}
+.menu a:hover,.menu a.is-active{border-bottom-color:var(--copper);color:var(--bean)}
+.top .cta{background:var(--bean);color:var(--cream);text-decoration:none;
+  padding:12px 20px;font-size:.92rem;font-weight:500;white-space:nowrap}
+.top .cta:hover{background:var(--copper)}
+.burger{display:none;width:42px;height:38px;border:1px solid var(--cream-2);
+  background:var(--white);position:relative;cursor:pointer;padding:0}
+.burger i{position:absolute;left:12px;right:12px;height:1.5px;background:var(--bean);
+  transition:transform .2s,opacity .2s}
+.burger i:nth-child(1){top:12px}.burger i:nth-child(2){top:18px}.burger i:nth-child(3){top:24px}
+.burger[aria-expanded="true"] i:nth-child(1){transform:translateY(6px) rotate(45deg)}
+.burger[aria-expanded="true"] i:nth-child(2){opacity:0}
+.burger[aria-expanded="true"] i:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
+@media(max-width:880px){
+  .menu{position:absolute;left:0;right:0;top:100%;flex-direction:column;gap:0;
+    background:var(--white);border-bottom:1px solid var(--cream-2);padding:4px clamp(16px,4vw,40px) 12px}
+  .menu:not(.is-open){display:none}
+  .menu a{padding-block:13px;border-bottom:1px solid var(--cream-2)}
+  .burger{display:block;margin-left:auto}
+  .top .cta{display:none}
+}
+
+/* ---------- герой ---------- */
+.hero{padding-block:clamp(44px,6vw,86px) clamp(46px,7vw,92px)}
+.hero .wrap{display:grid;gap:clamp(34px,5vw,60px);align-items:center}
+@media(min-width:900px){.hero .wrap{grid-template-columns:1.06fr .94fr}}
+.kicker{font-size:.78rem;letter-spacing:.2em;text-transform:uppercase;color:var(--copper);
+  margin-bottom:1.5em;display:flex;align-items:center;gap:10px}
+.kicker::before{content:"";width:26px;height:1px;background:var(--copper)}
+.hero h1{font-size:clamp(2.1rem,1.25rem+3.1vw,3.6rem)}
+.hero h1 em{font-style:italic;font-weight:500;color:var(--copper)}
+.hero__sub{margin-top:1.1em;max-width:44ch;color:var(--text-2);font-size:1.1rem}
+.btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+.btn{display:inline-block;text-decoration:none;padding:15px 28px;font-weight:500;font-size:.98rem;
+  border:1px solid var(--bean);cursor:pointer;font-family:var(--f-b);
+  transition:background-color .15s,color .15s,border-color .15s}
+.btn--fill{background:var(--bean);color:var(--cream)}
+.btn--fill:hover{background:var(--copper);border-color:var(--copper)}
+.btn--line{background:transparent}
+.btn--line:hover{background:var(--bean);color:var(--cream)}
+
+.heroart{position:relative}
+.beansvg{display:block;width:100%;height:auto;filter:drop-shadow(0 22px 40px rgba(36,24,18,.22))}
+.batch{margin-top:20px;display:grid;gap:1px;background:var(--cream-2);
+  border:1px solid var(--cream-2)}
+@media(min-width:560px){.batch{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.batch &gt; div{background:var(--white);padding:14px 16px;min-width:0}
+.batch dt{color:var(--muted);font-size:.72rem;letter-spacing:.09em;text-transform:uppercase}
+.batch dd{margin-top:5px;font-size:.9rem;line-height:1.4}
+.batch dd b{display:block;font-family:var(--f-d);font-size:1.35rem;color:var(--copper);
+  font-weight:700;margin-bottom:1px}
+
+/* ---------- общие секции ---------- */
+.sec{padding-block:clamp(50px,7vw,96px);border-top:1px solid var(--cream-2)}
+.sec--dark{background:var(--bean);color:var(--cream);border-top:none}
+.sec--white{background:var(--white)}
+.sec__head{max-width:58ch;margin-bottom:clamp(28px,4vw,46px)}
+.sec h2{font-size:clamp(1.9rem,1.35rem+2.2vw,3.1rem)}
+.sec__head p{margin-top:.85em;color:var(--muted)}
+.sec--dark .sec__head p{color:var(--cream-2)}
+.eyeb{font-size:.76rem;letter-spacing:.2em;text-transform:uppercase;color:var(--copper);
+  margin-bottom:1.2em}
+
+/* ---------- сорта ---------- */
+.beans{display:grid;gap:clamp(16px,2.2vw,26px)}
+@media(min-width:560px){.beans{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:900px){.beans{grid-template-columns:repeat(3,1fr)}}
+.bean{border:1px solid var(--cream-2);background:var(--white);padding:clamp(22px,2.6vw,30px);
+  display:flex;flex-direction:column;transition:border-color .18s,transform .18s}
+.bean:hover{border-color:var(--copper);transform:translateY(-3px)}
+.bean__o{font-size:.76rem;letter-spacing:.16em;text-transform:uppercase;color:var(--copper)}
+.bean h3{font-size:1.65rem;margin:.4em 0 .45em}
+.bean__d{color:var(--muted);font-size:.95rem}
+.bean__notes{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 18px}
+.bean__notes li{font-size:.79rem;border:1px solid var(--cream-2);padding:4px 9px;color:var(--text-2)}
+.roastmeter{margin-bottom:18px}
+.roastmeter__l{display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);
+  margin-bottom:5px}
+.roastmeter__t{height:5px;background:linear-gradient(90deg,#d8b58a,#a9703c,#5c3319);position:relative}
+.roastmeter__p{position:absolute;top:-4px;width:3px;height:13px;background:var(--bean);
+  transform:translateX(-50%)}
+.bean__f{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin-top:auto;padding-top:16px;border-top:1px solid var(--cream-2)}
+.bean__p{font-family:var(--f-d);font-size:1.5rem}
+.bean__b{background:none;border:1px solid var(--bean);padding:10px 16px;
+  font:500 .88rem var(--f-b);cursor:pointer;transition:background-color .15s,color .15s}
+.bean__b:hover{background:var(--bean);color:var(--cream)}
+.bean__b.ok{background:var(--copper);border-color:var(--copper);color:#fff}
+
+/* ---------- профиль обжарки ---------- */
+.profile{border:1px solid rgba(243,234,223,.2);padding:clamp(18px,2.4vw,28px);background:var(--bean-2)}
+.profile figcaption{display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between;
+  align-items:baseline;margin-bottom:16px;font-size:.86rem;color:var(--cream-2)}
+.profile__leg{display:flex;gap:16px;flex-wrap:wrap}
+.profile__leg span{display:flex;align-items:center;gap:7px}
+.profile__leg i{width:14px;height:2px;background:var(--copper-lt);display:block}
+.profile__leg i.dot{width:8px;height:8px;border-radius:50%;background:var(--cream)}
+.chartwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.chart{width:100%;min-width:580px;height:auto;overflow:visible;display:block}
+.chartnote{font-size:.8rem;color:#8c7561;margin-top:10px}
+@media(min-width:680px){.chartnote{display:none}}
+.chart .grid{stroke:rgba(243,234,223,.16);stroke-width:1}
+.chart .axis{stroke:rgba(243,234,223,.4);stroke-width:1}
+.chart .lbl{fill:#c9b8a4;font:400 12px var(--f-b)}
+.chart .curve{fill:none;stroke:var(--copper-lt);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.chart .mark{fill:var(--cream)}
+.chart .note{fill:var(--cream);font:500 12px var(--f-b)}
+
+.stages{display:grid;gap:clamp(18px,2.6vw,30px);margin-top:clamp(28px,4vw,44px)}
+@media(min-width:560px){.stages{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:880px){.stages{grid-template-columns:repeat(3,1fr)}}
+.stage{border-top:2px solid var(--copper);padding-top:18px}
+.stage__n{font-family:var(--f-d);font-size:2.2rem;color:var(--copper);line-height:1}
+.stage h3{font-size:1.2rem;margin:.5em 0 .4em}
+.stage p{color:var(--cream-2);font-size:.95rem}
+
+/* ---------- заваривание ---------- */
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:26px}
+@media(max-width:420px){.tabs{display:grid;grid-template-columns:1fr}.tab{text-align:left}}
+.tab{border:1px solid var(--cream-2);background:var(--white);color:var(--text-2);
+  padding:11px 20px;font:500 .93rem var(--f-b);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--bean);color:var(--cream);border-color:var(--bean)}
+/* Атрибут hidden задаёт display:none в стилях браузера, а любое авторское
+   display его перебивает. Поэтому для скрытой панели правило нужно явно. */
+.brew[hidden]{display:none}
+.brew{display:grid;gap:clamp(24px,3vw,42px)}
+@media(min-width:820px){.brew{grid-template-columns:.85fr 1.15fr}}
+.brew__fig{border:1px solid var(--cream-2);background:var(--white);display:grid;place-items:center;
+  padding:26px;min-height:210px}
+.brew dl{display:grid;gap:1px;background:var(--cream-2);border:1px solid var(--cream-2)}
+.brew dl &gt; div{background:var(--white);display:flex;flex-wrap:wrap;gap:6px 16px;
+  justify-content:space-between;padding:13px 16px}
+.brew dt{color:var(--muted);font-size:.9rem}
+.brew dd{font-weight:500;font-variant-numeric:tabular-nums}
+.brew__steps{margin-top:18px;counter-reset:b}
+.brew__steps li{counter-increment:b;display:grid;grid-template-columns:26px 1fr;gap:12px;
+  padding-block:7px;color:var(--text-2);font-size:.96rem}
+.brew__steps li::before{content:counter(b);font-family:var(--f-d);color:var(--copper);font-weight:700}
+
+/* ---------- отзывы ---------- */
+.revs{display:grid;gap:clamp(16px,2.2vw,24px)}
+@media(min-width:620px){.revs{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:940px){.revs{grid-template-columns:repeat(3,1fr)}}
+.rev{border-left:2px solid var(--copper);padding:4px 0 4px 20px}
+.rev p{font-family:var(--f-d);font-size:1.12rem;line-height:1.45}
+.rev footer{margin-top:14px;font-size:.88rem;color:var(--muted)}
+
+/* ---------- подписка ---------- */
+.sub{background:var(--bean-2);color:var(--cream);padding-block:clamp(46px,6vw,86px)}
+.sub .wrap{display:grid;gap:clamp(28px,4vw,50px)}
+@media(min-width:880px){.sub .wrap{grid-template-columns:.9fr 1.1fr}}
+.sub h2{font-size:clamp(1.8rem,1.3rem+2vw,2.8rem)}
+.sub p{color:var(--cream-2);margin-top:.8em;max-width:40ch}
+.opts{display:grid;gap:10px;margin-bottom:20px}
+@media(min-width:520px){.opts{grid-template-columns:repeat(3,1fr)}}
+.opt{position:relative}
+.opt input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+.opt span{display:block;border:1px solid rgba(243,234,223,.3);padding:14px;text-align:center;
+  font-size:.93rem;transition:border-color .15s,background-color .15s}
+.opt input:checked + span{border-color:var(--copper);background:rgba(181,101,47,.18)}
+.opt input:focus-visible + span{outline:2px solid var(--copper);outline-offset:2px}
+.opt b{display:block;font-family:var(--f-d);font-size:1.3rem;margin-bottom:2px}
+.form{display:flex;flex-wrap:wrap;gap:10px}
+.form input{flex:1 1 220px;background:transparent;border:1px solid rgba(243,234,223,.35);
+  color:var(--cream);padding:15px 16px;font:400 1rem var(--f-b)}
+.form input::placeholder{color:rgba(243,234,223,.5)}
+.form input:focus{border-color:var(--copper-lt)}
+.form button{background:var(--copper);border:1px solid var(--copper);color:#fff;padding:15px 26px;
+  font:500 1rem var(--f-b);cursor:pointer}
+.form button:hover{background:var(--copper-lt);border-color:var(--copper-lt)}
+.form__msg{flex:1 1 100%;font-size:.9rem;color:var(--copper-lt);min-height:1.35em}
+.form__total{flex:1 1 100%;font-size:.9rem;color:var(--cream-2)}
+
+/* ---------- вопросы ---------- */
+.faq{border-top:1px solid var(--cream-2)}
+.faq details{border-bottom:1px solid var(--cream-2)}
+.faq summary{cursor:pointer;list-style:none;padding:20px 36px 20px 0;position:relative;
+  font-size:1.12rem;font-weight:500}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"";position:absolute;right:6px;top:50%;width:11px;height:11px;
+  border-right:1.5px solid var(--copper);border-bottom:1.5px solid var(--copper);
+  transform:translateY(-70%) rotate(45deg);transition:transform .2s}
+.faq details[open] summary::after{transform:translateY(-30%) rotate(-135deg)}
+.faq summary:hover{color:var(--copper)}
+.faq p{color:var(--text-2);max-width:66ch;padding-bottom:22px}
+
+/* ---------- подвал ---------- */
+.foot{background:var(--bean);color:#c9b8a4;padding-block:clamp(34px,4vw,54px);font-size:.92rem}
+.foot .wrap{display:grid;gap:26px}
+@media(min-width:560px){.foot .wrap{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:860px){.foot .wrap{grid-template-columns:1.5fr 1fr 1fr}}
+.foot h4{margin:0 0 .9em;color:var(--cream);font-family:var(--f-b);font-size:.76rem;
+  letter-spacing:.16em;text-transform:uppercase;font-weight:600}
+.foot a{color:#c9b8a4;text-decoration:none}
+.foot a:hover{color:var(--copper-lt)}
+.foot li{padding-block:3px}
+.foot__note{border-top:1px solid rgba(243,234,223,.14);margin-top:26px;padding-top:20px;
+  font-size:.84rem;color:var(--muted)}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+</template>
+<template id="src2" data-name="app.js" data-lang="javascript" data-bytes="4869">/* Обжарка — скрипты лендинга. */
+
+(function () {
+  'use strict';
+
+  /* Переход по якорю с поправкой на липкие панели.
+     scroll-margin-top работает не везде одинаково: при плавной прокрутке
+     и меняющейся высоте шапки браузер промахивается мимо цели, иногда
+     улетая в самый низ страницы. Поэтому считаем смещение сами. */
+  function stickyOffset() {
+    var h = 0;
+    ['.top', '.topbar', '.subnav'].forEach(function (sel) {
+      var el = document.querySelector(sel);
+      if (!el) return;
+      var pos = getComputedStyle(el).position;
+      if (pos === 'sticky' || pos === 'fixed') h += el.getBoundingClientRect().height;
+    });
+    return h + 16;
+  }
+
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest ? e.target.closest('a[href^="#"]') : null;
+    if (!a) return;
+    var id = a.getAttribute('href').slice(1);
+    if (!id) return;
+    var target = document.getElementById(id);
+    if (!target) return;
+    e.preventDefault();
+    var y = target.getBoundingClientRect().top + window.pageYOffset - stickyOffset();
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    try { history.replaceState(null, '', '#' + id); } catch (err) { /* песочница */ }
+  });
+
+  /* бургер */
+  var burger = document.getElementById('burger'), menu = document.getElementById('menu');
+  burger.addEventListener('click', function () {
+    var open = menu.classList.toggle('is-open');
+    burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  menu.addEventListener('click', function (e) {
+    if (e.target.tagName === 'A') {
+      menu.classList.remove('is-open');
+      burger.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  /* подсветка текущего раздела */
+  var links = Array.prototype.slice.call(menu.querySelectorAll('a'));
+  var targets = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+  if (window.IntersectionObserver) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        var i = targets.indexOf(en.target);
+        links.forEach(function (a, n) { a.classList.toggle('is-active', n === i); });
+      });
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    targets.forEach(function (t) { if (t) io.observe(t); });
+  }
+
+  /* вкладки заваривания */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  function selectTab(tab) {
+    tabs.forEach(function (t) {
+      var on = t === tab;
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+    });
+  }
+  tabs.forEach(function (t, i) {
+    t.addEventListener('click', function () { selectTab(t); });
+    t.addEventListener('keydown', function (e) {
+      var n = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : -1;
+      if (n &lt; 0 || n &gt;= tabs.length) return;
+      tabs[n].focus(); selectTab(tabs[n]); e.preventDefault();
+    });
+  });
+
+  /* корзина в карточках сортов */
+  document.querySelectorAll('.bean__b').forEach(function (b) {
+    b.addEventListener('click', function () {
+      b.textContent = 'В корзине'; b.classList.add('ok');
+      setTimeout(function () { b.textContent = '250 г'; b.classList.remove('ok'); }, 1600);
+    });
+  });
+
+  /* подписка: пересчёт и проверка */
+  var total = document.getElementById('total');
+  function recalc() {
+    var r = document.querySelector('input[name="freq"]:checked');
+    var price = parseInt(r.dataset.price, 10);
+    var weeks = parseInt(r.value, 10);
+    var month = Math.round(price * (4.33 / weeks));
+    total.textContent = 'Раз в ' + weeks + ' недел' + (weeks === 2 ? 'и' : 'ь') +
+      ' · ' + price + ' ₽ за отправку · примерно ' +
+      month.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' ₽ в месяц';
+  }
+  document.querySelectorAll('input[name="freq"]').forEach(function (r) {
+    r.addEventListener('change', recalc);
+  });
+  recalc();
+
+  document.getElementById('subform').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var input = document.getElementById('mail'), msg = document.getElementById('formmsg');
+    var ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(input.value.trim());
+    msg.textContent = ok
+      ? 'Проверка пройдена. Это демо — письмо никуда не ушло.'
+      : 'Проверьте адрес: нужен формат имя@почта.ру';
+    if (!ok) input.focus();
+  });
+})();
+</template>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var codeEl = document.getElementById('code');
+  var gutter = document.getElementById('gutter');
+  var stat   = document.getElementById('stat');
+  var copyBtn = document.getElementById('copy');
+  var tabs   = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  var currentText = '';
+
+  function sourceOf(id) {
+    var node = document.getElementById(id);
+    // Источники лежат в <template>, поэтому берём текст из его содержимого.
+    return node.content ? node.content.textContent : node.textContent;
+  }
+
+  function show(id) {
+    var node = document.getElementById(id);
+    var text = sourceOf(id);
+    var lang = node.dataset.lang;
+    currentText = text;
+
+    var painted = false;
+    if (window.hljs && typeof hljs.highlight === 'function') {
+      try {
+        codeEl.innerHTML = hljs.highlight(text, { language: lang }).value;
+        painted = true;
+      } catch (e) {
+        painted = false;
+      }
+    }
+    // Без подсветки код всё равно должен быть виден.
+    if (!painted) codeEl.textContent = text;
+
+    var lines = text.split('\n').length;
+    var nums = '';
+    for (var i = 1; i <= lines; i++) nums += i + '\n';
+    gutter.textContent = nums;
+
+    var bytes = node.dataset.bytes;
+    stat.textContent = node.dataset.name + ' · ' + lines + ' строк · ' +
+      (bytes < 1024 ? bytes + ' Б' : (bytes / 1024).toFixed(1) + ' КБ');
+  }
+
+  function select(tab) {
+    tabs.forEach(function (x) { x.setAttribute('aria-selected', x === tab ? 'true' : 'false'); });
+    show(tab.dataset.src);
+  }
+
+  tabs.forEach(function (t, i) {
+    t.addEventListener('click', function () { select(t); });
+    t.addEventListener('keydown', function (e) {
+      var n = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : -1;
+      if (n < 0 || n >= tabs.length) return;
+      tabs[n].focus(); select(tabs[n]); e.preventDefault();
+    });
+  });
+
+  copyBtn.addEventListener('click', function () {
+    var reset = function (text, ms) {
+      copyBtn.textContent = text;
+      setTimeout(function () {
+        copyBtn.textContent = 'Скопировать файл';
+        copyBtn.classList.remove('ok');
+      }, ms);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(currentText).then(function () {
+        copyBtn.classList.add('ok');
+        reset('Скопировано', 1600);
+      }, function () {
+        reset('Не вышло — выделите вручную', 2200);
+      });
+    } else {
+      reset('Буфер недоступен', 2200);
+    }
+  });
+
+  select(tabs[0]);
+})();
+</script>
+</body>
+</html>

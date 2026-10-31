@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Руслан Качев — верстка сайтов, SEO-разработка и продвижение</title>
+<meta name="description" content="Верстаю лендинги и многостраничники по макетам из Figma, собираю SEO-структуру и продвигаю сайты по коммерческим запросам. Адаптив от 320 px, PageSpeed 95+, чистый код без конструкторов.">
+<meta name="theme-color" content="#eef0ec" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1113" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:title" content="Руслан Качев — верстка, SEO-разработка и продвижение">
+<meta property="og:description" content="Лендинги и многостраничники по макетам, SEO-структура, продвижение по коммерческим запросам. Пишите в Telegram, на почту или звоните.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23eef0ec'/%3E%3Crect x='7' y='7' width='18' height='18' fill='none' stroke='%233b2fe0' stroke-width='4'/%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="styles.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ProfessionalService",
+  "name": "Руслан Качев — верстка, SEO и продвижение",
+  "description": "Верстка сайтов по макетам, SEO-разработка и продвижение по коммерческим запросам.",
+  "areaServed": "RU",
+  "telephone": "+79674297737",
+  "email": "r.kachev@ya.ru",
+  "sameAs": ["https://t.me/rkachev"],
+  "makesOffer": [
+    { "@type": "Offer", "name": "Промо-страница", "price": "2000", "priceCurrency": "RUB" },
+    { "@type": "Offer", "name": "Лендинг", "price": "7500", "priceCurrency": "RUB" },
+    { "@type": "Offer", "name": "Многостраничный сайт", "price": "15000", "priceCurrency": "RUB" }
+  ]
+}
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">Перейти к содержимому</a>
+
+<header class="topbar">
+  <div class="wrap topbar__in">
+    <a class="brand" href="#top">
+      <span class="brand__mark" aria-hidden="true"></span>
+      <span class="brand__name">Руслан Качев</span>
+      <span class="brand__role">верстка · SEO · продвижение</span>
+    </a>
+
+    <nav class="nav" id="nav" aria-label="Разделы сайта">
+      <a href="#services">Услуги</a>
+      <a href="#works">Работы</a>
+      <a href="#process">Процесс</a>
+      <a href="#pricing">Цены</a>
+      <a href="#contact">Контакты</a>
+    </nav>
+
+    <div class="topbar__tools">
+      <button class="btn btn--solid btn--sm" type="button" data-open-contact>Написать мне</button>
+      <button class="icon-btn" id="theme-toggle" type="button" aria-pressed="false">
+        <span class="icon-btn__t">Тема</span>
+      </button>
+      <button class="burger" id="burger" type="button" aria-expanded="false" aria-controls="nav">
+        <span aria-hidden="true"></span>
+        <span class="vh">Меню</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ================= ГЕРОЙ ================= -->
+  <section class="hero" id="top">
+    <div class="wrap hero__in">
+      <div class="hero__text">
+        <p class="eyebrow">Фриланс · HTML&nbsp;/&nbsp;CSS&nbsp;/&nbsp;JS · SEO</p>
+        <h1 class="h-display">Пиксель<br>в пиксель.<br><span class="h-display__alt">И в топ выдачи.</span></h1>
+        <p class="lead">
+          Верстаю лендинги и многостраничники по макетам из Figma, собираю
+          SEO-структуру и продвигаю сайты по коммерческим запросам.
+          Адаптив от 320&nbsp;px, семантика вместо «див-супа», одинаковое поведение
+          в Chrome, Safari и Firefox.
+        </p>
+        <div class="hero__cta">
+          <button class="btn btn--solid" type="button" data-open-contact>Написать мне</button>
+          <a class="btn btn--ghost" href="#works">Посмотреть работы</a>
+        </div>
+        <dl class="facts">
+          <div><dt>Ответ на заявку</dt><dd>в течение дня</dd></div>
+          <div><dt>Правки после сдачи</dt><dd>14 дней бесплатно</dd></div>
+          <div><dt>Исходники</dt><dd>отдаю всегда</dd></div>
+        </dl>
+      </div>
+
+      <!-- Живой ресайзер: перетаскиваемая рамка -->
+      <figure class="demo">
+        <figcaption class="demo__head">
+          <span class="mono demo__label">Проверьте адаптив сами</span>
+          <output class="mono demo__readout" id="vp-readout" for="vp-grip">1024 px · Десктоп</output>
+        </figcaption>
+
+        <div class="demo__presets" role="group" aria-label="Ширина вьюпорта">
+          <button class="chip" type="button" data-w="320">320</button>
+          <button class="chip" type="button" data-w="768">768</button>
+          <button class="chip" type="button" data-w="1280">1280</button>
+          <button class="chip" type="button" data-w="auto">Авто</button>
+        </div>
+
+        <div class="demo__stage" id="vp-stage">
+          <div class="vp" id="vp">
+            <div class="vp__chrome" aria-hidden="true">
+              <i></i><i></i><i></i>
+              <span class="vp__url mono">example.ru</span>
+            </div>
+            <div class="vp__page" aria-hidden="true">
+              <div class="vp__nav">
+                <span class="vp__logo"></span>
+                <span class="vp__links"><i></i><i></i><i></i></span>
+                <span class="vp__burger"></span>
+              </div>
+              <div class="vp__hero">
+                <span class="vp__h1"></span>
+                <span class="vp__p"></span>
+                <span class="vp__p vp__p--short"></span>
+                <span class="vp__btn"></span>
+              </div>
+              <div class="vp__cards">
+                <span class="vp__card"></span>
+                <span class="vp__card"></span>
+                <span class="vp__card"></span>
+              </div>
+            </div>
+            <button class="vp__grip" id="vp-grip" type="button"
+                    aria-label="Изменить ширину вьюпорта. Стрелки влево и вправо тоже работают.">
+              <span aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+        <p class="demo__hint mono">Потяните за правый край рамки&nbsp;→</p>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ================= УСЛУГИ ================= -->
+  <section class="sec" id="services">
+    <div class="wrap">
+      <div class="sec__head">
+        <p class="selector mono">section#services</p>
+        <div>
+          <h2 class="h2">Что я делаю</h2>
+          <p class="deck">Сайты — от макета до публикации. Плюс SEO: собираю структуру так, чтобы страницы находились по нужным запросам, и продвигаю их дальше.</p>
+        </div>
+      </div>
+
+      <div class="rule-grid rule-grid--3">
+        <article class="cell">
+          <h3 class="cell__t">Верстка по макету</h3>
+          <p>Figma, Sketch или PSD превращаю в HTML и CSS. Отступы совпадают с макетом, шрифты подключены правильно, сетка держится.</p>
+          <p class="cell__meta mono">БЭМ · SCSS · Grid + Flexbox</p>
+        </article>
+        <article class="cell cell--seo">
+          <h3 class="cell__t">SEO-разработка</h3>
+          <p>Собираю сайт сразу под поиск: одна страница — один интент, заголовки по иерархии, мета-теги, микроразметка, чистые URL, sitemap и robots. Ничего не приходится переделывать после запуска.</p>
+          <p class="cell__meta mono">семантика · title/description · Schema.org · sitemap</p>
+        </article>
+        <article class="cell cell--seo">
+          <h3 class="cell__t">Продвижение</h3>
+          <p>Вывожу сайт в топ по коммерческим запросам: семантика и кластеры, технические ошибки, тексты под каждый запрос, Яндекс.Вебмастер и Метрика. Показываю позиции и заявки, а не «мы поработали».</p>
+          <p class="cell__meta mono">кластеры · Вебмастер · Метрика · отчёты</p>
+        </article>
+        <article class="cell">
+          <h3 class="cell__t">Адаптив</h3>
+          <p>Одна верстка на все размеры: от 320&nbsp;px до широких мониторов. Проверяю на реальных устройствах, а не только в эмуляторе.</p>
+          <p class="cell__meta mono">320 / 768 / 1024 / 1440</p>
+        </article>
+        <article class="cell">
+          <h3 class="cell__t">Интерактив</h3>
+          <p>Слайдеры, модальные окна, табы, аккордеоны, фильтры, валидация форм. Пишу на ванильном JS, библиотеки подключаю только когда они действительно нужны.</p>
+          <p class="cell__meta mono">ES6 · Swiper · GSAP</p>
+        </article>
+        <article class="cell">
+          <h3 class="cell__t">Скорость</h3>
+          <p>Сжимаю картинки, режу в WebP и AVIF, подключаю шрифты без скачков текста, убираю сдвиги макета. Цель — зелёный Lighthouse и Core Web Vitals, а не «и так сойдёт».</p>
+          <p class="cell__meta mono">LCP · CLS · INP · WebP/AVIF</p>
+        </article>
+        <article class="cell cell--seo">
+          <h3 class="cell__t">Аналитика</h3>
+          <p>Ставлю Метрику и цели: заявки, звонки, переходы в мессенджеры. Видно, откуда пришёл клиент и какая страница приносит деньги.</p>
+          <p class="cell__meta mono">Метрика · цели · отчёты</p>
+        </article>
+        <article class="cell">
+          <h3 class="cell__t">Доступность</h3>
+          <p>Навигация с клавиатуры, видимый фокус, контраст по WCAG, подписи к полям и кнопкам. Сайтом смогут пользоваться все.</p>
+          <p class="cell__meta mono">WCAG AA · aria · focus-visible</p>
+        </article>
+        <article class="cell">
+          <h3 class="cell__t">Правки чужой верстки</h3>
+          <p>Чиню сломанный адаптив, разбираю каскад, убираю нагромождение !important, попутно правлю технические ошибки, из-за которых сайт проседает в поиске.</p>
+          <p class="cell__meta mono">аудит · рефакторинг · багфикс</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= РАБОТЫ ================= -->
+  <section class="sec" id="works">
+    <div class="wrap">
+      <div class="sec__head">
+        <p class="selector mono">section#works</p>
+        <div>
+          <h2 class="h2">Работы</h2>
+          <p class="deck">Готовые сайты, которые можно открыть и потрогать. Каждая ссылка ведёт на живой демо-стенд, а не на картинку в галерее.</p>
+        </div>
+      </div>
+
+      <div class="rule-grid rule-grid--2 works">
+        <article class="work work--wide">
+          <picture>
+            <source media="(max-width: 640px)" srcset="assets/works/kuhnya-mobile.jpg" width="780" height="1270">
+            <img class="work__shot" src="assets/works/kuhnya.jpg" alt="Превью сайта «Ваша Кухня» — первый экран с каталогом кухонь"
+                 width="1280" height="800" loading="lazy" decoding="async">
+          </picture>
+          <div class="work__body">
+            <p class="work__idx mono">01 · Многостраничник + SEO</p>
+            <h3 class="work__t">Ваша Кухня — фабрика кухонь</h3>
+            <p class="work__d">Сайт на 18 страниц вместо старого одностраничника: каталог по планировкам, калькулятор с квизом, блог, отдельная страница под каждый запрос. Микроразметка, sitemap, self-hosted шрифты, ленивая загрузка фото.</p>
+            <ul class="tags mono">
+              <li>Astro</li><li>Schema.org</li><li>SEO</li><li>Метрика</li>
+            </ul>
+            <dl class="work__stats mono">
+              <div><dt>Страниц</dt><dd>18</dd></div>
+              <div><dt>Срок</dt><dd>3 дня</dd></div>
+              <div><dt>Lighthouse SEO</dt><dd>100</dd></div>
+            </dl>
+            <p class="work__links">
+              <a href="works/kuhnya/" class="link">Открыть демо</a>
+            </p>
+          </div>
+        </article>
+
+        <article class="work">
+          <img class="work__shot" src="assets/works/coffee.jpg" alt="Превью лендинга «Обжарка» — кофе малыми партиями"
+               width="1280" height="800" loading="lazy" decoding="async">
+          <div class="work__body">
+            <p class="work__idx mono">02 · Лендинг</p>
+            <h3 class="work__t">Обжарка — кофе малыми партиями</h3>
+            <p class="work__d">Одностраничник для обжарщика: пять экранов, карточки сортов, форма заявки, появление блоков по скроллу.</p>
+            <ul class="tags mono">
+              <li>HTML5</li><li>SCSS</li><li>JS</li>
+            </ul>
+            <dl class="work__stats mono">
+              <div><dt>Срок</dt><dd>4 дня</dd></div>
+              <div><dt>PageSpeed</dt><dd>98</dd></div>
+            </dl>
+            <p class="work__links">
+              <a href="works/coffee/" class="link">Демо</a>
+              <a href="works/coffee/code.html" class="link">Код</a>
+            </p>
+          </div>
+        </article>
+
+        <article class="work">
+          <img class="work__shot" src="assets/works/law.jpg" alt="Превью сайта юридического бюро «Клюев и партнёры»"
+               width="1280" height="800" loading="lazy" decoding="async">
+          <div class="work__body">
+            <p class="work__idx mono">03 · Многостраничник</p>
+            <h3 class="work__t">Клюев и партнёры — юрбюро</h3>
+            <p class="work__d">Три страницы с общими компонентами и единой сеткой: главная, услуги, контакты. Один CSS на весь сайт.</p>
+            <ul class="tags mono">
+              <li>БЭМ</li><li>Grid</li><li>Git</li>
+            </ul>
+            <dl class="work__stats mono">
+              <div><dt>Срок</dt><dd>6 дней</dd></div>
+              <div><dt>Страниц</dt><dd>3</dd></div>
+            </dl>
+            <p class="work__links">
+              <a href="works/law/" class="link">Демо</a>
+              <a href="works/law/code.html" class="link">Код</a>
+            </p>
+          </div>
+        </article>
+
+        <article class="work">
+          <img class="work__shot" src="assets/works/fitness.jpg" alt="Превью сайта фитнес-клуба «Высота»"
+               width="1280" height="800" loading="lazy" decoding="async">
+          <div class="work__body">
+            <p class="work__idx mono">04 · Расписание и виджеты</p>
+            <h3 class="work__t">Высота — фитнес-клуб</h3>
+            <p class="work__d">Расписание тренировок с фильтром по направлениям, карточки тренеров, табы и аккордеон. Ванильный JS без библиотек.</p>
+            <ul class="tags mono">
+              <li>JS</li><li>Grid</li><li>доступность</li>
+            </ul>
+            <dl class="work__stats mono">
+              <div><dt>Срок</dt><dd>5 дней</dd></div>
+              <div><dt>Экранов</dt><dd>6</dd></div>
+            </dl>
+            <p class="work__links">
+              <a href="works/fitness/" class="link">Демо</a>
+              <a href="works/fitness/code.html" class="link">Код</a>
+            </p>
+          </div>
+        </article>
+
+        <article class="work">
+          <img class="work__shot" src="assets/works/email.jpg" alt="Превью email-рассылки «Обжарка» в почтовом клиенте"
+               width="1280" height="800" loading="lazy" decoding="async">
+          <div class="work__body">
+            <p class="work__idx mono">05 · Письмо</p>
+            <h3 class="work__t">Рассылка «Обжарка»</h3>
+            <p class="work__d">Письмо на таблицах и инлайновых стилях. Проверено в Gmail, Outlook и Почте Mail.ru.</p>
+            <ul class="tags mono">
+              <li>table-layout</li><li>inline CSS</li>
+            </ul>
+            <dl class="work__stats mono">
+              <div><dt>Срок</dt><dd>2 дня</dd></div>
+              <div><dt>Клиентов</dt><dd>12</dd></div>
+            </dl>
+            <p class="work__links">
+              <a href="works/email/" class="link">Демо</a>
+              <a href="works/email/code.html" class="link">Код</a>
+            </p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ПРОЦЕСС ================= -->
+  <section class="sec" id="process">
+    <div class="wrap">
+      <div class="sec__head">
+        <p class="selector mono">section#process</p>
+        <div>
+          <h2 class="h2">Как идёт работа</h2>
+          <p class="deck">Шесть шагов, каждый заканчивается чем-то, что можно посмотреть и потрогать.</p>
+        </div>
+      </div>
+
+      <ol class="steps">
+        <li class="step">
+          <span class="step__n mono">01</span>
+          <div>
+            <h3 class="step__t">Смотрю макет</h3>
+            <p>Открываю Figma, проверяю сетку, состояния кнопок, наличие мобильной версии. Сразу говорю, чего не хватает.</p>
+          </div>
+        </li>
+        <li class="step">
+          <span class="step__n mono">02</span>
+          <div>
+            <h3 class="step__t">Называю цену и срок</h3>
+            <p>Фиксированная сумма и дата сдачи до начала работы. Если объём вырастет по ходу, обсуждаем до того, как я это сверстаю.</p>
+          </div>
+        </li>
+        <li class="step">
+          <span class="step__n mono">03</span>
+          <div>
+            <h3 class="step__t">Верстаю</h3>
+            <p>Выкладываю промежуточный результат на тестовый адрес каждые два-три дня. Вы видите прогресс, а не ждёте месяц в тишине.</p>
+          </div>
+        </li>
+        <li class="step">
+          <span class="step__n mono">04</span>
+          <div>
+            <h3 class="step__t">Собираю SEO-структуру</h3>
+            <p>Разбиваю запросы по страницам, прописываю title и description, разметку Schema.org, сайтмап и robots. Страницы не конкурируют между собой в выдаче.</p>
+          </div>
+        </li>
+        <li class="step">
+          <span class="step__n mono">05</span>
+          <div>
+            <h3 class="step__t">Проверяем вместе</h3>
+            <p>Прохожу по чек-листу: устройства, браузеры, клавиатура, скорость, Lighthouse. Вы присылаете правки одним списком — я вношу.</p>
+          </div>
+        </li>
+        <li class="step">
+          <span class="step__n mono">06</span>
+          <div>
+            <h3 class="step__t">Передаю и запускаю</h3>
+            <p>Исходники, репозиторий, инструкция по правке текстов, регистрация в Вебмастере и установка Метрики. Дальше 14 дней правлю мелочи бесплатно, а при желании беру продвижение помесячно.</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ================= ЦЕНЫ ================= -->
+  <section class="sec" id="pricing">
+    <div class="wrap">
+      <div class="sec__head">
+        <p class="selector mono">section#pricing</p>
+        <div>
+          <h2 class="h2">Сколько стоит</h2>
+          <p class="deck">Верстка по готовому макету. SEO-структура и базовые мета-теги входят в цену, продвижение считается отдельно. Точную сумму называю после того, как посмотрю файл.</p>
+        </div>
+      </div>
+
+      <div class="price-list">
+        <article class="price-row">
+          <div class="price-row__head">
+            <p class="price-row__idx mono">01</p>
+            <div>
+              <h3 class="price-row__t">Промо-страница</h3>
+              <p class="price-row__d">Один экран или короткий лендинг: оффер, форма заявки, адаптив, базовые мета-теги.</p>
+              <p class="price-row__term mono">2–3 дня</p>
+            </div>
+          </div>
+          <ul class="ticks price-row__list">
+            <li>Адаптив от 320 px</li>
+            <li>Форма заявки с валидацией</li>
+            <li>Подключение Метрики</li>
+          </ul>
+          <div class="price-row__money">
+            <s class="price-row__old mono">3 000 ₽</s>
+            <p class="price-row__v">2 000 ₽</p>
+            <span class="price-row__save mono">−33%</span>
+          </div>
+          <a class="btn btn--ghost price-row__cta" href="#contact">Обсудить</a>
+        </article>
+
+        <article class="price-row price-row--pick">
+          <div class="price-row__head">
+            <p class="price-row__idx mono">02</p>
+            <div>
+              <h3 class="price-row__t">Лендинг <span class="price-row__badge mono">чаще всего берут</span></h3>
+              <p class="price-row__d">До восьми секций: слайдеры, модалки, аккордеоны, оптимизация скорости, подключение к CMS по желанию.</p>
+              <p class="price-row__term mono">5–8 дней</p>
+            </div>
+          </div>
+          <ul class="ticks price-row__list">
+            <li>До 8 секций и интерактив</li>
+            <li>Скорость и Core Web Vitals</li>
+            <li>SEO-структура страницы</li>
+            <li>CMS по желанию</li>
+          </ul>
+          <div class="price-row__money">
+            <s class="price-row__old mono">10 000 ₽</s>
+            <p class="price-row__v">7 500 ₽</p>
+            <span class="price-row__save mono">−25%</span>
+          </div>
+          <a class="btn btn--solid price-row__cta" href="#contact">Обсудить</a>
+        </article>
+
+        <article class="price-row">
+          <div class="price-row__head">
+            <p class="price-row__idx mono">03</p>
+            <div>
+              <h3 class="price-row__t">Многостраничник</h3>
+              <p class="price-row__d">От пяти страниц: общие компоненты, сборка, репозиторий с историей, страница под каждый запрос.</p>
+              <p class="price-row__term mono">от 2 недель</p>
+            </div>
+          </div>
+          <ul class="ticks price-row__list">
+            <li>От 5 страниц</li>
+            <li>Общие компоненты и сборка</li>
+            <li>Schema.org, sitemap, robots</li>
+            <li>Репозиторий с историей</li>
+          </ul>
+          <div class="price-row__money">
+            <s class="price-row__old mono">20 000 ₽</s>
+            <p class="price-row__v">15 000 ₽</p>
+            <span class="price-row__save mono">−25%</span>
+          </div>
+          <a class="btn btn--ghost price-row__cta" href="#contact">Обсудить</a>
+        </article>
+      </div>
+
+      <p class="note">Скидка действует на все три пакета. Срочная работа и выходные — плюс 30% к сумме. Правка чужой верстки и SEO-аудит считаются по часам, продвижение — помесячно.</p>
+    </div>
+  </section>
+
+  <!-- ================= ОБО МНЕ ================= -->
+  <section class="sec" id="about">
+    <div class="wrap">
+      <div class="sec__head">
+        <p class="selector mono">section#about</p>
+        <div>
+          <h2 class="h2">Обо мне</h2>
+        </div>
+      </div>
+
+      <div class="about">
+        <div class="about__text">
+          <p>Меня зовут Руслан. Верстаю сайты по макетам и занимаюсь SEO: структура, техническая часть, продвижение по коммерческим запросам. Работаю на фрилансе, беру проекты целиком — от файла в Figma до зарегистрированного в Вебмастере сайта.</p>
+          <p>Не беру задачи, в которых не уверен: если для проекта нужен бэкенд или сложная логика, скажу об этом сразу, а не посреди работы.</p>
+
+          <h3 class="about__sub">На чём договариваемся</h3>
+          <ul class="ticks">
+            <li>Валидный HTML и осмысленные имена классов</li>
+            <li>Без правок макета «на глаз» — спрашиваю, если что-то неоднозначно</li>
+            <li>Комментарии в коде там, где решение неочевидно</li>
+            <li>Отдаю исходники и сборку, не держу проект в заложниках</li>
+            <li>По SEO показываю цифры: позиции, трафик, заявки</li>
+          </ul>
+        </div>
+
+        <aside class="stack">
+          <h3 class="stack__t mono">Инструменты</h3>
+          <ul class="tags tags--wrap mono">
+            <li>HTML5</li><li>CSS3</li><li>Flexbox</li><li>Grid</li>
+            <li>SCSS</li><li>БЭМ</li><li>JavaScript</li><li>ES6</li>
+            <li>Astro</li><li>Vite</li><li>Git</li><li>Figma</li>
+            <li>Schema.org</li><li>Яндекс.Вебмастер</li><li>Метрика</li><li>Lighthouse</li>
+          </ul>
+          <p class="stack__note">Список честный: то, чем пользуюсь регулярно. Незнакомый инструмент освою, но предупрежу, что на это уйдёт время.</p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ВОПРОСЫ ================= -->
+  <section class="sec" id="faq">
+    <div class="wrap">
+      <div class="sec__head">
+        <p class="selector mono">section#faq</p>
+        <div><h2 class="h2">Частые вопросы</h2></div>
+      </div>
+
+      <div class="faq">
+        <details>
+          <summary>Что нужно, чтобы начать?</summary>
+          <p>Ссылка на макет в Figma с доступом на просмотр, тексты и картинки в исходном качестве. Если мобильной версии в макете нет — сделаю адаптив на своё усмотрение и покажу до финала. Если макета нет совсем, соберу структуру по референсам и пообещаю «похоже», а не «пиксель в пиксель».</p>
+        </details>
+        <details>
+          <summary>SEO входит в цену?</summary>
+          <p>Техническая часть — да: семантические заголовки, title и description, микроразметка, sitemap, robots, скорость. Это то, что закладывается при верстке. Само продвижение — отдельная работа: семантика, контент, ссылки, отчёты по позициям, оплата помесячно.</p>
+        </details>
+        <details>
+          <summary>Работаете по предоплате?</summary>
+          <p>Да, 50% до старта и 50% после приёмки. На проектах дольше двух недель делим на три части.</p>
+        </details>
+        <details>
+          <summary>Дизайн тоже делаете?</summary>
+          <p>Нет, я верстальщик и SEO-специалист. Если макета нет, могу посоветовать дизайнера или собрать страницу по референсу — но результат тогда будет ближе к «похоже», чем к «пиксель в пиксель».</p>
+        </details>
+        <details>
+          <summary>А если правок окажется много?</summary>
+          <p>Правки в рамках согласованного макета входят в цену. Новые блоки и смена концепции — отдельная задача с отдельной оценкой. Границу проговариваем заранее, чтобы не спорить потом.</p>
+        </details>
+        <details>
+          <summary>Как передаёте результат?</summary>
+          <p>Репозиторий на GitHub плюс архив с готовыми файлами. Могу залить на ваш хостинг, настроить домен, подключить HTTPS. 14 дней после сдачи мелкие правки бесплатно.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= КОНТАКТЫ ================= -->
+  <section class="sec sec--contact" id="contact">
+    <div class="wrap">
+      <div class="sec__head">
+        <p class="selector mono">section#contact</p>
+        <div>
+          <h2 class="h2">Напишите — отвечу сегодня</h2>
+          <p class="deck">Пришлите ссылку на макет и желаемый срок. В ответ получите цену и дату сдачи, без созвонов и брифов на десять листов. Если нужен только SEO-аудит — пришлите адрес сайта.</p>
+        </div>
+      </div>
+
+      <div class="contact-cta">
+        <button class="btn btn--solid" type="button" data-open-contact>Написать мне</button>
+        <p class="contact-cta__note mono">Telegram · почта · телефон — выбирайте любой</p>
+      </div>
+
+      <ul class="contacts">
+        <li class="contact">
+          <span class="contact__k mono">Telegram</span>
+          <a class="contact__v" id="c-tg" href="https://t.me/rkachev">@rkachev</a>
+          <button class="copy" type="button" data-copy="#c-tg">Копировать</button>
+        </li>
+        <li class="contact">
+          <span class="contact__k mono">Почта</span>
+          <a class="contact__v" id="c-mail" href="mailto:r.kachev@ya.ru">r.kachev@ya.ru</a>
+          <button class="copy" type="button" data-copy="#c-mail">Копировать</button>
+        </li>
+        <li class="contact">
+          <span class="contact__k mono">Телефон</span>
+          <a class="contact__v" id="c-tel" href="tel:+79674297737">+7 967 429-77-37</a>
+          <button class="copy" type="button" data-copy="#c-tel">Копировать</button>
+        </li>
+        <li class="contact">
+          <span class="contact__k mono">Где я</span>
+          <span class="contact__v">Москва · UTC+3 · на связи 15:00–23:00</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap foot__in">
+    <p class="mono">Руслан Качев · верстка · SEO · продвижение · <span id="year">2026</span></p>
+    <p class="mono foot__built">Сверстано вручную: 0 фреймворков, 3 файла</p>
+  </div>
+</footer>
+
+<!-- Кнопка «Написать мне»: три канала связи -->
+<dialog class="sheet" id="contact-sheet" aria-labelledby="sheet-t">
+  <h2 class="sheet__t" id="sheet-t">Написать мне</h2>
+  <p class="sheet__d">Выберите удобный канал — отвечу в течение дня.</p>
+  <ul class="sheet__list">
+    <li>
+      <a class="sheet__link" href="https://t.me/rkachev" target="_blank" rel="noopener">
+        <span class="sheet__k mono">Telegram</span>
+        <span class="sheet__v">@rkachev</span>
+        <span class="sheet__go mono" aria-hidden="true">→</span>
+      </a>
+    </li>
+    <li>
+      <a class="sheet__link" href="mailto:r.kachev@ya.ru">
+        <span class="sheet__k mono">Почта</span>
+        <span class="sheet__v">r.kachev@ya.ru</span>
+        <span class="sheet__go mono" aria-hidden="true">→</span>
+      </a>
+    </li>
+    <li>
+      <a class="sheet__link" href="tel:+79674297737">
+        <span class="sheet__k mono">Телефон</span>
+        <span class="sheet__v">+7 967 429-77-37</span>
+        <span class="sheet__go mono" aria-hidden="true">→</span>
+      </a>
+    </li>
+  </ul>
+  <form method="dialog" class="sheet__foot">
+    <button class="btn btn--ghost" type="submit">Закрыть</button>
+  </form>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Обжарка — кофе малыми партиями</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Golos+Text:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="demobar">
+  <div class="wrap">
+    <span>Демо-проект для портфолио. Компания вымышленная.</span>
+    <span class="sep"></span>
+    <a href="code.html">Смотреть код</a>
+    <a href="../../index.html">← В портфолио</a>
+  </div>
+</div>
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#top">Об<em>жар</em>ка</a>
+    <button class="burger" id="burger" type="button" aria-expanded="false" aria-controls="menu">
+      <i></i><i></i><i></i><span class="vh">Меню</span>
+    </button>
+    <nav class="menu" id="menu" aria-label="Разделы">
+      <a href="#beans">Сорта</a>
+      <a href="#roast">Обжарка</a>
+      <a href="#brew">Заваривание</a>
+      <a href="#revs">Отзывы</a>
+      <a href="#faq">Доставка</a>
+    </nav>
+    <a class="cta" href="#sub">Подписка</a>
+  </div>
+</header>
+
+<main id="top">
+
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <p class="kicker">Обжариваем в Ярославле с 2019 года</p>
+        <h1>Партия — <em>12 кг.</em><br>Не больше.</h1>
+        <p class="hero__sub">Маленький барабан, ручной контроль профиля и отправка в тот же день, когда зерно остыло. Кофе приезжает к вам моложе, чем стоит на полке магазина.</p>
+        <div class="btns">
+          <a class="btn btn--fill" href="#beans">Выбрать зерно</a>
+          <a class="btn btn--line" href="#roast">Как мы обжариваем</a>
+        </div>
+      </div>
+
+      <div class="heroart">
+        <svg class="beansvg" viewBox="0 0 420 380" role="img" aria-label="Кофейное зерно в разрезе">
+          <defs>
+            <radialGradient id="g1" cx="38%" cy="30%">
+              <stop offset="0%" stop-color="#6b4527"/>
+              <stop offset="55%" stop-color="#43291a"/>
+              <stop offset="100%" stop-color="#1e120b"/>
+            </radialGradient>
+            <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#d98a4e"/>
+              <stop offset="100%" stop-color="#8d4a1f"/>
+            </linearGradient>
+          </defs>
+          <ellipse cx="210" cy="196" rx="150" ry="150" fill="url(#g1)"/>
+          <path d="M210 52 C150 120 150 272 210 340 C268 272 268 120 210 52 Z" fill="#170d07" opacity=".55"/>
+          <path d="M210 60 C162 124 162 268 210 332" fill="none" stroke="url(#g2)" stroke-width="3" opacity=".9"/>
+          <ellipse cx="210" cy="196" rx="150" ry="150" fill="none" stroke="rgba(243,234,223,.16)"/>
+          <ellipse cx="210" cy="196" rx="118" ry="118" fill="none" stroke="rgba(181,101,47,.45)"/>
+          <g opacity=".5" stroke="#b5652f" stroke-width="2" stroke-linecap="round">
+            <path d="M196 26 C186 16 196 8 190 0" fill="none"/>
+            <path d="M222 30 C212 20 222 12 216 4" fill="none"/>
+          </g>
+        </svg>
+        <dl class="batch">
+          <div>
+            <dt>Когда уезжает к вам</dt>
+            <dd><b>на 3-й день</b>после обжарки</dd>
+          </div>
+          <div>
+            <dt>Партия этой недели</dt>
+            <dd>Эфиопия Иргачеффе<br>12 кг</dd>
+          </div>
+          <div>
+            <dt>День обжарки</dt>
+            <dd>каждый вторник</dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- сорта -->
+  <section class="sec sec--white" id="beans">
+    <div class="wrap">
+      <div class="sec__head">
+        <p class="eyeb">Ассортимент</p>
+        <h2>Три сорта в ротации</h2>
+        <p>Меняем позиции, когда заканчивается партия зелёного зерна, а не когда захотелось обновить сайт. Шкала под описанием показывает степень обжарки.</p>
+      </div>
+
+      <div class="beans">
+        <article class="bean">
+          <p class="bean__o">Эфиопия</p>
+          <h3>Иргачеффе</h3>
+          <p class="bean__d">Мытая обработка, высота 1900 м. Светлая обжарка под фильтр: кислотность заметная, тело лёгкое.</p>
+          <ul class="bean__notes"><li>жасмин</li><li>лимон</li><li>чёрный чай</li></ul>
+          <div class="roastmeter">
+            <div class="roastmeter__l"><span>светлая</span><span>тёмная</span></div>
+            <div class="roastmeter__t"><span class="roastmeter__p" style="left:18%"></span></div>
+          </div>
+          <div class="bean__f"><span class="bean__p">890 ₽</span><button class="bean__b" type="button">250 г</button></div>
+        </article>
+
+        <article class="bean">
+          <p class="bean__o">Колумбия</p>
+          <h3>Уила</h3>
+          <p class="bean__d">Классика для эспрессо и для турки. Средняя обжарка, прощает ошибки в помоле и температуре воды.</p>
+          <ul class="bean__notes"><li>тёмный шоколад</li><li>слива</li><li>орех</li></ul>
+          <div class="roastmeter">
+            <div class="roastmeter__l"><span>светлая</span><span>тёмная</span></div>
+            <div class="roastmeter__t"><span class="roastmeter__p" style="left:54%"></span></div>
+          </div>
+          <div class="bean__f"><span class="bean__p">740 ₽</span><button class="bean__b" type="button">250 г</button></div>
+        </article>
+
+        <article class="bean">
+          <p class="bean__o">Бразилия</p>
+          <h3>Серрадо</h3>
+          <p class="bean__d">Натуральная обработка. Плотное тело и сладость, хорошо держит молоко — берут для капучино.</p>
+          <ul class="bean__notes"><li>карамель</li><li>арахис</li><li>изюм</li></ul>
+          <div class="roastmeter">
+            <div class="roastmeter__l"><span>светлая</span><span>тёмная</span></div>
+            <div class="roastmeter__t"><span class="roastmeter__p" style="left:76%"></span></div>
+          </div>
+          <div class="bean__f"><span class="bean__p">690 ₽</span><button class="bean__b" type="button">250 г</button></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- обжарка -->
+  <section class="sec sec--dark" id="roast">
+    <div class="wrap">
+      <div class="sec__head">
+        <p class="eyeb">Процесс</p>
+        <h2>Что происходит с зерном</h2>
+        <p>Восемнадцать минут, за которые зелёное зерно становится тем, что вы мелете утром. Ниже — реальный профиль последней партии эфиопии.</p>
+      </div>
+
+      <figure class="profile" style="margin:0">
+        <figcaption>
+          <span>Профиль обжарки · Эфиопия Иргачеффе · 12 кг</span>
+          <span class="profile__leg">
+            <span><i></i> температура зерна</span>
+            <span><i class="dot"></i> ключевые точки</span>
+          </span>
+        </figcaption>
+
+        <div class="chartwrap">
+        <svg class="chart" viewBox="0 0 660 272" role="img"
+             aria-label="График: температура зерна растёт от 90 градусов на первой минуте до 208 градусов на восемнадцатой">
+          <!-- сетка и подписи оси Y -->
+          <line class="grid" x1="56" y1="210" x2="616" y2="210"/>
+          <line class="grid" x1="56" y1="151.5" x2="616" y2="151.5"/>
+          <line class="grid" x1="56" y1="93.1" x2="616" y2="93.1"/>
+          <line class="grid" x1="56" y1="34.6" x2="616" y2="34.6"/>
+          <text class="lbl" x="48" y="214" text-anchor="end">80°</text>
+          <text class="lbl" x="48" y="155.5" text-anchor="end">120°</text>
+          <text class="lbl" x="48" y="97.1" text-anchor="end">160°</text>
+          <text class="lbl" x="48" y="38.6" text-anchor="end">200°</text>
+
+          <!-- ось X -->
+          <line class="axis" x1="56" y1="210" x2="616" y2="210"/>
+          <text class="lbl" x="56"  y="230" text-anchor="middle">0</text>
+          <text class="lbl" x="149" y="230" text-anchor="middle">3</text>
+          <text class="lbl" x="242" y="230" text-anchor="middle">6</text>
+          <text class="lbl" x="335" y="230" text-anchor="middle">9</text>
+          <text class="lbl" x="429" y="230" text-anchor="middle">12</text>
+          <text class="lbl" x="522" y="230" text-anchor="middle">15</text>
+          <text class="lbl" x="616" y="230" text-anchor="middle">18</text>
+          <text class="lbl" x="336" y="252" text-anchor="middle">минуты от загрузки</text>
+
+          <!-- кривая -->
+          <polyline class="curve"
+            points="56,63.8 87,195.4 149,166.2 242,122.3 335,85.8 460,40.5 523,31.7 616,22.9"/>
+
+          <!-- ключевые точки -->
+          <circle class="mark" cx="87" cy="195.4" r="4.5"/>
+          <text class="note" x="99" y="199">поворотная точка · 90°</text>
+          <circle class="mark" cx="242" cy="122.3" r="4.5"/>
+          <text class="note" x="254" y="126">начало Майяра · 140°</text>
+          <circle class="mark" cx="460" cy="40.5" r="4.5"/>
+          <text class="note" x="452" y="30" text-anchor="end">первый крэк · 196°</text>
+        </svg>
+        </div>
+        <p class="chartnote">График листается вправо →</p>
+      </figure>
+
+      <div class="stages">
+        <article class="stage">
+          <p class="stage__n">01</p>
+          <h3>Сушка · 0–6 мин</h3>
+          <p>Зерно отдаёт влагу и желтеет. Здесь важна ровная температура: скачок — и обжарка пойдёт пятнами.</p>
+        </article>
+        <article class="stage">
+          <p class="stage__n">02</p>
+          <h3>Майяр · 6–13 мин</h3>
+          <p>Появляются сахара и запах хлеба. На этом отрезке решается, каким будет вкус в чашке.</p>
+        </article>
+        <article class="stage">
+          <p class="stage__n">03</p>
+          <h3>Первый крэк · 13–18 мин</h3>
+          <p>Зерно щёлкает и растёт в объёме. Снимаем сразу после — или держим дольше, если нужен эспрессо.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- заваривание -->
+  <section class="sec" id="brew">
+    <div class="wrap">
+      <div class="sec__head">
+        <p class="eyeb">Рецепты</p>
+        <h2>Как заварить дома</h2>
+        <p>Три способа, которыми пьём сами. Пропорции даны для 250 г пачки — хватит примерно на двадцать порций.</p>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="Способы заваривания">
+        <button class="tab" role="tab" id="t-v60"  aria-controls="p-v60"  aria-selected="true">Воронка V60</button>
+        <button class="tab" role="tab" id="t-aero" aria-controls="p-aero" aria-selected="false">Аэропресс</button>
+        <button class="tab" role="tab" id="t-turk" aria-controls="p-turk" aria-selected="false">Турка</button>
+      </div>
+
+      <div class="brew" role="tabpanel" id="p-v60" aria-labelledby="t-v60">
+        <div class="brew__fig">
+          <svg viewBox="0 0 160 160" width="150" height="150" role="img" aria-label="Воронка V60">
+            <path d="M34 42 L126 42 L80 126 Z" fill="none" stroke="#241812" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M46 58 L114 58 L80 118 Z" fill="#b5652f" opacity=".2"/>
+            <line x1="26" y1="42" x2="134" y2="42" stroke="#241812" stroke-width="3" stroke-linecap="round"/>
+            <rect x="62" y="126" width="36" height="8" fill="#241812"/>
+            <path d="M70 134 L90 134 L94 150 L66 150 Z" fill="none" stroke="#241812" stroke-width="3" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <dl>
+            <div><dt>Кофе</dt><dd>15 г</dd></div>
+            <div><dt>Вода</dt><dd>250 мл, 93 °C</dd></div>
+            <div><dt>Помол</dt><dd>средний, как поваренная соль</dd></div>
+            <div><dt>Время</dt><dd>2:30</dd></div>
+          </dl>
+          <ol class="brew__steps">
+            <li>Промойте фильтр кипятком и слейте воду из чашки.</li>
+            <li>Влейте 45 мл и дайте зерну раскрыться 30 секунд.</li>
+            <li>Долейте до 150 мл круговыми движениями от центра.</li>
+            <li>Долейте до 250 мл и дождитесь, пока вода уйдёт.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="brew" role="tabpanel" id="p-aero" aria-labelledby="t-aero" hidden>
+        <div class="brew__fig">
+          <svg viewBox="0 0 160 160" width="150" height="150" role="img" aria-label="Аэропресс">
+            <rect x="56" y="34" width="48" height="86" fill="none" stroke="#241812" stroke-width="3"/>
+            <rect x="60" y="70" width="40" height="46" fill="#b5652f" opacity=".2"/>
+            <rect x="64" y="14" width="32" height="22" fill="none" stroke="#241812" stroke-width="3"/>
+            <line x1="50" y1="120" x2="110" y2="120" stroke="#241812" stroke-width="3" stroke-linecap="round"/>
+            <path d="M66 126 L94 126 L98 150 L62 150 Z" fill="none" stroke="#241812" stroke-width="3" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <dl>
+            <div><dt>Кофе</dt><dd>16 г</dd></div>
+            <div><dt>Вода</dt><dd>220 мл, 85 °C</dd></div>
+            <div><dt>Помол</dt><dd>мелкий, как сахарная пудра</dd></div>
+            <div><dt>Время</dt><dd>1:40</dd></div>
+          </dl>
+          <ol class="brew__steps">
+            <li>Соберите аэропресс в перевёрнутом положении.</li>
+            <li>Засыпьте кофе, влейте всю воду и размешайте дважды.</li>
+            <li>Настаивайте минуту, затем закрутите крышку с фильтром.</li>
+            <li>Переверните на чашку и выдавите за 30 секунд.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="brew" role="tabpanel" id="p-turk" aria-labelledby="t-turk" hidden>
+        <div class="brew__fig">
+          <svg viewBox="0 0 160 160" width="150" height="150" role="img" aria-label="Турка">
+            <path d="M52 46 L108 46 L98 122 L62 122 Z" fill="none" stroke="#241812" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M58 76 L102 76 L96 118 L64 118 Z" fill="#b5652f" opacity=".25"/>
+            <path d="M108 52 L140 60" stroke="#241812" stroke-width="3" stroke-linecap="round"/>
+            <path d="M46 44 L58 40 L54 50 Z" fill="#241812"/>
+            <path d="M40 140 Q80 128 120 140" fill="none" stroke="#b5652f" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <dl>
+            <div><dt>Кофе</dt><dd>8 г</dd></div>
+            <div><dt>Вода</dt><dd>100 мл, холодная</dd></div>
+            <div><dt>Помол</dt><dd>очень мелкий, в пыль</dd></div>
+            <div><dt>Время</dt><dd>4:00 на слабом огне</dd></div>
+          </dl>
+          <ol class="brew__steps">
+            <li>Засыпьте кофе в холодную воду и размешайте один раз.</li>
+            <li>Грейте на малом огне, не отходя от плиты.</li>
+            <li>Снимите, как только пенка поднимется к краю.</li>
+            <li>Дайте осесть полминуты и разливайте.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- отзывы -->
+  <section class="sec sec--white" id="revs">
+    <div class="wrap">
+      <div class="sec__head">
+        <p class="eyeb">Отзывы</p>
+        <h2>Что пишут подписчики</h2>
+      </div>
+      <div class="revs">
+        <article class="rev">
+          <p>«Первый раз вижу, чтобы на пачке стояла дата обжарки, а не только срок годности».</p>
+          <footer>Ирина, Кострома · подписка 6 месяцев</footer>
+        </article>
+        <article class="rev">
+          <p>«Попросил помолоть под турку — помололи и написали от руки, сколько класть».</p>
+          <footer>Павел, Ярославль · разовый заказ</footer>
+        </article>
+        <article class="rev">
+          <p>«Бразилия в капучино держит вкус даже через овсяное молоко. Беру теперь по два кило».</p>
+          <footer>Кофейня «Столько-то», Вологда</footer>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- подписка -->
+  <section class="sub" id="sub">
+    <div class="wrap">
+      <div>
+        <h2>Подписка на кофе</h2>
+        <p>Присылаем свежую партию с выбранной периодичностью. Сорт выбираете вы или доверяете нам — тогда каждый раз приходит что-то новое.</p>
+      </div>
+
+      <form class="form" id="subform" novalidate>
+        <fieldset style="border:none;padding:0;margin:0;flex:1 1 100%">
+          <legend class="vh">Как часто присылать</legend>
+          <div class="opts">
+            <label class="opt">
+              <input type="radio" name="freq" value="2" data-price="890" checked>
+              <span><b>2 недели</b>890 ₽ за отправку</span>
+            </label>
+            <label class="opt">
+              <input type="radio" name="freq" value="4" data-price="790">
+              <span><b>4 недели</b>790 ₽ за отправку</span>
+            </label>
+            <label class="opt">
+              <input type="radio" name="freq" value="8" data-price="740">
+              <span><b>8 недель</b>740 ₽ за отправку</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <label class="vh" for="mail">Электронная почта</label>
+        <input id="mail" type="email" name="mail" placeholder="Ваша почта" required>
+        <button type="submit">Оформить</button>
+        <p class="form__total" id="total">Раз в 2 недели · 890 ₽ за отправку · примерно 1 930 ₽ в месяц</p>
+        <p class="form__msg" id="formmsg" role="status"></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- доставка -->
+  <section class="sec" id="faq">
+    <div class="wrap">
+      <div class="sec__head">
+        <p class="eyeb">Доставка и оплата</p>
+        <h2>Частые вопросы</h2>
+      </div>
+      <div class="faq">
+        <details>
+          <summary>Когда отправляете заказ?</summary>
+          <p>Обжариваем по вторникам, отправляем в среду утром. Заказ, сделанный до вечера понедельника, попадает в ближайшую партию. Всё, что позже, уедет через неделю — свежим, а не залежавшимся.</p>
+        </details>
+        <details>
+          <summary>Сколько идёт посылка?</summary>
+          <p>По Ярославлю — курьером в день отправки. По России Почтой или СДЭКом: 2–5 дней в центральную часть, до 9 дней за Урал. Трек-номер присылаем в письме.</p>
+        </details>
+        <details>
+          <summary>Можно помолоть?</summary>
+          <p>Да, укажите способ заваривания в комментарии к заказу. Но если дома есть кофемолка — берите зерно: молотый кофе теряет аромат за неделю.</p>
+        </details>
+        <details>
+          <summary>Что если кофе не понравился?</summary>
+          <p>Напишите нам в течение двух недель. Заменим на другой сорт или вернём деньги без вопросов — вскрытая пачка не мешает.</p>
+        </details>
+        <details>
+          <summary>Работаете с кофейнями?</summary>
+          <p>Да, от 5 кг в месяц цена оптовая. Бесплатно настраиваем помол под вашу кофемашину и проводим калибровку на месте, если вы в Ярославской области.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div>
+      <h4>Обжарка</h4>
+      <p>Ярославль, ул. Свободы 12<br>Обжарочный цех и точка самовывоза<br>Пн–Пт, 9:00–18:00</p>
+    </div>
+    <div>
+      <h4>Разделы</h4>
+      <ul>
+        <li><a href="#beans">Сорта</a></li>
+        <li><a href="#roast">Обжарка</a></li>
+        <li><a href="#brew">Заваривание</a></li>
+        <li><a href="#faq">Доставка</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Связь</h4>
+      <ul>
+        <li><a href="tel:+79000000000">+7 900 000-00-00</a></li>
+        <li><a href="mailto:hello@example.ru">hello@example.ru</a></li>
+        <li>Телеграм: @example</li>
+      </ul>
+    </div>
+  </div>
+  <div class="wrap"><p class="foot__note">Демо-верстка для портфолио. Компания, цены и отзывы вымышлены.</p></div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
