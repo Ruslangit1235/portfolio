@@ -41,19 +41,25 @@ python3 -m http.server 8000
 
 ## Публикация на GitHub Pages
 
-1. Создать репозиторий, например `portfolio` (публичный).
-2. Загрузить содержимое этой папки в корень репозитория (файл `index.html` должен лежать в корне).
-3. Settings → Pages → Source: `Deploy from a branch`, Branch: `main`, папка `/ (root)`.
-4. Через минуту сайт будет на `https://<логин>.github.io/portfolio/`.
+Сайт уже опубликован:
 
-Важно: файл `.nojekyll` уже лежит в корне — без него GitHub Pages не отдаст папку
+- **Демо:** https://ruslangit1235.github.io/portfolio/
+- **Репозиторий:** https://github.com/Ruslangit1235/portfolio
+- Ветка `main`, папка `/ (root)`, обновление — обычный `git push`.
+
+Важно: файл `.nojekyll` лежит в корне — без него Pages не отдаст папку
 `works/kuhnya/_astro/` (Jekyll игнорирует каталоги, начинающиеся с подчёркивания),
 и демо кухонь останется без стилей и картинок.
 
-После публикации поменять в `index.html`:
+Обновление сайта после правок:
 
-- `og:url` и `canonical` — когда появится постоянный адрес (сейчас не заданы);
-- ссылки на репозиторий в карточках работ — если код будет открыт.
+```bash
+cd portfolio
+git add -A && git commit -m "что поменялось" && git push
+```
+
+Pages пересобирается минуту-две. Первый деплой после `git push` иногда нужно
+проверить в Actions → pages build and deployment.
 
 ## Контакты в сайте
 
