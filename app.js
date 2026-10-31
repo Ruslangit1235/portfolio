@@ -183,6 +183,39 @@
     });
   }
 
+  /* ---------- Подсветка пункта меню ---------- */
+  var navLinks = document.querySelectorAll('.nav a[href^="#"]');
+  var sections = [];
+  Array.prototype.forEach.call(navLinks, function (a) {
+    var el = document.querySelector(a.getAttribute('href'));
+    if (el) sections.push({ link: a, el: el });
+  });
+
+  function spy() {
+    if (!sections.length) return;
+    var line = window.scrollY + 140;
+    var current = null;
+    sections.forEach(function (s) {
+      if (s.el.getBoundingClientRect().top + window.scrollY <= line) current = s;
+    });
+    // у самого низа страницы подсвечиваем последний раздел
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) {
+      current = sections[sections.length - 1];
+    }
+    sections.forEach(function (s) { s.link.classList.toggle('is-active', s === current); });
+  }
+
+  var spyTick = false;
+  window.addEventListener('scroll', function () {
+    if (spyTick) return;
+    spyTick = true;
+    window.requestAnimationFrame(function () { spyTick = false; spy(); });
+  }, { passive: true });
+  window.addEventListener('resize', spy);
+  // страховка: обновляем и по таймеру — на случай, если scroll-события не доходят
+  window.setInterval(spy, 400);
+  spy();
+
   /* ---------- Год в подвале ---------- */
   var year = document.getElementById('year');
   if (year) year.textContent = new Date().getFullYear();

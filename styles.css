@@ -14,7 +14,7 @@
   --sunken:   #e4e7e2;
   --ink:      #12161a;
   --ink-2:    #545f62;
-  --ink-3:    #7c8785;
+  --ink-3:    #68726f;
   --line:     #d2d7d1;
   --line-2:   #bcc3bb;
   --accent:   #3b2fe0;
@@ -190,6 +190,7 @@ a:hover { color: var(--accent-2); }
   border-bottom: 1px solid transparent;
 }
 .nav a:hover { color: var(--ink); border-bottom-color: var(--accent); }
+.nav a.is-active { color: var(--ink); border-bottom-color: var(--accent); }
 
 .topbar__tools { display: flex; align-items: center; gap: 8px; }
 
@@ -378,15 +379,43 @@ button.btn { cursor: pointer; font-family: var(--f-body); }
   background: var(--line);
   border: 1px solid var(--line);
 }
-@media (min-width: 640px) { .rule-grid--2, .rule-grid--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 980px) { .rule-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 640px) {
+  .rule-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 
-.cell { background: var(--paper); padding: clamp(20px, 2.6vw, 30px); }
-.cell--seo { background: var(--surface); box-shadow: inset 3px 0 0 var(--accent); }
-.cell--seo .cell__t { color: var(--ink); }
-.cell__t { font-size: var(--step-1); font-weight: 600; letter-spacing: -0.015em; margin-bottom: 0.55em; }
-.cell p { color: var(--ink-2); }
-.cell__meta { color: var(--ink-3); margin-top: 1.1em; }
+/* Услуги — редакционный список строк */
+.svc { border-top: 1px solid var(--line); }
+.svc__row {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 4px 14px;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--line);
+  transition: background-color 0.15s;
+}
+.svc__row > * { min-width: 0; }
+.svc__n { color: var(--mark); grid-row: 1 / span 3; padding-top: 0.25em; }
+.svc__t {
+  font-size: var(--step-1); font-weight: 600; letter-spacing: -0.015em;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+}
+
+.svc__d { color: var(--ink-2); }
+.svc__tags { color: var(--ink-2); font-size: 12px; letter-spacing: 0.005em; }
+
+@media (min-width: 820px) {
+  .svc__row {
+    grid-template-columns: 56px minmax(150px, 200px) minmax(0, 1fr) 252px;
+    align-items: start;
+    column-gap: 28px;
+    padding: 22px 8px;
+  }
+  .svc__n { grid-row: auto; padding-top: 0.35em; }
+  .svc__tags { padding-top: 0.25em; }
+  .svc__row:hover { background: color-mix(in srgb, var(--surface) 75%, transparent); }
+  .svc__row:hover .svc__t { color: var(--accent); }
+  .svc__row:hover .svc__n { color: var(--ink-2); }
+}
 
 /* ---------- 6. Работы ---------- */
 .work { background: var(--paper); display: flex; flex-direction: column; }
@@ -607,3 +636,11 @@ a.contact__v:hover { color: var(--accent); border-bottom-color: var(--accent); }
 .sheet__v { font-weight: 500; font-size: var(--step-1); letter-spacing: -0.01em; }
 .sheet__go { margin-left: auto; color: var(--accent); }
 .sheet__foot { display: flex; justify-content: flex-end; margin-top: 1.6em; }
+
+/* Завершение списка услуг */
+.svc__foot {
+  margin-top: 24px;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 14px 24px;
+}
+.svc__foot p { color: var(--ink-2); font-size: var(--step--1); margin: 0; }
