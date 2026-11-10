@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Код · Контраст — палитра и WCAG</title>
+<meta name="description" content="Преобразования sRGB ↔ OKLab ↔ OKLCH, гамут-мэппинг, формула относительной светимости WCAG 2.1 и экспорт переменных — всё написано руками, здесь это видно построчно.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0b0c09">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230d0e0b'/%3E%3Cpath d='M9 22l5-12h4l5 12h-3l-1.2-3h-5.6L12 22z' fill='%23c9f24e'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600&family=Golos+Text:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#0b0c09; --panel:#111310; --panel2:#15170f; --line:rgba(241,240,229,.15);
+  --ink:#f1f0e5; --muted:#94948a; --acc:#c9f24e; --acc-ink:#0b0c09;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+  --sans:"Golos Text",system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{width:100%;max-width:1180px;margin:0 auto;padding:0 28px}
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.top__in{display:flex;align-items:center;gap:16px;height:56px}
+.back{font-family:var(--mono);font-size:11.5px;text-decoration:none;color:var(--muted);
+  border-bottom:1px solid transparent;padding-bottom:1px;transition:.15s}
+.back:hover{color:var(--ink);border-color:var(--acc)}
+.top__name{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.top__right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.head{padding:44px 0 18px}
+.kind{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--acc);margin:0 0 14px}
+h1{font-family:"Unbounded",var(--sans);font-weight:600;font-size:clamp(26px,3.4vw,40px);line-height:1.02;
+  letter-spacing:-.04em;margin:0}
+.note{color:var(--muted);max-width:70ch;margin:14px 0 0;font-size:14.5px}
+.meta{display:flex;flex-wrap:wrap;gap:8px 22px;margin:20px 0 0;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.meta b{color:var(--ink);font-weight:500}
+
+.bar{border-top:1px solid var(--line);border-bottom:1px solid var(--line);position:sticky;top:56px;
+  z-index:15;background:var(--bg);margin-top:22px}
+.bar__in{display:flex;align-items:center;gap:6px;padding:9px 0;overflow:auto}
+.tab{
+  font-family:var(--mono);font-size:11.5px;padding:7px 12px;border:1px solid var(--line);border-radius:7px;
+  background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;transition:.15s
+}
+.tab:hover{color:var(--ink);border-color:rgba(241,240,229,.4)}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tab em{font-style:normal;opacity:.55;margin-left:7px;font-size:10px}
+.bar__tools{margin-left:auto;display:flex;gap:6px;flex-shrink:0}
+.btn{
+  font-family:var(--mono);font-size:11px;padding:7px 11px;border-radius:7px;border:1px solid var(--line);
+  background:var(--panel2);color:var(--ink);cursor:pointer;transition:.15s
+}
+.btn:hover{border-color:rgba(241,240,229,.45);background:#1c1f14}
+.btn[data-done="1"]{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+
+.code{margin:0 0 40px;border:1px solid var(--line);border-top:0;background:var(--panel);overflow:auto}
+.code pre{margin:0;padding:16px 18px 20px;font-family:var(--mono);font-size:12.5px;line-height:1.68;
+  tab-size:2;white-space:pre;color:#cfd3c6}
+.code pre.wrap-lines{white-space:pre-wrap;word-break:break-word}
+.ln{display:block;position:relative;padding-left:52px;min-height:1.68em}
+.ln::before{content:attr(data-n);position:absolute;left:0;width:34px;text-align:right;color:#43483f;
+  font-size:11px;user-select:none}
+.ln:hover::before{color:var(--acc)}
+.tok-com{color:#5f6b58;font-style:italic}
+.tok-str{color:#e3b478}
+.tok-tag{color:#8fd6ff}
+.tok-attr{color:var(--acc)}
+.tok-kw{color:#ff9ecb}
+.tok-num{color:#b6e05a}
+.tok-prop{color:#9ad0ff}
+.tok-at{color:#c4a6ff}
+
+.foot{display:flex;gap:18px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--line);
+  padding:18px 0 40px;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.foot a{text-decoration:none;border-bottom:1px solid var(--line);padding-bottom:1px}
+.foot a:hover{border-color:var(--acc);color:var(--ink)}
+.foot__r{margin-left:auto;display:flex;gap:16px}
+@media (max-width:640px){
+  .wrap{padding:0 16px}
+  .head{padding:28px 0 14px}
+  .top__name{display:none}
+  .code pre{font-size:11.5px;padding:12px 10px}
+  .ln{padding-left:38px}
+  .ln::before{width:24px;font-size:10px}
+  .bar{top:52px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="wrap top__in">
+    <a class="back" href="index.html">← к демо</a>
+    <span class="top__name">контраст · код</span>
+    <div class="top__right"><a class="back" href="../../index.html">в портфолио</a></div>
+  </div>
+</div>
+
+<header class="head">
+  <div class="wrap">
+    <p class="kind">контраст · код</p>
+    <h1>Контраст: OKLCH и контраст без библиотек</h1>
+    <p class="note">Преобразования sRGB ↔ OKLab ↔ OKLCH, гамут-мэппинг, формула относительной светимости WCAG 2.1 и экспорт переменных — всё написано руками, здесь это видно построчно.</p>
+    <p class="meta">
+      <span>файлов: <b>1</b></span>
+      <span>открыт: <b id="stat-file">—</b></span>
+      <span>строк: <b id="stat-lines">—</b></span>
+      <span>размер: <b id="stat-size">—</b></span>
+    </p>
+  </div>
+</header>
+
+<div class="bar">
+  <div class="wrap bar__in" role="tablist" aria-label="Файлы">
+    <button class="tab" type="button" role="tab" data-tab="index-html" aria-selected="true">index.html<em>19 КБ</em></button>
+    <div class="bar__tools">
+      <button class="btn" type="button" id="wrap">Переносы строк</button>
+      <button class="btn" type="button" id="download">Скачать</button>
+      <button class="btn" type="button" id="copy">Копировать</button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+  <section class="pane" data-pane="index-html" data-file="index.html" data-size="19" >
+    <div class="code"><pre data-lang="html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;ru&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+&lt;title&gt;Контраст — генератор палитр и проверка WCAG&lt;/title&gt;
+&lt;meta name=&quot;description&quot; content=&quot;Демо-стенд: палитра в OKLCH из одного цвета, проверка контраста по WCAG и экспорт CSS-переменных. Ванильный JS.&quot;&gt;
+&lt;meta name=&quot;theme-color&quot; content=&quot;#101012&quot;&gt;
+&lt;link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot;&gt;
+&lt;link rel=&quot;preconnect&quot; href=&quot;https://fonts.gstatic.com&quot; crossorigin&gt;
+&lt;link rel=&quot;stylesheet&quot; href=&quot;https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap&quot;&gt;
+&lt;style&gt;
+:root{
+  --bg:#101012; --surf:#17171a; --surf2:#1e1e22; --line:#2b2b31; --ink:#ececef; --muted:#8a8a95;
+  --ok:#5ce08a; --warn:#ffc65c; --bad:#ff6b6b;
+  --mono:&quot;JetBrains Mono&quot;,ui-monospace,monospace; --sans:&quot;Golos Text&quot;,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 26px}
+header.top{display:flex;align-items:center;gap:14px;padding:24px 0;border-bottom:1px solid var(--line)}
+.logo{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.16em;text-transform:uppercase}
+.logo i{color:var(--muted);font-style:normal}
+.top .back{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted);text-decoration:none;border-bottom:1px solid var(--line);padding-bottom:2px}
+.top .back:hover{color:var(--ink);border-color:var(--ink)}
+h1{font-size:clamp(28px,4vw,44px);line-height:1.02;letter-spacing:-.03em;margin:38px 0 10px;font-weight:600;max-width:20ch}
+.sub{color:var(--muted);max-width:56ch;margin:0 0 34px}
+.layout{display:grid;grid-template-columns:1.35fr 1fr;gap:18px;align-items:start}
+.card{background:var(--surf);border:1px solid var(--line);border-radius:12px;padding:18px}
+.card h2{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:0 0 14px;font-weight:400}
+/* ——— база ——— */
+.base{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+.swatch-input{
+  position:relative;width:56px;height:56px;border-radius:10px;overflow:hidden;border:1px solid var(--line);flex:none;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)
+}
+.swatch-input input{position:absolute;inset:-8px;width:calc(100% + 16px);height:calc(100% + 16px);border:0;padding:0;cursor:pointer;background:transparent}
+.hex{display:flex;align-items:center;gap:6px;background:var(--surf2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-family:var(--mono)}
+.hex span{color:var(--muted);font-size:13px}
+.hex input{width:86px;background:transparent;border:0;color:var(--ink);font-family:var(--mono);font-size:14px;outline:none;text-transform:uppercase}
+.base__meta{font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.7;margin-left:auto;text-align:right}
+.base__meta b{color:var(--ink);font-weight:500}
+/* ——— шкала ——— */
+.scale{display:grid;grid-template-columns:repeat(11,1fr);gap:0;border-radius:10px;overflow:hidden;border:1px solid var(--line);margin-bottom:14px}
+.step{
+  aspect-ratio:.72;border:0;padding:0;cursor:pointer;position:relative;display:flex;flex-direction:column;justify-content:flex-end;
+  align-items:center;gap:2px;font-family:var(--mono);font-size:9px;color:rgba(0,0,0,.55);transition:transform .12s
+}
+.step:hover{transform:translateY(-2px);z-index:2;box-shadow:0 6px 18px rgba(0,0,0,.45)}
+.step b{font-size:10px;font-weight:700}
+.step em{font-style:normal;font-size:8px;opacity:.8}
+.step[data-active=&quot;1&quot;]{box-shadow:inset 0 0 0 2px #fff, 0 0 0 1px #000}
+.roles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.role{display:flex;align-items:center;gap:7px}
+.role i{width:10px;height:10px;border-radius:3px;border:1px solid var(--line);flex:none}
+/* ——— контраст ——— */
+.contrast__pick{display:flex;gap:8px;margin-bottom:14px}
+.pick{flex:1;background:var(--surf2);border:1px solid var(--line);border-radius:9px;padding:9px 10px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.pick b{display:block;color:var(--ink);font-size:13px;margin-top:2px}
+.pick[data-target=&quot;fg&quot;]{box-shadow:inset 0 0 0 1px #fff}
+.preview{border-radius:10px;padding:22px 20px;margin-bottom:14px;border:1px solid var(--line)}
+.preview__big{font-size:34px;font-weight:600;line-height:1.12;letter-spacing:-.02em;margin:0 0 8px}
+.preview__small{font-size:15px;line-height:1.5;margin:0;max-width:34ch}
+.ratio{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
+.ratio b{font-family:var(--mono);font-size:38px;font-weight:700;letter-spacing:-.03em}
+.ratio span{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.badges{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.badge{background:var(--surf2);border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-family:var(--mono);font-size:10px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.badge b{font-size:11px;letter-spacing:.06em}
+.pass{color:var(--ok)} .fail{color:var(--bad)}
+.row-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn{
+  font-family:var(--mono);font-size:11px;padding:10px 12px;border-radius:8px;border:1px solid var(--line);
+  background:var(--surf2);color:var(--ink);cursor:pointer;transition:.15s
+}
+.btn:hover{border-color:#4a4a55;background:#26262c}
+.btn--main{background:var(--ink);color:#111;border-color:var(--ink);font-weight:700}
+.btn--main:hover{background:#fff}
+.btn[data-done=&quot;1&quot;]{background:var(--ok);color:#06210f;border-color:var(--ok)}
+#css-out{
+  width:100%;margin-top:16px;background:#0b0b0d;border:1px solid var(--line);border-radius:9px;color:#b9b9c4;
+  font-family:var(--mono);font-size:11px;line-height:1.75;padding:12px;resize:vertical;min-height:190px;outline:none
+}
+.hint{font-family:var(--mono);font-size:10px;color:#5f5f6a;margin-top:10px}
+footer{padding:44px 0 36px;font-family:var(--mono);font-size:10px;color:#565662;display:flex;gap:16px;flex-wrap:wrap;border-top:1px solid var(--line);margin-top:34px}
+footer a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line)}
+@media (max-width:920px){
+  .layout{grid-template-columns:1fr}
+  .scale{grid-template-columns:repeat(6,1fr)}
+  .base__meta{text-align:left;margin-left:0;width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+:focus-visible{outline:2px solid #fff;outline-offset:2px}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;wrap&quot;&gt;
+  &lt;header class=&quot;top&quot;&gt;
+    &lt;p class=&quot;logo&quot;&gt;контраст&lt;i&gt;/тулкит&lt;/i&gt;&lt;/p&gt;
+    &lt;a class=&quot;back&quot; href=&quot;../../index.html&quot;&gt;← в портфолио&lt;/a&gt;
+  &lt;/header&gt;
+
+  &lt;h1&gt;Один цвет — одиннадцать ступеней&lt;/h1&gt;
+  &lt;p class=&quot;sub&quot;&gt;Палитра считается в OKLCH: светимость меняется равномерно, цвет не уезжает в серый. Рядом — честная проверка контраста по WCAG 2.1 и готовые CSS-переменные.&lt;/p&gt;
+
+  &lt;div class=&quot;layout&quot;&gt;
+    &lt;section class=&quot;card&quot; aria-labelledby=&quot;c-base&quot;&gt;
+      &lt;h2 id=&quot;c-base&quot;&gt;Базовый цвет&lt;/h2&gt;
+      &lt;div class=&quot;base&quot;&gt;
+        &lt;label class=&quot;swatch-input&quot; title=&quot;Выбрать цвет&quot;&gt;
+          &lt;input type=&quot;color&quot; id=&quot;picker&quot; value=&quot;#4f46e5&quot; aria-label=&quot;Базовый цвет&quot;&gt;
+        &lt;/label&gt;
+        &lt;div class=&quot;hex&quot;&gt;&lt;span&gt;#&lt;/span&gt;&lt;input id=&quot;hexin&quot; value=&quot;4F46E5&quot; maxlength=&quot;6&quot; spellcheck=&quot;false&quot; aria-label=&quot;HEX без решётки&quot;&gt;&lt;/div&gt;
+        &lt;div class=&quot;base__meta&quot; id=&quot;base-meta&quot;&gt;—&lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;div class=&quot;scale&quot; id=&quot;scale&quot; role=&quot;group&quot; aria-label=&quot;Шкала оттенков&quot;&gt;&lt;/div&gt;
+      &lt;div class=&quot;roles&quot;&gt;
+        &lt;span class=&quot;role&quot;&gt;&lt;i id=&quot;r-fg&quot;&gt;&lt;/i&gt;текст&lt;/span&gt;
+        &lt;span class=&quot;role&quot;&gt;&lt;i id=&quot;r-bg&quot;&gt;&lt;/i&gt;фон&lt;/span&gt;
+        &lt;span class=&quot;role&quot;&gt;&lt;i id=&quot;r-acc&quot;&gt;&lt;/i&gt;акцент&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;p class=&quot;hint&quot;&gt;Клик по ступени — подставить её в текст или фон. Переключатель цвета выбирается в блоке справа.&lt;/p&gt;
+    &lt;/section&gt;
+
+    &lt;section class=&quot;card&quot; aria-labelledby=&quot;c-contrast&quot;&gt;
+      &lt;h2 id=&quot;c-contrast&quot;&gt;Контраст&lt;/h2&gt;
+      &lt;div class=&quot;contrast__pick&quot;&gt;
+        &lt;button class=&quot;pick&quot; type=&quot;button&quot; data-target=&quot;fg&quot; id=&quot;pick-fg&quot;&gt;текст&lt;b&gt;—&lt;/b&gt;&lt;/button&gt;
+        &lt;button class=&quot;pick&quot; type=&quot;button&quot; data-target=&quot;bg&quot; id=&quot;pick-bg&quot;&gt;фон&lt;b&gt;—&lt;/b&gt;&lt;/button&gt;
+      &lt;/div&gt;
+
+      &lt;div class=&quot;preview&quot; id=&quot;preview&quot;&gt;
+        &lt;p class=&quot;preview__big&quot; id=&quot;pv-big&quot;&gt;Читается?&lt;/p&gt;
+        &lt;p class=&quot;preview__small&quot; id=&quot;pv-small&quot;&gt;Если текст на фоне ниже 4,5:1, часть людей его просто не увидит. Это проверяется формулой, а не на глаз.&lt;/p&gt;
+      &lt;/div&gt;
+
+      &lt;div class=&quot;ratio&quot;&gt;&lt;b id=&quot;ratio&quot;&gt;—&lt;/b&gt;&lt;span&gt;к 1 · WCAG 2.1&lt;/span&gt;&lt;/div&gt;
+
+      &lt;div class=&quot;badges&quot;&gt;
+        &lt;div class=&quot;badge&quot;&gt;&lt;span&gt;AA · 4,5:1&lt;/span&gt;&lt;b id=&quot;b-aa&quot;&gt;—&lt;/b&gt;&lt;/div&gt;
+        &lt;div class=&quot;badge&quot;&gt;&lt;span&gt;AAA · 7:1&lt;/span&gt;&lt;b id=&quot;b-aaa&quot;&gt;—&lt;/b&gt;&lt;/div&gt;
+        &lt;div class=&quot;badge&quot;&gt;&lt;span&gt;AA крупный · 3:1&lt;/span&gt;&lt;b id=&quot;b-aal&quot;&gt;—&lt;/b&gt;&lt;/div&gt;
+        &lt;div class=&quot;badge&quot;&gt;&lt;span&gt;UI · 3:1&lt;/span&gt;&lt;b id=&quot;b-ui&quot;&gt;—&lt;/b&gt;&lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;div class=&quot;row-btns&quot;&gt;
+        &lt;button class=&quot;btn&quot; type=&quot;button&quot; id=&quot;fix&quot;&gt;Подобрать доступный&lt;/button&gt;
+        &lt;button class=&quot;btn&quot; type=&quot;button&quot; id=&quot;swap&quot;&gt;Поменять местами&lt;/button&gt;
+        &lt;button class=&quot;btn btn--main&quot; type=&quot;button&quot; id=&quot;copy-css&quot;&gt;Скопировать CSS&lt;/button&gt;
+        &lt;button class=&quot;btn&quot; type=&quot;button&quot; id=&quot;copy-hex&quot;&gt;Скопировать HEX&lt;/button&gt;
+      &lt;/div&gt;
+
+      &lt;textarea id=&quot;css-out&quot; readonly aria-label=&quot;CSS-переменные палитры&quot;&gt;&lt;/textarea&gt;
+      &lt;p class=&quot;hint&quot; id=&quot;out-hint&quot;&gt;Переменные обновляются при каждом изменении базы.&lt;/p&gt;
+    &lt;/section&gt;
+  &lt;/div&gt;
+
+  &lt;footer&gt;
+    &lt;span&gt;демо-стенд · OKLab ↔ sRGB вручную, без библиотек&lt;/span&gt;
+    &lt;a href=&quot;../../index.html&quot;&gt;портфолио&lt;/a&gt;
+  &lt;/footer&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+(() =&gt; {
+  &quot;use strict&quot;;
+
+  /* ——— цветовые преобразования ——— */
+  const hexToRgb = (hex) =&gt; {
+    const h = hex.replace(&quot;#&quot;, &quot;&quot;).trim();
+    const full = h.length === 3 ? h.split(&quot;&quot;).map(c =&gt; c + c).join(&quot;&quot;) : h;
+    const n = parseInt(full, 16);
+    return [(n &gt;&gt; 16) &amp; 255, (n &gt;&gt; 8) &amp; 255, n &amp; 255];
+  };
+  const rgbToHex = (rgb) =&gt;
+    &quot;#&quot; + rgb.map(v =&gt; Math.round(Math.min(255, Math.max(0, v))).toString(16).padStart(2, &quot;0&quot;)).join(&quot;&quot;).toUpperCase();
+
+  const toLinear = (c) =&gt; { c /= 255; return c &lt;= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+  const fromLinear = (c) =&gt; 255 * (c &lt;= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 2.4) - 0.055);
+
+  function rgbToOklab([r, g, b]) {
+    const R = toLinear(r), G = toLinear(g), B = toLinear(b);
+    const l = Math.cbrt(0.4122214708 * R + 0.5363325363 * G + 0.0514459929 * B);
+    const m = Math.cbrt(0.2119034982 * R + 0.6806995451 * G + 0.1073969566 * B);
+    const s = Math.cbrt(0.0883024619 * R + 0.2817188376 * G + 0.6299787005 * B);
+    return [
+      0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
+      1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
+      0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s
+    ];
+  }
+
+  function oklabToRgb([L, a, b]) {
+    const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
+    const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
+    const s_ = L - 0.0894841775 * a - 1.2914855480 * b;
+    const l = l_ ** 3, m = m_ ** 3, s = s_ ** 3;
+    return [
+      fromLinear(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
+      fromLinear(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s),
+      fromLinear(-0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s)
+    ];
+  }
+
+  const oklabToOklch = ([L, a, b]) =&gt; [L, Math.hypot(a, b), Math.atan2(b, a) * 180 / Math.PI];
+  const oklchToOklab = ([L, C, h]) =&gt; [L, C * Math.cos(h * Math.PI / 180), C * Math.sin(h * Math.PI / 180)];
+
+  const inGamut = (rgb) =&gt; rgb.every(v =&gt; v &gt;= -0.6 &amp;&amp; v &lt;= 255.6);
+
+  // Гамут-мэппинг: тянем хрому вниз, пока цвет не влезет в sRGB
+  function mapToGamut([L, C, h]) {
+    let c = C;
+    for (let i = 0; i &lt; 200; i++) {
+      const rgb = oklabToRgb(oklchToOklab([L, c, h]));
+      if (inGamut(rgb)) return oklchToOklab([L, c, h]);
+      c *= 0.985;
+      if (c &lt; 0.0005) break;
+    }
+    return [L, 0, 0];
+  }
+
+  const lum = (rgb) =&gt; {
+    const [r, g, b] = rgb.map(toLinear);
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const contrast = (a, b) =&gt; {
+    const l1 = lum(hexToRgb(a)), l2 = lum(hexToRgb(b));
+    return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+  };
+
+  /* ——— шкала ——— */
+  const STEPS = [
+    { k: 50, L: 0.985, c: 0.10 },
+    { k: 100, L: 0.955, c: 0.19 },
+    { k: 200, L: 0.905, c: 0.34 },
+    { k: 300, L: 0.835, c: 0.56 },
+    { k: 400, L: 0.745, c: 0.80 },
+    { k: 500, L: 0.655, c: 1.00 },
+    { k: 600, L: 0.575, c: 0.98 },
+    { k: 700, L: 0.495, c: 0.88 },
+    { k: 800, L: 0.415, c: 0.74 },
+    { k: 900, L: 0.335, c: 0.60 },
+    { k: 950, L: 0.245, c: 0.46 }
+  ];
+
+  const state = { base: &quot;#4F46E5&quot;, steps: [], fg: &quot;#111111&quot;, bg: &quot;#FFFFFF&quot;, target: &quot;fg&quot; };
+
+  function buildSteps(hex) {
+    const [, C0, h] = oklabToOklch(rgbToOklab(hexToRgb(hex)));
+    return STEPS.map(s =&gt; {
+      const lab = mapToGamut([s.L, C0 * s.c, h]);
+      const rgb = oklabToRgb(lab);
+      const [L, C, hh] = oklabToOklch(lab);
+      return {
+        k: s.k,
+        hex: rgbToHex(rgb),
+        oklch: `oklch(${(L * 100).toFixed(1)}% ${C.toFixed(3)} ${hh.toFixed(0)})`
+      };
+    });
+  }
+
+  function renderScale() {
+    const wrap = document.getElementById(&quot;scale&quot;);
+    wrap.innerHTML = state.steps.map(s =&gt; {
+      const dark = lum(hexToRgb(s.hex)) &lt; 0.35;
+      return `&lt;button class=&quot;step&quot; type=&quot;button&quot; data-hex=&quot;${s.hex}&quot; data-active=&quot;${s.hex === (state.target === &quot;fg&quot; ? state.fg : state.bg) ? 1 : 0}&quot;
+        style=&quot;background:${s.hex};color:${dark ? &quot;rgba(255,255,255,.8)&quot; : &quot;rgba(0,0,0,.6)&quot;}&quot;
+        title=&quot;oklch ${s.k} · ${s.hex}&quot; aria-label=&quot;Ступень ${s.k}, ${s.hex}&quot;&gt;&lt;em&gt;${s.k}&lt;/em&gt;&lt;b&gt;${s.hex.slice(1)}&lt;/b&gt;&lt;/button&gt;`;
+    }).join(&quot;&quot;);
+
+    wrap.querySelectorAll(&quot;.step&quot;).forEach(btn =&gt; {
+      btn.addEventListener(&quot;click&quot;, () =&gt; {
+        if (state.target === &quot;fg&quot;) state.fg = btn.dataset.hex; else state.bg = btn.dataset.hex;
+        renderScale(); renderContrast();
+      });
+    });
+
+    const meta = document.getElementById(&quot;base-meta&quot;);
+    const [, C, h] = oklabToOklch(rgbToOklab(hexToRgb(state.base)));
+    meta.innerHTML = `OKLCH&lt;br&gt;&lt;b&gt;${state.base}&lt;/b&gt;&lt;br&gt;h ${h.toFixed(0)}° · C ${C.toFixed(3)}`;
+
+    document.getElementById(&quot;r-fg&quot;).style.background = state.fg;
+    document.getElementById(&quot;r-bg&quot;).style.background = state.bg;
+    document.getElementById(&quot;r-acc&quot;).style.background = state.steps[5].hex;
+  }
+
+  function renderContrast() {
+    const ratio = contrast(state.fg, state.bg);
+    const r = ratio.toFixed(2).replace(&quot;.&quot;, &quot;,&quot;);
+    document.getElementById(&quot;ratio&quot;).textContent = r;
+    document.getElementById(&quot;pv-big&quot;).style.color = state.fg;
+    document.getElementById(&quot;pv-small&quot;).style.color = state.fg;
+    document.getElementById(&quot;preview&quot;).style.background = state.bg;
+    document.getElementById(&quot;pick-fg&quot;).innerHTML = `текст&lt;b&gt;${state.fg}&lt;/b&gt;`;
+    document.getElementById(&quot;pick-bg&quot;).innerHTML = `фон&lt;b&gt;${state.bg}&lt;/b&gt;`;
+    document.getElementById(&quot;pick-fg&quot;).setAttribute(&quot;aria-pressed&quot;, String(state.target === &quot;fg&quot;));
+    document.getElementById(&quot;pick-bg&quot;).setAttribute(&quot;aria-pressed&quot;, String(state.target === &quot;bg&quot;));
+    document.getElementById(&quot;pick-fg&quot;).style.boxShadow = state.target === &quot;fg&quot; ? &quot;inset 0 0 0 1px #fff&quot; : &quot;none&quot;;
+    document.getElementById(&quot;pick-bg&quot;).style.boxShadow = state.target === &quot;bg&quot; ? &quot;inset 0 0 0 1px #fff&quot; : &quot;none&quot;;
+
+    const mark = (id, ok) =&gt; {
+      const el = document.getElementById(id);
+      el.textContent = ok ? &quot;проходит&quot; : &quot;ниже нормы&quot;;
+      el.className = ok ? &quot;pass&quot; : &quot;fail&quot;;
+    };
+    mark(&quot;b-aa&quot;, ratio &gt;= 4.5);
+    mark(&quot;b-aaa&quot;, ratio &gt;= 7);
+    mark(&quot;b-aal&quot;, ratio &gt;= 3);
+    mark(&quot;b-ui&quot;, ratio &gt;= 3);
+
+    document.getElementById(&quot;css-out&quot;).value = cssVars();
+  }
+
+  const cssVars = () =&gt; {
+    const lines = state.steps.map(s =&gt; `  --c-${s.k}: ${s.hex.toLowerCase()}; /* ${s.oklch} */`);
+    lines.push(`  --c-base: ${state.base.toLowerCase()};`);
+    lines.push(`  --c-ink: ${state.fg.toLowerCase()};`);
+    lines.push(`  --c-paper: ${state.bg.toLowerCase()};`);
+    return `:root {\n${lines.join(&quot;\n&quot;)}\n}`;
+  };
+
+  function setBase(hex) {
+    const clean = (hex.startsWith(&quot;#&quot;) ? hex : &quot;#&quot; + hex).toUpperCase();
+    if (!/^#[0-9A-F]{6}$/.test(clean)) return;
+    state.base = clean;
+    document.getElementById(&quot;picker&quot;).value = clean.toLowerCase();
+    document.getElementById(&quot;hexin&quot;).value = clean.slice(1);
+    state.steps = buildSteps(clean);
+    // по умолчанию: тёмная и светлая ступени как текст/фон
+    state.fg = state.steps[8].hex;
+    state.bg = state.steps[0].hex;
+    renderScale(); renderContrast();
+  }
+
+  /* ——— события ——— */
+  document.getElementById(&quot;picker&quot;).addEventListener(&quot;input&quot;, (e) =&gt; setBase(e.target.value));
+  document.getElementById(&quot;hexin&quot;).addEventListener(&quot;change&quot;, (e) =&gt; {
+    const v = e.target.value.replace(/[^0-9a-f]/gi, &quot;&quot;);
+    if (v.length === 6) setBase(v); else e.target.value = state.base.slice(1);
+  });
+  document.getElementById(&quot;pick-fg&quot;).addEventListener(&quot;click&quot;, () =&gt; { state.target = &quot;fg&quot;; renderScale(); renderContrast(); });
+  document.getElementById(&quot;pick-bg&quot;).addEventListener(&quot;click&quot;, () =&gt; { state.target = &quot;bg&quot;; renderScale(); renderContrast(); });
+
+  document.getElementById(&quot;swap&quot;).addEventListener(&quot;click&quot;, () =&gt; {
+    [state.fg, state.bg] = [state.bg, state.fg];
+    renderScale(); renderContrast();
+  });
+
+  // ищем ближайшую по свету ступень, дающую нужный контраст
+  document.getElementById(&quot;fix&quot;).addEventListener(&quot;click&quot;, () =&gt; {
+    const candidates = state.steps.map(s =&gt; s.hex);
+    const want = contrast(state.fg, state.bg) &gt;= 4.5
+      ? null
+      : candidates.map(hx =&gt; ({ hx, c: contrast(hx, state.bg) })).sort((a, b) =&gt; b.c - a.c)[0];
+    if (want &amp;&amp; want.c &gt; 0) {
+      state.fg = want.hx;
+      document.getElementById(&quot;out-hint&quot;).textContent = `Подставил ${want.hx}: ${want.c.toFixed(2).replace(&quot;.&quot;, &quot;,&quot;)}:1 к фону.`;
+    } else {
+      document.getElementById(&quot;out-hint&quot;).textContent = &quot;Контраст уже выше 4,5:1 — менять нечего.&quot;;
+    }
+    renderScale(); renderContrast();
+  });
+
+  async function copyText(text, btn, label) {
+    try {
+      await navigator.clipboard.writeText(text);
+      btn.dataset.done = &quot;1&quot;;
+      const old = btn.textContent;
+      btn.textContent = &quot;Готово&quot;;
+      setTimeout(() =&gt; { btn.textContent = old; delete btn.dataset.done; }, 1500);
+    } catch {
+      document.getElementById(&quot;out-hint&quot;).textContent = &quot;Буфер обмена закрыт — скопируйте из поля ниже.&quot;;
+    }
+  }
+
+  document.getElementById(&quot;copy-css&quot;).addEventListener(&quot;click&quot;, (e) =&gt; copyText(cssVars(), e.currentTarget));
+  document.getElementById(&quot;copy-hex&quot;).addEventListener(&quot;click&quot;, (e) =&gt; copyText(state.steps[5].hex, e.currentTarget));
+
+  setBase(&quot;#4F46E5&quot;);
+})();
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre></div>
+  </section>
+</main>
+
+<footer class="foot wrap">
+  <span>страница кода · исходник встроен целиком, подсветка своя</span>
+  <div class="foot__r">
+    <a href="index.html">демо ↗</a>
+    <a href="../../index.html">в портфолио</a>
+  </div>
+</footer>
+
+<script>
+(() => {
+  "use strict";
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const tabs = $$(".tab");
+  const panes = $$(".pane");
+
+  const MAP = { "&": "&amp;", "<": "&lt;", ">": "&gt;" };
+  const esc = (s) => s.replace(/[&<>]/g, (c) => MAP[c]);
+
+  /* ——— лексер: комментарии и строки, затем ключевые слова ——— */
+  /* угловые скобки разметки пишем как \x3C: их литералы ломают разбор скрипта */
+  const TOKEN = /(\/\*[\s\S]*?\*\/|\/\/[^\n]*|\x3C!--[\s\S]*?--\x3E|`(?:\\[\s\S]|[^`\\])*`|"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*')/g;
+  const KW = /\b(const|let|var|function|return|if|else|for|while|do|switch|case|break|continue|new|class|extends|this|null|undefined|true|false|await|async|of|in|typeof|instanceof|delete|try|catch|finally|throw|import|export|from|default)\b/g;
+  const NUM = /\b\d+(?:\.\d+)?(?:e[+-]?\d+)?\b|\b0x[0-9a-fA-F]+\b/g;
+  const TAG = /\x3C!--[\s\S]*?--\x3E|\x3C\/?[a-zA-Z][^>]*>/g;
+  const ATTR = /([\w:@.\-]+)(\s*=\s*)("[^"]*"|'[^']*'|[^\s>]+)|([\w:@.\-]+)|([\s\S])/g;
+
+  const paintJs = (s) => esc(s).replace(KW, '<span class="tok-kw">$1</span>').replace(NUM, '<span class="tok-num">$&</span>');
+  const paintCss = (s) => esc(s)
+    .replace(/(@[\w-]+)/g, '<span class="tok-at">$1</span>')
+    .replace(/([\w-]+)(?=\s*:)/g, '<span class="tok-prop">$1</span>')
+    .replace(NUM, '<span class="tok-num">$&</span>');
+
+  function paintCode(src, lang) {
+    const body = lang === "css" ? paintCss : paintJs;
+    let out = "", last = 0, m;
+    TOKEN.lastIndex = 0;
+    while ((m = TOKEN.exec(src))) {
+      out += body(src.slice(last, m.index));
+      const t = m[0];
+      const isComment = t.startsWith("\x3C!--") || t.startsWith("/*") || t.startsWith("//");
+      out += '<span class="' + (isComment ? "tok-com" : "tok-str") + '">' + esc(t) + "</span>";
+      last = m.index + t.length;
+    }
+    return out + body(src.slice(last));
+  }
+
+  function paintTag(tag) {
+    if (tag.startsWith("\x3C!--")) return '<span class="tok-com">' + esc(tag) + "</span>";
+    const m = /^<(\/?)([a-zA-Z][\w:-]*)([\s\S]*?)(\/?)>$/.exec(tag);
+    if (!m) return esc(tag);
+    const [, slash, name, attrs, selfClose] = m;
+    let painted = "", a;
+    ATTR.lastIndex = 0;
+    while ((a = ATTR.exec(attrs))) {
+      if (a[4] !== undefined) painted += '<span class="tok-attr">' + esc(a[4]) + "</span>";
+      else if (a[1] !== undefined) {
+        painted += '<span class="tok-attr">' + esc(a[1]) + "</span>" + esc(a[2] || "") +
+          '<span class="tok-str">' + esc(a[3] || "") + "</span>";
+      } else painted += esc(a[5]);
+    }
+    return esc("<") + esc(slash || "") + '<span class="tok-tag">' + esc(name) + "</span>" +
+      painted + esc(selfClose || "") + esc(">");
+  }
+
+  function paintHtml(src) {
+    let out = "", i = 0, m;
+    while (i < src.length) {
+      TAG.lastIndex = i;
+      m = TAG.exec(src);
+      if (!m) { out += esc(src.slice(i)); break; }
+      out += esc(src.slice(i, m.index));
+      out += paintTag(m[0]);
+      i = m.index + m[0].length;
+      /* внутри script и style подсвечиваем по правилам их языков */
+      const open = /^\x3C(script|style)\b/i.exec(m[0]);
+      if (open && !/\/>$/.test(m[0])) {
+        const name = open[1].toLowerCase();
+        const close = src.toLowerCase().indexOf("</" + name, i);
+        const end = close === -1 ? src.length : close;
+        out += name === "script" ? paintCode(src.slice(i, end), "js") : paintCode(src.slice(i, end), "css");
+        i = end;
+      }
+    }
+    return out;
+  }
+
+  function paintAstro(src) {
+    const fm = /^---\r?\n([\s\S]*?)\r?\n---/.exec(src);
+    if (!fm) return paintHtml(src);
+    const head = paintCode(fm[1], "js");
+    const rest = src.slice(fm[0].length);
+    return '<span class="tok-com">---</span>\n' + head + '\n<span class="tok-com">---</span>' + paintHtml(rest);
+  }
+
+  function paintLine(line, lang, state) {
+    if (lang === "css" || lang === "js") {
+      if (state.comment) {
+        const end = line.indexOf("*/");
+        if (end === -1) return '<span class="tok-com">' + esc(line) + "</span>";
+        state.comment = false;
+        return '<span class="tok-com">' + esc(line.slice(0, end + 2)) + "</span>" + paintCode(line.slice(end + 2), lang);
+      }
+      const out = paintCode(line, lang);
+      if (/\/\*(?![\s\S]*\*\/)/.test(line)) state.comment = true;
+      return out;
+    }
+    if (lang === "html" || lang === "astro") return lang === "astro" ? paintAstro(line) : paintHtml(line);
+    return esc(line);
+  }
+
+  function render(pre) {
+    if (pre.dataset.done) return;
+    const lang = pre.dataset.lang || "html";
+    const lines = pre.textContent.replace(/\t/g, "  ").split("\n");
+    const state = { comment: false };
+    /* строки — блочные span'ы, переносов в тексте нет: собираем их обратно
+       при копировании и скачивании, иначе файл выгрузится одной строкой */
+    pre.innerHTML = lines
+      .map((line, i) => '<span class="ln" data-n="' + (i + 1) + '">' + paintLine(line, lang, state) + "</span>")
+      .join("");
+    pre.dataset.done = "1";
+    pre.dataset.lines = lines.length;
+  }
+
+  const rawText = (pre) => Array.from(pre.children).map((el) => el.textContent).join("\n");
+
+  function select(name) {
+    tabs.forEach((t) => t.setAttribute("aria-selected", String(t.dataset.tab === name)));
+    panes.forEach((p) => (p.hidden = p.dataset.pane !== name));
+    const active = panes.find((p) => p.dataset.pane === name);
+    if (active) {
+      const pre = active.querySelector("pre");
+      render(pre);
+      document.getElementById("stat-lines").textContent = pre.dataset.lines;
+      document.getElementById("stat-size").textContent = active.dataset.size + " КБ";
+      document.getElementById("stat-file").textContent = active.dataset.file;
+      pre.classList.remove("wrap-lines");
+      const wb = document.getElementById("wrap");
+      wb.textContent = "Переносы строк"; wb.dataset.done = "0";
+    }
+    if (location.hash !== "#" + name) history.replaceState(null, "", "#" + name);
+  }
+
+  tabs.forEach((t) => t.addEventListener("click", () => select(t.dataset.tab)));
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    if (/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
+    const i = tabs.findIndex((t) => t.getAttribute("aria-selected") === "true");
+    const next = (i + (e.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
+    tabs[next].click();
+    tabs[next].focus();
+  });
+
+  function current() {
+    const pane = panes.find((p) => !p.hidden);
+    return { pane, pre: pane.querySelector("pre"), name: pane.dataset.file };
+  }
+
+  document.getElementById("copy").addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    try {
+      await navigator.clipboard.writeText(rawText(current().pre));
+      btn.dataset.done = "1";
+      btn.textContent = "Скопировано";
+    } catch {
+      btn.textContent = "Выделите вручную";
+    }
+    setTimeout(() => { btn.textContent = "Копировать"; delete btn.dataset.done; }, 1800);
+  });
+
+  document.getElementById("download").addEventListener("click", () => {
+    const { pre, name } = current();
+    const blob = new Blob([rawText(pre)], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
+  const wrapBtn = document.getElementById("wrap");
+  wrapBtn.addEventListener("click", () => {
+    const on = current().pre.classList.toggle("wrap-lines");
+    wrapBtn.dataset.done = on ? "1" : "0";
+    wrapBtn.textContent = on ? "Без переносов" : "Переносы строк";
+  });
+
+  select(location.hash.slice(1) || panes[0].dataset.pane);
+})();
+</script>
+</body>
+</html>

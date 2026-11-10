@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Код · Гарнитура — шрифтовая студия</title>
+<meta name="description" content="Живой тестер типографики: пересчёт кегля, трекинга и интерлиньяжа, сетка глифов, копирование CSS. Разметка, стили и скрипт лежат в одном документе.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0b0c09">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230d0e0b'/%3E%3Cpath d='M9 22l5-12h4l5 12h-3l-1.2-3h-5.6L12 22z' fill='%23c9f24e'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600&family=Golos+Text:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#0b0c09; --panel:#111310; --panel2:#15170f; --line:rgba(241,240,229,.15);
+  --ink:#f1f0e5; --muted:#94948a; --acc:#c9f24e; --acc-ink:#0b0c09;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+  --sans:"Golos Text",system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{width:100%;max-width:1180px;margin:0 auto;padding:0 28px}
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.top__in{display:flex;align-items:center;gap:16px;height:56px}
+.back{font-family:var(--mono);font-size:11.5px;text-decoration:none;color:var(--muted);
+  border-bottom:1px solid transparent;padding-bottom:1px;transition:.15s}
+.back:hover{color:var(--ink);border-color:var(--acc)}
+.top__name{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.top__right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.head{padding:44px 0 18px}
+.kind{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--acc);margin:0 0 14px}
+h1{font-family:"Unbounded",var(--sans);font-weight:600;font-size:clamp(26px,3.4vw,40px);line-height:1.02;
+  letter-spacing:-.04em;margin:0}
+.note{color:var(--muted);max-width:70ch;margin:14px 0 0;font-size:14.5px}
+.meta{display:flex;flex-wrap:wrap;gap:8px 22px;margin:20px 0 0;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.meta b{color:var(--ink);font-weight:500}
+
+.bar{border-top:1px solid var(--line);border-bottom:1px solid var(--line);position:sticky;top:56px;
+  z-index:15;background:var(--bg);margin-top:22px}
+.bar__in{display:flex;align-items:center;gap:6px;padding:9px 0;overflow:auto}
+.tab{
+  font-family:var(--mono);font-size:11.5px;padding:7px 12px;border:1px solid var(--line);border-radius:7px;
+  background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;transition:.15s
+}
+.tab:hover{color:var(--ink);border-color:rgba(241,240,229,.4)}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tab em{font-style:normal;opacity:.55;margin-left:7px;font-size:10px}
+.bar__tools{margin-left:auto;display:flex;gap:6px;flex-shrink:0}
+.btn{
+  font-family:var(--mono);font-size:11px;padding:7px 11px;border-radius:7px;border:1px solid var(--line);
+  background:var(--panel2);color:var(--ink);cursor:pointer;transition:.15s
+}
+.btn:hover{border-color:rgba(241,240,229,.45);background:#1c1f14}
+.btn[data-done="1"]{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+
+.code{margin:0 0 40px;border:1px solid var(--line);border-top:0;background:var(--panel);overflow:auto}
+.code pre{margin:0;padding:16px 18px 20px;font-family:var(--mono);font-size:12.5px;line-height:1.68;
+  tab-size:2;white-space:pre;color:#cfd3c6}
+.code pre.wrap-lines{white-space:pre-wrap;word-break:break-word}
+.ln{display:block;position:relative;padding-left:52px;min-height:1.68em}
+.ln::before{content:attr(data-n);position:absolute;left:0;width:34px;text-align:right;color:#43483f;
+  font-size:11px;user-select:none}
+.ln:hover::before{color:var(--acc)}
+.tok-com{color:#5f6b58;font-style:italic}
+.tok-str{color:#e3b478}
+.tok-tag{color:#8fd6ff}
+.tok-attr{color:var(--acc)}
+.tok-kw{color:#ff9ecb}
+.tok-num{color:#b6e05a}
+.tok-prop{color:#9ad0ff}
+.tok-at{color:#c4a6ff}
+
+.foot{display:flex;gap:18px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--line);
+  padding:18px 0 40px;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.foot a{text-decoration:none;border-bottom:1px solid var(--line);padding-bottom:1px}
+.foot a:hover{border-color:var(--acc);color:var(--ink)}
+.foot__r{margin-left:auto;display:flex;gap:16px}
+@media (max-width:640px){
+  .wrap{padding:0 16px}
+  .head{padding:28px 0 14px}
+  .top__name{display:none}
+  .code pre{font-size:11.5px;padding:12px 10px}
+  .ln{padding-left:38px}
+  .ln::before{width:24px;font-size:10px}
+  .bar{top:52px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="wrap top__in">
+    <a class="back" href="index.html">← к демо</a>
+    <span class="top__name">гарнитура · код</span>
+    <div class="top__right"><a class="back" href="../../index.html">в портфолио</a></div>
+  </div>
+</div>
+
+<header class="head">
+  <div class="wrap">
+    <p class="kind">гарнитура · код</p>
+    <h1>Гарнитура: тестер набора в одном файле</h1>
+    <p class="note">Живой тестер типографики: пересчёт кегля, трекинга и интерлиньяжа, сетка глифов, копирование CSS. Разметка, стили и скрипт лежат в одном документе.</p>
+    <p class="meta">
+      <span>файлов: <b>1</b></span>
+      <span>открыт: <b id="stat-file">—</b></span>
+      <span>строк: <b id="stat-lines">—</b></span>
+      <span>размер: <b id="stat-size">—</b></span>
+    </p>
+  </div>
+</header>
+
+<div class="bar">
+  <div class="wrap bar__in" role="tablist" aria-label="Файлы">
+    <button class="tab" type="button" role="tab" data-tab="index-html" aria-selected="true">index.html<em>17 КБ</em></button>
+    <div class="bar__tools">
+      <button class="btn" type="button" id="wrap">Переносы строк</button>
+      <button class="btn" type="button" id="download">Скачать</button>
+      <button class="btn" type="button" id="copy">Копировать</button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+  <section class="pane" data-pane="index-html" data-file="index.html" data-size="17" >
+    <div class="code"><pre data-lang="html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;ru&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+&lt;title&gt;Гарнитура — шрифтовая студия&lt;/title&gt;
+&lt;meta name=&quot;description&quot; content=&quot;Демо-стенд: шрифтовая студия с живым тестером набора. Ванильный JS, без библиотек.&quot;&gt;
+&lt;meta name=&quot;theme-color&quot; content=&quot;#f4f1ea&quot;&gt;
+&lt;link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot;&gt;
+&lt;link rel=&quot;preconnect&quot; href=&quot;https://fonts.gstatic.com&quot; crossorigin&gt;
+&lt;link rel=&quot;stylesheet&quot; href=&quot;https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&amp;family=Playfair+Display:ital,wght@0,500;0,700;1,500&amp;family=Manrope:wght@400;500;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap&quot;&gt;
+&lt;style&gt;
+:root{
+  --paper:#f4f1ea; --paper-2:#ebe6dc; --ink:#16140f; --muted:#6f6759;
+  --line:#d8d1c3; --acc:#c8412a;
+  --mono:&quot;JetBrains Mono&quot;,ui-monospace,monospace; --sans:&quot;Manrope&quot;,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1240px;margin:0 auto;padding:0 28px}
+a{color:inherit}
+/* ——— шапка ——— */
+.top{display:flex;align-items:center;gap:20px;padding:26px 0 18px;border-bottom:1px solid var(--line)}
+.brand{font-family:&quot;Unbounded&quot;,sans-serif;font-weight:800;font-size:19px;letter-spacing:-.03em;text-decoration:none}
+.brand span{color:var(--acc)}
+.top nav{margin-left:auto;display:flex;gap:22px;font-size:13px;font-family:var(--mono);letter-spacing:.04em}
+.top nav a{text-decoration:none;color:var(--muted);padding-bottom:2px;border-bottom:1px solid transparent}
+.top nav a:hover{color:var(--ink);border-color:var(--acc)}
+.top__cta{font-family:var(--mono);font-size:12px;background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:2px;text-decoration:none;margin-left:12px}
+.top__cta:hover{background:var(--acc)}
+/* ——— заголовок ——— */
+.hero{padding:56px 0 40px;display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:end;border-bottom:1px solid var(--line)}
+.hero h1{font-family:&quot;Unbounded&quot;,sans-serif;font-weight:800;font-size:clamp(40px,6.4vw,86px);line-height:.93;letter-spacing:-.045em;margin:0}
+.hero h1 em{font-family:&quot;Playfair Display&quot;,serif;font-style:italic;font-weight:500;letter-spacing:-.01em}
+.hero p{color:var(--muted);max-width:38ch;margin:22px 0 0;font-size:15px}
+.hero__spec{display:grid;gap:14px}
+.hero__num{display:flex;align-items:baseline;gap:12px;border-top:1px solid var(--line);padding-top:10px;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.hero__num b{font-family:&quot;Unbounded&quot;,sans-serif;font-size:22px;color:var(--ink);letter-spacing:-.02em;margin-left:auto;text-transform:none}
+/* ——— тестер ——— */
+.tester{padding:40px 0 8px}
+.tester__title{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:400;margin:0 0 18px}
+.tester__bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:26px}
+.seg{display:flex;border:1px solid var(--line);border-radius:2px;overflow:hidden;background:#fff}
+.seg button{
+  font-family:var(--mono);font-size:11px;letter-spacing:.03em;padding:8px 12px;border:0;background:transparent;
+  color:var(--muted);cursor:pointer;border-right:1px solid var(--line);transition:.14s
+}
+.seg button:last-child{border-right:0}
+.seg button:hover{background:var(--paper-2);color:var(--ink)}
+.seg button[aria-pressed=&quot;true&quot;]{background:var(--ink);color:var(--paper)}
+.field{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.field input[type=range]{width:96px;accent-color:var(--acc)}
+.field output{color:var(--ink);min-width:42px;font-variant-numeric:tabular-nums}
+.tester__stage{
+  border:1px solid var(--line);background:#fff;padding:34px 34px 26px;position:relative;
+  min-height:260px;display:flex;align-items:center
+}
+.tester__stage::before{
+  content:attr(data-meta);position:absolute;top:10px;right:14px;font-family:var(--mono);
+  font-size:10px;color:#a9a193;letter-spacing:.1em;text-transform:uppercase
+}
+#sample{
+  width:100%;border:0;background:transparent;resize:none;overflow:hidden;
+  font-family:var(--sans);color:var(--ink);line-height:1.15;outline:none;
+  caret-color:var(--acc);
+}
+.tester__foot{display:flex;gap:14px;align-items:center;margin-top:12px;flex-wrap:wrap}
+.tester__hint{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.copy{font-family:var(--mono);font-size:11px;background:transparent;border:1px solid var(--line);padding:7px 12px;border-radius:2px;cursor:pointer;color:var(--muted);margin-left:auto}
+.copy:hover{border-color:var(--ink);color:var(--ink)}
+.copy[data-done=&quot;1&quot;]{background:var(--acc);border-color:var(--acc);color:#fff}
+/* ——— глифы ——— */
+.glyphs{padding:40px 0;border-top:1px solid var(--line);margin-top:40px}
+.glyphs__head{display:flex;align-items:baseline;gap:14px;margin-bottom:18px}
+.glyphs h2{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:0;font-weight:400}
+.glyphs__fam{font-family:var(--mono);font-size:11px;color:var(--acc);margin-left:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.grid span{
+  border-right:1px solid var(--line);border-bottom:1px solid var(--line);aspect-ratio:1;display:grid;place-items:center;
+  font-size:28px;transition:background .16s,color .16s;cursor:default
+}
+.grid span:hover{background:var(--ink);color:var(--paper)}
+/* ——— витрина ——— */
+.show{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-top:8px}
+.spec{background:#fff;padding:26px 22px;min-height:230px;display:flex;flex-direction:column;gap:10px;text-decoration:none;transition:background .2s}
+.spec:hover{background:var(--paper-2)}
+.spec__aa{font-size:64px;line-height:1;letter-spacing:-.03em}
+.spec__n{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--muted)}
+.spec__t{margin-top:auto;font-size:15px;font-weight:700}
+.spec__d{font-size:13px;color:var(--muted)}
+.spec__w{font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:.1em}
+/* ——— футер ——— */
+.end{padding:56px 0 40px;border-top:1px solid var(--line);margin-top:56px;display:flex;gap:18px;flex-wrap:wrap;align-items:baseline}
+.end h2{font-family:&quot;Unbounded&quot;,sans-serif;font-size:clamp(26px,4vw,44px);letter-spacing:-.035em;margin:0;line-height:1}
+.back{font-family:var(--mono);font-size:12px;margin-left:auto;text-decoration:none;border-bottom:1px solid var(--acc);padding-bottom:2px}
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr;gap:26px;padding:36px 0 28px}
+  .show{grid-template-columns:1fr}
+  .top nav{display:none}
+  .tester__stage{padding:22px 18px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;wrap&quot;&gt;
+
+  &lt;header class=&quot;top&quot;&gt;
+    &lt;a class=&quot;brand&quot; href=&quot;#top&quot;&gt;Гарнитура&lt;span&gt;.&lt;/span&gt;&lt;/a&gt;
+    &lt;nav aria-label=&quot;Разделы&quot;&gt;
+      &lt;a href=&quot;#tester&quot;&gt;Тестер&lt;/a&gt;
+      &lt;a href=&quot;#glyphs&quot;&gt;Глифы&lt;/a&gt;
+      &lt;a href=&quot;#show&quot;&gt;Каталог&lt;/a&gt;
+    &lt;/nav&gt;
+    &lt;a class=&quot;top__cta&quot; href=&quot;#show&quot;&gt;Смотреть каталог&lt;/a&gt;
+  &lt;/header&gt;
+
+  &lt;section class=&quot;hero&quot; id=&quot;top&quot;&gt;
+    &lt;div&gt;
+      &lt;h1&gt;Шрифт&lt;br&gt;&lt;em&gt;как&lt;/em&gt; инструмент&lt;/h1&gt;
+      &lt;p&gt;Небольшая студия: четыре гарнитуры с полной кириллицей. Тестер ниже работает по-настоящему — правьте текст, кегль и трекинг прямо на странице.&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;hero__spec&quot;&gt;
+      &lt;div class=&quot;hero__num&quot;&gt;&lt;span&gt;Файлы&lt;/span&gt;&lt;b&gt;16&lt;/b&gt;&lt;/div&gt;
+      &lt;div class=&quot;hero__num&quot;&gt;&lt;span&gt;Языки&lt;/span&gt;&lt;b&gt;3&lt;/b&gt;&lt;/div&gt;
+      &lt;div class=&quot;hero__num&quot;&gt;&lt;span&gt;Лицензия&lt;/span&gt;&lt;b&gt;OFL&lt;/b&gt;&lt;/div&gt;
+      &lt;div class=&quot;hero__num&quot;&gt;&lt;span&gt;Год&lt;/span&gt;&lt;b&gt;2026&lt;/b&gt;&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class=&quot;tester&quot; id=&quot;tester&quot; aria-labelledby=&quot;tester-t&quot;&gt;
+    &lt;h2 id=&quot;tester-t&quot; class=&quot;tester__title&quot;&gt;Живой тестер&lt;/h2&gt;
+
+    &lt;div class=&quot;tester__bar&quot;&gt;
+      &lt;div class=&quot;seg&quot; role=&quot;group&quot; aria-label=&quot;Гарнитура&quot;&gt;
+        &lt;button type=&quot;button&quot; data-family=&quot;Unbounded&quot; aria-pressed=&quot;true&quot;&gt;Unbounded&lt;/button&gt;
+        &lt;button type=&quot;button&quot; data-family=&quot;Playfair Display&quot; aria-pressed=&quot;false&quot; aria-label=&quot;Playfair Display&quot;&gt;Playfair&lt;/button&gt;
+        &lt;button type=&quot;button&quot; data-family=&quot;Manrope&quot; aria-pressed=&quot;false&quot;&gt;Manrope&lt;/button&gt;
+        &lt;button type=&quot;button&quot; data-family=&quot;JetBrains Mono&quot; aria-pressed=&quot;false&quot; aria-label=&quot;JetBrains Mono&quot;&gt;JetBrains&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;seg&quot; role=&quot;group&quot; aria-label=&quot;Начертание&quot;&gt;
+        &lt;button type=&quot;button&quot; data-weight=&quot;400&quot; aria-pressed=&quot;true&quot;&gt;400&lt;/button&gt;
+        &lt;button type=&quot;button&quot; data-weight=&quot;600&quot; aria-pressed=&quot;false&quot;&gt;600&lt;/button&gt;
+        &lt;button type=&quot;button&quot; data-weight=&quot;800&quot; aria-pressed=&quot;false&quot;&gt;800&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;label class=&quot;field&quot;&gt;кегль &lt;input id=&quot;f-size&quot; type=&quot;range&quot; min=&quot;16&quot; max=&quot;140&quot; value=&quot;64&quot;&gt;&lt;output id=&quot;o-size&quot;&gt;64&lt;/output&gt;&lt;/label&gt;
+      &lt;label class=&quot;field&quot;&gt;трекинг &lt;input id=&quot;f-track&quot; type=&quot;range&quot; min=&quot;-80&quot; max=&quot;80&quot; value=&quot;-20&quot;&gt;&lt;output id=&quot;o-track&quot;&gt;-0,02&lt;/output&gt;&lt;/label&gt;
+      &lt;label class=&quot;field&quot;&gt;интерлиньяж &lt;input id=&quot;f-lh&quot; type=&quot;range&quot; min=&quot;80&quot; max=&quot;180&quot; value=&quot;100&quot;&gt;&lt;output id=&quot;o-lh&quot;&gt;1,00&lt;/output&gt;&lt;/label&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;tester__stage&quot; id=&quot;stage&quot; data-meta=&quot;Unbounded 400 · 64px&quot;&gt;
+      &lt;textarea id=&quot;sample&quot; rows=&quot;2&quot; spellcheck=&quot;false&quot; aria-label=&quot;Текст для проверки набора&quot;&gt;Съешь же ещё этих мягких французских булок&lt;/textarea&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;tester__foot&quot;&gt;
+      &lt;p class=&quot;tester__hint&quot;&gt;Текст в рамке можно править. Всё считается на лету — ни одного запроса к серверу.&lt;/p&gt;
+      &lt;button class=&quot;copy&quot; type=&quot;button&quot; id=&quot;copy-css&quot;&gt;Скопировать CSS&lt;/button&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;glyphs&quot; id=&quot;glyphs&quot;&gt;
+      &lt;div class=&quot;glyphs__head&quot;&gt;
+        &lt;h2&gt;Глифы&lt;/h2&gt;
+        &lt;span class=&quot;glyphs__fam&quot; id=&quot;glyph-fam&quot;&gt;Unbounded · 400&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;grid&quot; id=&quot;glyph-grid&quot;&gt;&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section id=&quot;show&quot; aria-labelledby=&quot;show-t&quot; style=&quot;padding-top:8px&quot;&gt;
+    &lt;div class=&quot;glyphs__head&quot;&gt;
+      &lt;h2 id=&quot;show-t&quot;&gt;Каталог&lt;/h2&gt;
+      &lt;span class=&quot;glyphs__fam&quot;&gt;4 гарнитуры · 16 файлов&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;show&quot;&gt;
+      &lt;a class=&quot;spec&quot; href=&quot;#tester&quot; data-set=&quot;Unbounded|800|Unbounded — дисплейная|Плотная, широкая, для заголовков и обложек.&quot;&gt;
+        &lt;span class=&quot;spec__aa&quot; style=&quot;font-family:&#x27;Unbounded&#x27;,sans-serif;font-weight:800&quot;&gt;Аа&lt;/span&gt;
+        &lt;span class=&quot;spec__n&quot;&gt;01 / display&lt;/span&gt;
+        &lt;span class=&quot;spec__t&quot;&gt;Unbounded&lt;/span&gt;
+        &lt;span class=&quot;spec__d&quot;&gt;Плотная, широкая, для заголовков и обложек.&lt;/span&gt;
+        &lt;span class=&quot;spec__w&quot;&gt;400 · 600 · 800&lt;/span&gt;
+      &lt;/a&gt;
+      &lt;a class=&quot;spec&quot; href=&quot;#tester&quot; data-set=&quot;Playfair Display|500|Playfair Display — акциденция|Высокий контраст, курсив для акцентов.&quot;&gt;
+        &lt;span class=&quot;spec__aa&quot; style=&quot;font-family:&#x27;Playfair Display&#x27;,serif;font-weight:500&quot;&gt;Аа&lt;/span&gt;
+        &lt;span class=&quot;spec__n&quot;&gt;02 / serif&lt;/span&gt;
+        &lt;span class=&quot;spec__t&quot;&gt;Playfair Display&lt;/span&gt;
+        &lt;span class=&quot;spec__d&quot;&gt;Высокий контраст, курсив для акцентов.&lt;/span&gt;
+        &lt;span class=&quot;spec__w&quot;&gt;500 · 700 · italic&lt;/span&gt;
+      &lt;/a&gt;
+      &lt;a class=&quot;spec&quot; href=&quot;#tester&quot; data-set=&quot;Manrope|400|Manrope — текстовая|Нейтральная, читается с 14 px.&quot;&gt;
+        &lt;span class=&quot;spec__aa&quot; style=&quot;font-family:&#x27;Manrope&#x27;,sans-serif;font-weight:400&quot;&gt;Аа&lt;/span&gt;
+        &lt;span class=&quot;spec__n&quot;&gt;03 / sans&lt;/span&gt;
+        &lt;span class=&quot;spec__t&quot;&gt;Manrope&lt;/span&gt;
+        &lt;span class=&quot;spec__d&quot;&gt;Нейтральная, читается с 14 px.&lt;/span&gt;
+        &lt;span class=&quot;spec__w&quot;&gt;400 · 500 · 700&lt;/span&gt;
+      &lt;/a&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;footer class=&quot;end&quot;&gt;
+    &lt;h2&gt;Попробуйте на своём тексте&lt;/h2&gt;
+    &lt;a class=&quot;back&quot; href=&quot;../../index.html&quot;&gt;← в портфолио&lt;/a&gt;
+  &lt;/footer&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+(() =&gt; {
+  &quot;use strict&quot;;
+  const stage = document.getElementById(&quot;stage&quot;);
+  const sample = document.getElementById(&quot;sample&quot;);
+  const grid = document.getElementById(&quot;glyph-grid&quot;);
+  const famLabel = document.getElementById(&quot;glyph-fam&quot;);
+  const outSize = document.getElementById(&quot;o-size&quot;);
+  const outTrack = document.getElementById(&quot;o-track&quot;);
+  const outLh = document.getElementById(&quot;o-lh&quot;);
+
+  const state = { family: &quot;Unbounded&quot;, weight: 400, size: 64, track: -0.02, lh: 1 };
+
+  const GLYPHS = &quot;АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя0123456789.,:;!?—–()«»№%&quot;;
+
+  function apply() {
+    sample.style.fontFamily = `&quot;${state.family}&quot;, sans-serif`;
+    sample.style.fontWeight = state.weight;
+    sample.style.fontSize = state.size + &quot;px&quot;;
+    sample.style.letterSpacing = state.track + &quot;em&quot;;
+    sample.style.lineHeight = state.lh;
+    // авто-высота textarea: рамка растёт под набранное
+    sample.style.height = &quot;auto&quot;;
+    sample.style.height = Math.max(state.size * state.lh, sample.scrollHeight) + &quot;px&quot;;
+    stage.dataset.meta = `${state.family} ${state.weight} · ${state.size}px`;
+    famLabel.textContent = `${state.family} · ${state.weight}`;
+    outSize.value = state.size;
+    outTrack.value = state.track.toFixed(2).replace(&quot;.&quot;, &quot;,&quot;);
+    outLh.value = state.lh.toFixed(2).replace(&quot;.&quot;, &quot;,&quot;);
+    renderGlyphs();
+  }
+
+  function renderGlyphs() {
+    const chars = GLYPHS.split(&quot;&quot;);
+    // перерисовываем только при смене гарнитуры — экономим layout
+    if (grid.dataset.sig === state.family + state.weight) return;
+    grid.dataset.sig = state.family + state.weight;
+    grid.innerHTML = chars.map(c =&gt; `&lt;span style=&quot;font-family:&#x27;${state.family}&#x27;,sans-serif;font-weight:${state.weight}&quot;&gt;${c}&lt;/span&gt;`).join(&quot;&quot;);
+  }
+
+  document.querySelectorAll(&quot;[data-family]&quot;).forEach((btn) =&gt; {
+    btn.addEventListener(&quot;click&quot;, () =&gt; {
+      state.family = btn.dataset.family;
+      document.querySelectorAll(&quot;[data-family]&quot;).forEach(b =&gt; b.setAttribute(&quot;aria-pressed&quot;, String(b === btn)));
+      apply();
+    });
+  });
+
+  document.querySelectorAll(&quot;[data-weight]&quot;).forEach((btn) =&gt; {
+    btn.addEventListener(&quot;click&quot;, () =&gt; {
+      state.weight = +btn.dataset.weight;
+      document.querySelectorAll(&quot;[data-weight]&quot;).forEach(b =&gt; b.setAttribute(&quot;aria-pressed&quot;, String(b === btn)));
+      apply();
+    });
+  });
+
+  document.getElementById(&quot;f-size&quot;).addEventListener(&quot;input&quot;, (e) =&gt; { state.size = +e.target.value; apply(); });
+  document.getElementById(&quot;f-track&quot;).addEventListener(&quot;input&quot;, (e) =&gt; { state.track = +e.target.value / 1000; apply(); });
+  document.getElementById(&quot;f-lh&quot;).addEventListener(&quot;input&quot;, (e) =&gt; { state.lh = +e.target.value / 100; apply(); });
+  sample.addEventListener(&quot;input&quot;, apply);
+
+  // карточки каталога переключают тестер
+  document.querySelectorAll(&quot;[data-set]&quot;).forEach((card) =&gt; {
+    card.addEventListener(&quot;click&quot;, () =&gt; {
+      const [family, weight] = card.dataset.set.split(&quot;|&quot;);
+      state.family = family;
+      state.weight = +weight;
+      document.querySelectorAll(&quot;[data-family]&quot;).forEach(b =&gt; b.setAttribute(&quot;aria-pressed&quot;, String(b.dataset.family === family)));
+      document.querySelectorAll(&quot;[data-weight]&quot;).forEach(b =&gt; b.setAttribute(&quot;aria-pressed&quot;, String(+b.dataset.weight === +weight)));
+      apply();
+      document.getElementById(&quot;tester&quot;).scrollIntoView({ behavior: &quot;smooth&quot;, block: &quot;start&quot; });
+      setTimeout(() =&gt; sample.focus({ preventScroll: true }), 400);
+    });
+  });
+
+  const copyBtn = document.getElementById(&quot;copy-css&quot;);
+  copyBtn.addEventListener(&quot;click&quot;, async () =&gt; {
+    const css = `font-family: &quot;${state.family}&quot;, sans-serif;\nfont-weight: ${state.weight};\nfont-size: ${state.size}px;\nletter-spacing: ${state.track.toFixed(3)}em;\nline-height: ${state.lh.toFixed(2)};`;
+    try {
+      await navigator.clipboard.writeText(css);
+      copyBtn.textContent = &quot;Скопировано&quot;;
+      copyBtn.dataset.done = &quot;1&quot;;
+    } catch {
+      copyBtn.textContent = &quot;Не вышло — выделите вручную&quot;;
+    }
+    setTimeout(() =&gt; { copyBtn.textContent = &quot;Скопировать CSS&quot;; delete copyBtn.dataset.done; }, 1800);
+  });
+
+  apply();
+})();
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre></div>
+  </section>
+</main>
+
+<footer class="foot wrap">
+  <span>страница кода · исходник встроен целиком, подсветка своя</span>
+  <div class="foot__r">
+    <a href="index.html">демо ↗</a>
+    <a href="../../index.html">в портфолио</a>
+  </div>
+</footer>
+
+<script>
+(() => {
+  "use strict";
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const tabs = $$(".tab");
+  const panes = $$(".pane");
+
+  const MAP = { "&": "&amp;", "<": "&lt;", ">": "&gt;" };
+  const esc = (s) => s.replace(/[&<>]/g, (c) => MAP[c]);
+
+  /* ——— лексер: комментарии и строки, затем ключевые слова ——— */
+  /* угловые скобки разметки пишем как \x3C: их литералы ломают разбор скрипта */
+  const TOKEN = /(\/\*[\s\S]*?\*\/|\/\/[^\n]*|\x3C!--[\s\S]*?--\x3E|`(?:\\[\s\S]|[^`\\])*`|"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*')/g;
+  const KW = /\b(const|let|var|function|return|if|else|for|while|do|switch|case|break|continue|new|class|extends|this|null|undefined|true|false|await|async|of|in|typeof|instanceof|delete|try|catch|finally|throw|import|export|from|default)\b/g;
+  const NUM = /\b\d+(?:\.\d+)?(?:e[+-]?\d+)?\b|\b0x[0-9a-fA-F]+\b/g;
+  const TAG = /\x3C!--[\s\S]*?--\x3E|\x3C\/?[a-zA-Z][^>]*>/g;
+  const ATTR = /([\w:@.\-]+)(\s*=\s*)("[^"]*"|'[^']*'|[^\s>]+)|([\w:@.\-]+)|([\s\S])/g;
+
+  const paintJs = (s) => esc(s).replace(KW, '<span class="tok-kw">$1</span>').replace(NUM, '<span class="tok-num">$&</span>');
+  const paintCss = (s) => esc(s)
+    .replace(/(@[\w-]+)/g, '<span class="tok-at">$1</span>')
+    .replace(/([\w-]+)(?=\s*:)/g, '<span class="tok-prop">$1</span>')
+    .replace(NUM, '<span class="tok-num">$&</span>');
+
+  function paintCode(src, lang) {
+    const body = lang === "css" ? paintCss : paintJs;
+    let out = "", last = 0, m;
+    TOKEN.lastIndex = 0;
+    while ((m = TOKEN.exec(src))) {
+      out += body(src.slice(last, m.index));
+      const t = m[0];
+      const isComment = t.startsWith("\x3C!--") || t.startsWith("/*") || t.startsWith("//");
+      out += '<span class="' + (isComment ? "tok-com" : "tok-str") + '">' + esc(t) + "</span>";
+      last = m.index + t.length;
+    }
+    return out + body(src.slice(last));
+  }
+
+  function paintTag(tag) {
+    if (tag.startsWith("\x3C!--")) return '<span class="tok-com">' + esc(tag) + "</span>";
+    const m = /^<(\/?)([a-zA-Z][\w:-]*)([\s\S]*?)(\/?)>$/.exec(tag);
+    if (!m) return esc(tag);
+    const [, slash, name, attrs, selfClose] = m;
+    let painted = "", a;
+    ATTR.lastIndex = 0;
+    while ((a = ATTR.exec(attrs))) {
+      if (a[4] !== undefined) painted += '<span class="tok-attr">' + esc(a[4]) + "</span>";
+      else if (a[1] !== undefined) {
+        painted += '<span class="tok-attr">' + esc(a[1]) + "</span>" + esc(a[2] || "") +
+          '<span class="tok-str">' + esc(a[3] || "") + "</span>";
+      } else painted += esc(a[5]);
+    }
+    return esc("<") + esc(slash || "") + '<span class="tok-tag">' + esc(name) + "</span>" +
+      painted + esc(selfClose || "") + esc(">");
+  }
+
+  function paintHtml(src) {
+    let out = "", i = 0, m;
+    while (i < src.length) {
+      TAG.lastIndex = i;
+      m = TAG.exec(src);
+      if (!m) { out += esc(src.slice(i)); break; }
+      out += esc(src.slice(i, m.index));
+      out += paintTag(m[0]);
+      i = m.index + m[0].length;
+      /* внутри script и style подсвечиваем по правилам их языков */
+      const open = /^\x3C(script|style)\b/i.exec(m[0]);
+      if (open && !/\/>$/.test(m[0])) {
+        const name = open[1].toLowerCase();
+        const close = src.toLowerCase().indexOf("</" + name, i);
+        const end = close === -1 ? src.length : close;
+        out += name === "script" ? paintCode(src.slice(i, end), "js") : paintCode(src.slice(i, end), "css");
+        i = end;
+      }
+    }
+    return out;
+  }
+
+  function paintAstro(src) {
+    const fm = /^---\r?\n([\s\S]*?)\r?\n---/.exec(src);
+    if (!fm) return paintHtml(src);
+    const head = paintCode(fm[1], "js");
+    const rest = src.slice(fm[0].length);
+    return '<span class="tok-com">---</span>\n' + head + '\n<span class="tok-com">---</span>' + paintHtml(rest);
+  }
+
+  function paintLine(line, lang, state) {
+    if (lang === "css" || lang === "js") {
+      if (state.comment) {
+        const end = line.indexOf("*/");
+        if (end === -1) return '<span class="tok-com">' + esc(line) + "</span>";
+        state.comment = false;
+        return '<span class="tok-com">' + esc(line.slice(0, end + 2)) + "</span>" + paintCode(line.slice(end + 2), lang);
+      }
+      const out = paintCode(line, lang);
+      if (/\/\*(?![\s\S]*\*\/)/.test(line)) state.comment = true;
+      return out;
+    }
+    if (lang === "html" || lang === "astro") return lang === "astro" ? paintAstro(line) : paintHtml(line);
+    return esc(line);
+  }
+
+  function render(pre) {
+    if (pre.dataset.done) return;
+    const lang = pre.dataset.lang || "html";
+    const lines = pre.textContent.replace(/\t/g, "  ").split("\n");
+    const state = { comment: false };
+    /* строки — блочные span'ы, переносов в тексте нет: собираем их обратно
+       при копировании и скачивании, иначе файл выгрузится одной строкой */
+    pre.innerHTML = lines
+      .map((line, i) => '<span class="ln" data-n="' + (i + 1) + '">' + paintLine(line, lang, state) + "</span>")
+      .join("");
+    pre.dataset.done = "1";
+    pre.dataset.lines = lines.length;
+  }
+
+  const rawText = (pre) => Array.from(pre.children).map((el) => el.textContent).join("\n");
+
+  function select(name) {
+    tabs.forEach((t) => t.setAttribute("aria-selected", String(t.dataset.tab === name)));
+    panes.forEach((p) => (p.hidden = p.dataset.pane !== name));
+    const active = panes.find((p) => p.dataset.pane === name);
+    if (active) {
+      const pre = active.querySelector("pre");
+      render(pre);
+      document.getElementById("stat-lines").textContent = pre.dataset.lines;
+      document.getElementById("stat-size").textContent = active.dataset.size + " КБ";
+      document.getElementById("stat-file").textContent = active.dataset.file;
+      pre.classList.remove("wrap-lines");
+      const wb = document.getElementById("wrap");
+      wb.textContent = "Переносы строк"; wb.dataset.done = "0";
+    }
+    if (location.hash !== "#" + name) history.replaceState(null, "", "#" + name);
+  }
+
+  tabs.forEach((t) => t.addEventListener("click", () => select(t.dataset.tab)));
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    if (/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
+    const i = tabs.findIndex((t) => t.getAttribute("aria-selected") === "true");
+    const next = (i + (e.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
+    tabs[next].click();
+    tabs[next].focus();
+  });
+
+  function current() {
+    const pane = panes.find((p) => !p.hidden);
+    return { pane, pre: pane.querySelector("pre"), name: pane.dataset.file };
+  }
+
+  document.getElementById("copy").addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    try {
+      await navigator.clipboard.writeText(rawText(current().pre));
+      btn.dataset.done = "1";
+      btn.textContent = "Скопировано";
+    } catch {
+      btn.textContent = "Выделите вручную";
+    }
+    setTimeout(() => { btn.textContent = "Копировать"; delete btn.dataset.done; }, 1800);
+  });
+
+  document.getElementById("download").addEventListener("click", () => {
+    const { pre, name } = current();
+    const blob = new Blob([rawText(pre)], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
+  const wrapBtn = document.getElementById("wrap");
+  wrapBtn.addEventListener("click", () => {
+    const on = current().pre.classList.toggle("wrap-lines");
+    wrapBtn.dataset.done = on ? "1" : "0";
+    wrapBtn.textContent = on ? "Без переносов" : "Переносы строк";
+  });
+
+  select(location.hash.slice(1) || panes[0].dataset.pane);
+})();
+</script>
+</body>
+</html>

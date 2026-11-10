@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Код · Ваша Кухня — фабрика кухонь</title>
+<meta name="description" content="Клиентский проект собирается на Astro: страницы, компоненты, SEO-разметка и стили. Здесь — четыре файла из исходного проекта: главная страница, SEO-компонент, квиз-калькулятор и глобальные стили.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0b0c09">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230d0e0b'/%3E%3Cpath d='M9 22l5-12h4l5 12h-3l-1.2-3h-5.6L12 22z' fill='%23c9f24e'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600&family=Golos+Text:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#0b0c09; --panel:#111310; --panel2:#15170f; --line:rgba(241,240,229,.15);
+  --ink:#f1f0e5; --muted:#94948a; --acc:#c9f24e; --acc-ink:#0b0c09;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+  --sans:"Golos Text",system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{width:100%;max-width:1180px;margin:0 auto;padding:0 28px}
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.top__in{display:flex;align-items:center;gap:16px;height:56px}
+.back{font-family:var(--mono);font-size:11.5px;text-decoration:none;color:var(--muted);
+  border-bottom:1px solid transparent;padding-bottom:1px;transition:.15s}
+.back:hover{color:var(--ink);border-color:var(--acc)}
+.top__name{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.top__right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.head{padding:44px 0 18px}
+.kind{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--acc);margin:0 0 14px}
+h1{font-family:"Unbounded",var(--sans);font-weight:600;font-size:clamp(26px,3.4vw,40px);line-height:1.02;
+  letter-spacing:-.04em;margin:0}
+.note{color:var(--muted);max-width:70ch;margin:14px 0 0;font-size:14.5px}
+.meta{display:flex;flex-wrap:wrap;gap:8px 22px;margin:20px 0 0;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.meta b{color:var(--ink);font-weight:500}
+
+.bar{border-top:1px solid var(--line);border-bottom:1px solid var(--line);position:sticky;top:56px;
+  z-index:15;background:var(--bg);margin-top:22px}
+.bar__in{display:flex;align-items:center;gap:6px;padding:9px 0;overflow:auto}
+.tab{
+  font-family:var(--mono);font-size:11.5px;padding:7px 12px;border:1px solid var(--line);border-radius:7px;
+  background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;transition:.15s
+}
+.tab:hover{color:var(--ink);border-color:rgba(241,240,229,.4)}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tab em{font-style:normal;opacity:.55;margin-left:7px;font-size:10px}
+.bar__tools{margin-left:auto;display:flex;gap:6px;flex-shrink:0}
+.btn{
+  font-family:var(--mono);font-size:11px;padding:7px 11px;border-radius:7px;border:1px solid var(--line);
+  background:var(--panel2);color:var(--ink);cursor:pointer;transition:.15s
+}
+.btn:hover{border-color:rgba(241,240,229,.45);background:#1c1f14}
+.btn[data-done="1"]{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+
+.code{margin:0 0 40px;border:1px solid var(--line);border-top:0;background:var(--panel);overflow:auto}
+.code pre{margin:0;padding:16px 18px 20px;font-family:var(--mono);font-size:12.5px;line-height:1.68;
+  tab-size:2;white-space:pre;color:#cfd3c6}
+.code pre.wrap-lines{white-space:pre-wrap;word-break:break-word}
+.ln{display:block;position:relative;padding-left:52px;min-height:1.68em}
+.ln::before{content:attr(data-n);position:absolute;left:0;width:34px;text-align:right;color:#43483f;
+  font-size:11px;user-select:none}
+.ln:hover::before{color:var(--acc)}
+.tok-com{color:#5f6b58;font-style:italic}
+.tok-str{color:#e3b478}
+.tok-tag{color:#8fd6ff}
+.tok-attr{color:var(--acc)}
+.tok-kw{color:#ff9ecb}
+.tok-num{color:#b6e05a}
+.tok-prop{color:#9ad0ff}
+.tok-at{color:#c4a6ff}
+
+.foot{display:flex;gap:18px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--line);
+  padding:18px 0 40px;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.foot a{text-decoration:none;border-bottom:1px solid var(--line);padding-bottom:1px}
+.foot a:hover{border-color:var(--acc);color:var(--ink)}
+.foot__r{margin-left:auto;display:flex;gap:16px}
+@media (max-width:640px){
+  .wrap{padding:0 16px}
+  .head{padding:28px 0 14px}
+  .top__name{display:none}
+  .code pre{font-size:11.5px;padding:12px 10px}
+  .ln{padding-left:38px}
+  .ln::before{width:24px;font-size:10px}
+  .bar{top:52px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="wrap top__in">
+    <a class="back" href="index.html">← к демо</a>
+    <span class="top__name">ваша кухня · код</span>
+    <div class="top__right"><a class="back" href="../../index.html">в портфолио</a></div>
+  </div>
+</div>
+
+<header class="head">
+  <div class="wrap">
+    <p class="kind">ваша кухня · код</p>
+    <h1>Ваша Кухня: исходники на Astro</h1>
+    <p class="note">Клиентский проект собирается на Astro: страницы, компоненты, SEO-разметка и стили. Здесь — четыре файла из исходного проекта: главная страница, SEO-компонент, квиз-калькулятор и глобальные стили.</p>
+    <p class="meta">
+      <span>файлов: <b>4</b></span>
+      <span>открыт: <b id="stat-file">—</b></span>
+      <span>строк: <b id="stat-lines">—</b></span>
+      <span>размер: <b id="stat-size">—</b></span>
+    </p>
+  </div>
+</header>
+
+<div class="bar">
+  <div class="wrap bar__in" role="tablist" aria-label="Файлы">
+    <button class="tab" type="button" role="tab" data-tab="index-astro" aria-selected="true">index.astro<em>11 КБ</em></button>
+    <button class="tab" type="button" role="tab" data-tab="Seo-astro" aria-selected="false">Seo.astro<em>3 КБ</em></button>
+    <button class="tab" type="button" role="tab" data-tab="Quiz-astro" aria-selected="false">Quiz.astro<em>9 КБ</em></button>
+    <button class="tab" type="button" role="tab" data-tab="global-css" aria-selected="false">global.css<em>4 КБ</em></button>
+    <div class="bar__tools">
+      <button class="btn" type="button" id="wrap">Переносы строк</button>
+      <button class="btn" type="button" id="download">Скачать</button>
+      <button class="btn" type="button" id="copy">Копировать</button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+  <section class="pane" data-pane="index-astro" data-file="index.astro" data-size="11" >
+    <div class="code"><pre data-lang="astro">---
+import { Picture } from &#x27;astro:assets&#x27;;
+import Base from &#x27;../layouts/Base.astro&#x27;;
+import Icon from &#x27;../components/Icon.astro&#x27;;
+import CategoryGrid from &#x27;../components/CategoryGrid.astro&#x27;;
+import Steps from &#x27;../components/Steps.astro&#x27;;
+import Faq from &#x27;../components/Faq.astro&#x27;;
+import LeadForm from &#x27;../components/LeadForm.astro&#x27;;
+import Reviews from &#x27;../components/Reviews.astro&#x27;;
+import { site, rub } from &#x27;../data/site&#x27;;
+import { advantages, faq } from &#x27;../data/content&#x27;;
+import { works } from &#x27;../data/kitchens&#x27;;
+import hero from &#x27;../assets/kitchens/ug7.jpg&#x27;;
+
+const gallery = [works[18], works[9], works[15], works[2], works[5]];
+
+const faqSchema = {
+  &#x27;@context&#x27;: &#x27;https://schema.org&#x27;,
+  &#x27;@type&#x27;: &#x27;FAQPage&#x27;,
+  mainEntity: faq.map((f) =&gt; ({ &#x27;@type&#x27;: &#x27;Question&#x27;, name: f.q, acceptedAnswer: { &#x27;@type&#x27;: &#x27;Answer&#x27;, text: f.a } })),
+};
+---
+&lt;Base
+  title=&quot;Кухни на заказ в Пятигорске от производителя — «Ваша Кухня»&quot;
+  description={`Кухни на заказ в Пятигорске и на КМВ от ${rub(site.facts.priceFrom)}. Собственное производство, изготовление за ${site.facts.days} рабочий день, бесплатный замер, доставка и сборка. Гарантия ${site.facts.warranty} года.`}
+  schema={[faqSchema]}
+&gt;
+  &lt;section class=&quot;hero&quot;&gt;
+    &lt;div class=&quot;container hero__grid&quot;&gt;
+      &lt;div class=&quot;hero__text&quot;&gt;
+        &lt;a class=&quot;hero__rating&quot; href={site.yandexMaps} target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;
+          &lt;span class=&quot;stars&quot;&gt;{[1, 2, 3, 4, 5].map(() =&gt; &lt;Icon name=&quot;star&quot; /&gt;)}&lt;/span&gt;
+          &lt;span&gt;&lt;b&gt;{site.rating.value.toFixed(1)}&lt;/b&gt; · {site.rating.count} отзыва на Яндекс Картах&lt;/span&gt;
+        &lt;/a&gt;
+        &lt;h1&gt;Кухни на заказ в&amp;nbsp;Пятигорске &lt;em&gt;от&amp;nbsp;производителя&lt;/em&gt;&lt;/h1&gt;
+        &lt;p class=&quot;hero__lead&quot;&gt;Проектируем и изготавливаем кухни под ваши размеры на собственном производстве. Без посредников — поэтому дешевле салонов.&lt;/p&gt;
+        &lt;div class=&quot;hero__cta&quot;&gt;
+          &lt;a class=&quot;btn btn--primary&quot; href=&quot;/kalkulyator/&quot;&gt;Рассчитать стоимость &lt;Icon name=&quot;arrow&quot; /&gt;&lt;/a&gt;
+          &lt;a class=&quot;btn btn--ghost&quot; href=&quot;/raboty/&quot;&gt;Смотреть работы&lt;/a&gt;
+        &lt;/div&gt;
+        &lt;dl class=&quot;hero__facts&quot;&gt;
+          &lt;div&gt;&lt;dt&gt;{site.facts.days}&lt;/dt&gt;&lt;dd&gt;рабочий день&lt;br /&gt;на изготовление&lt;/dd&gt;&lt;/div&gt;
+          &lt;div&gt;&lt;dt&gt;{site.facts.warranty} года&lt;/dt&gt;&lt;dd&gt;гарантия&lt;br /&gt;на мебель&lt;/dd&gt;&lt;/div&gt;
+          &lt;div&gt;&lt;dt&gt;0 ₽&lt;/dt&gt;&lt;dd&gt;замер, доставка&lt;br /&gt;и сборка&lt;/dd&gt;&lt;/div&gt;
+        &lt;/dl&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;hero__media&quot;&gt;
+        &lt;Picture src={hero} formats={[&#x27;avif&#x27;, &#x27;webp&#x27;]} fallbackFormat=&quot;jpg&quot; widths={[480, 800, 1200]} sizes=&quot;(max-width: 860px) 100vw, 45vw&quot; alt=&quot;Угловая кухня графитового цвета с деревянной столешницей и подсветкой — работа «Ваша Кухня»&quot; loading=&quot;eager&quot; fetchpriority=&quot;high&quot; /&gt;
+        &lt;div class=&quot;hero__badge&quot;&gt;
+          &lt;span&gt;Акция&lt;/span&gt;
+          &lt;b&gt;{site.promo.title}&lt;/b&gt;
+          &lt;s&gt;{rub(site.promo.oldPrice)}&lt;/s&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class=&quot;section section--surface&quot;&gt;
+    &lt;div class=&quot;container&quot;&gt;
+      &lt;h2 class=&quot;sr-only&quot;&gt;Почему выбирают «Ваша Кухня»&lt;/h2&gt;
+      &lt;ul class=&quot;adv&quot;&gt;
+        {advantages.map((a) =&gt; (
+          &lt;li data-reveal&gt;&lt;Icon name=&quot;check&quot; /&gt;&lt;h3&gt;{a.title}&lt;/h3&gt;&lt;p&gt;{a.text}&lt;/p&gt;&lt;/li&gt;
+        ))}
+      &lt;/ul&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class=&quot;section&quot;&gt;
+    &lt;div class=&quot;container&quot;&gt;
+      &lt;div class=&quot;section-head&quot;&gt;
+        &lt;span class=&quot;eyebrow&quot;&gt;Каталог&lt;/span&gt;
+        &lt;h2&gt;Кухни любой &lt;em&gt;планировки&lt;/em&gt;&lt;/h2&gt;
+        &lt;p&gt;Делаем под ваше помещение: от компактной прямой кухни до кухни-гостиной с островом. Материалы фасадов и столешниц — на выбор.&lt;/p&gt;
+      &lt;/div&gt;
+      &lt;CategoryGrid /&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class=&quot;section section--surface&quot;&gt;
+    &lt;div class=&quot;container&quot;&gt;
+      &lt;div class=&quot;section-head section-head--row&quot;&gt;
+        &lt;div&gt;
+          &lt;span class=&quot;eyebrow&quot;&gt;Портфолио&lt;/span&gt;
+          &lt;h2&gt;Наши &lt;em&gt;работы&lt;/em&gt;&lt;/h2&gt;
+        &lt;/div&gt;
+        &lt;a class=&quot;btn btn--ghost&quot; href=&quot;/raboty/&quot;&gt;Все работы &lt;Icon name=&quot;arrow&quot; /&gt;&lt;/a&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;mosaic&quot;&gt;
+        {gallery.map((w, i) =&gt; (
+          &lt;a href=&quot;/raboty/&quot; class={`mosaic__item mosaic__item--${i}`} data-reveal&gt;
+            &lt;Picture src={w.image} formats={[&#x27;avif&#x27;, &#x27;webp&#x27;]} fallbackFormat=&quot;jpg&quot; widths={[400, 800]} sizes=&quot;(max-width: 760px) 50vw, 33vw&quot; alt={w.alt} /&gt;
+          &lt;/a&gt;
+        ))}
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class=&quot;section section--dark&quot;&gt;
+    &lt;div class=&quot;container&quot;&gt;
+      &lt;div class=&quot;section-head&quot;&gt;
+        &lt;span class=&quot;eyebrow&quot;&gt;Как мы работаем&lt;/span&gt;
+        &lt;h2&gt;От заявки до готовой кухни — &lt;em&gt;6 шагов&lt;/em&gt;&lt;/h2&gt;
+      &lt;/div&gt;
+      &lt;Steps /&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class=&quot;section&quot;&gt;
+    &lt;div class=&quot;container design&quot;&gt;
+      &lt;div class=&quot;design__text&quot; data-reveal&gt;
+        &lt;span class=&quot;eyebrow&quot;&gt;Индивидуальный дизайн&lt;/span&gt;
+        &lt;h2&gt;Кухня, которой нет &lt;em&gt;ни у кого&lt;/em&gt;&lt;/h2&gt;
+        &lt;p&gt;Подберём фасады, фурнитуру, цвет и ручки, сделаем фартук с фотопечатью. Дизайнер воплотит в проекте любую идею — даже если пока это просто картинка из интернета.&lt;/p&gt;
+        &lt;a class=&quot;btn btn--primary&quot; href=&quot;/individualnyj-dizajn/&quot;&gt;Подробнее &lt;Icon name=&quot;arrow&quot; /&gt;&lt;/a&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;design__price&quot; data-reveal&gt;
+        &lt;span&gt;Кухня по типовому чертежу&lt;/span&gt;
+        &lt;b&gt;от {rub(site.facts.priceFrom)}&lt;/b&gt;
+        &lt;span&gt;Аванс {site.facts.prepay}% или беспроцентная рассрочка&lt;/span&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;Reviews /&gt;
+
+  &lt;section class=&quot;section&quot;&gt;
+    &lt;div class=&quot;container faq-wrap&quot;&gt;
+      &lt;div class=&quot;section-head&quot;&gt;
+        &lt;span class=&quot;eyebrow&quot;&gt;Вопросы&lt;/span&gt;
+        &lt;h2&gt;Частые &lt;em&gt;вопросы&lt;/em&gt;&lt;/h2&gt;
+      &lt;/div&gt;
+      &lt;Faq items={faq} /&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;LeadForm source=&quot;Главная — форма внизу&quot; /&gt;
+
+  &lt;section class=&quot;section section--surface&quot;&gt;
+    &lt;div class=&quot;container geo&quot;&gt;
+      &lt;div&gt;
+        &lt;span class=&quot;eyebrow&quot;&gt;География&lt;/span&gt;
+        &lt;h2&gt;Доставляем и устанавливаем по&amp;nbsp;&lt;em&gt;КМВ&lt;/em&gt;&lt;/h2&gt;
+      &lt;/div&gt;
+      &lt;ul&gt;{site.cities.map((c) =&gt; &lt;li&gt;{c}&lt;/li&gt;)}&lt;/ul&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+&lt;/Base&gt;
+
+&lt;style&gt;
+  .hero { padding: clamp(24px, 4vw, 56px) 0 clamp(56px, 7vw, 96px); }
+  .hero__grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: clamp(32px, 5vw, 72px); align-items: center; }
+  .hero__text { display: grid; gap: 24px; justify-items: start; }
+  .hero__rating { display: inline-flex; align-items: center; gap: 10px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); font-size: .85rem; text-decoration: none; color: var(--ink-2); }
+  .stars { display: flex; color: #f2b01e; }
+  .stars :global(svg) { width: 14px; }
+  .hero__lead { font-size: clamp(1.02rem, 1.4vw, 1.2rem); color: var(--ink-2); max-width: 540px; }
+  .hero__cta { display: flex; flex-wrap: wrap; gap: 12px; }
+  .hero__facts { display: flex; gap: clamp(20px, 3vw, 44px); margin: 12px 0 0; padding-top: 24px; border-top: 1px solid var(--line); }
+  .hero__facts dt { font-family: var(--font-display); font-size: clamp(1.6rem, 2.6vw, 2.2rem); line-height: 1.1; }
+  .hero__facts dd { margin: 4px 0 0; font-size: .82rem; color: var(--muted); line-height: 1.35; }
+
+  .hero__media { position: relative; }
+  .hero__media :global(img) { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: calc(var(--radius) * 1.5); box-shadow: var(--shadow); }
+  .hero__badge { position: absolute; left: -28px; bottom: 32px; display: grid; gap: 2px; padding: 18px 22px; background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); max-width: 230px; }
+  .hero__badge span { font-size: .72rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--brand); }
+  .hero__badge b { font-size: 1rem; line-height: 1.3; }
+  .hero__badge s { color: var(--muted); font-size: .9rem; }
+
+  .adv { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(24px, 3vw, 40px); margin: 0; padding: 0; list-style: none; }
+  .adv li { display: grid; gap: 10px; align-content: start; }
+  .adv :global(svg) { width: 36px; height: 36px; padding: 8px; border-radius: 50%; background: rgb(176 26 26 / .08); color: var(--brand); }
+  .adv p { color: var(--muted); font-size: .95rem; }
+
+  .section-head--row { display: flex; justify-content: space-between; align-items: end; max-width: none; gap: 24px; }
+  .section-head--row &gt; div { display: grid; gap: 16px; }
+
+  .mosaic { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, clamp(180px, 22vw, 300px)); gap: 16px; }
+  .mosaic__item { overflow: hidden; border-radius: var(--radius); }
+  .mosaic__item--0 { grid-row: span 2; }
+  .mosaic__item :global(img) { width: 100%; height: 100%; object-fit: cover; transition: transform 1s var(--ease); }
+  .mosaic__item:hover :global(img) { transform: scale(1.04); }
+
+  .design { display: grid; grid-template-columns: 1.4fr 1fr; gap: clamp(32px, 6vw, 96px); align-items: center; }
+  .design__text { display: grid; gap: 20px; justify-items: start; }
+  .design__text p { color: var(--ink-2); font-size: 1.05rem; }
+  .design__price { display: grid; gap: 8px; padding: clamp(28px, 4vw, 48px); border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+  .design__price span { color: var(--muted); font-size: .92rem; }
+  .design__price b { font-family: var(--font-display); font-size: clamp(2.2rem, 4vw, 3.2rem); font-weight: 500; color: var(--brand); }
+
+  .faq-wrap { max-width: 900px; }
+
+  .geo { display: grid; grid-template-columns: 1fr 1.2fr; gap: 40px; align-items: center; }
+  .geo &gt; div { display: grid; gap: 16px; }
+  .geo ul { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; list-style: none; }
+  .geo li { padding: 10px 18px; border: 1px solid var(--line); border-radius: 999px; font-weight: 600; }
+
+  @media (max-width: 1020px) { .adv { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 860px) {
+    .hero__grid, .design, .geo { grid-template-columns: 1fr; }
+    .hero__media { order: -1; }
+    .hero__media :global(img) { aspect-ratio: 4 / 3; }
+    .hero__badge { left: 10px; bottom: 10px; padding: 8px 12px; max-width: 190px; gap: 0; }
+    .hero__badge b { font-size: .85rem; }
+    .hero__badge s { display: none; }
+  }
+  @media (max-width: 560px) {
+    .hero__cta { display: grid; width: 100%; }
+    .hero__facts { width: 100%; justify-content: space-between; gap: 12px; }
+    .adv { grid-template-columns: 1fr; }
+    .section-head--row { flex-direction: column; align-items: start; }
+    .mosaic { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 150px); gap: 10px; }
+    .mosaic__item--0 { grid-column: span 2; grid-row: auto; }
+  }
+&lt;/style&gt;
+</pre></div>
+  </section>
+  <section class="pane" data-pane="Seo-astro" data-file="Seo.astro" data-size="3" hidden>
+    <div class="code"><pre data-lang="astro">---
+import { getImage } from &#x27;astro:assets&#x27;;
+import type { ImageMetadata } from &#x27;astro&#x27;;
+import { site } from &#x27;../data/site&#x27;;
+import defaultOg from &#x27;../assets/kitchens/ug7.jpg&#x27;;
+
+export interface Crumb { name: string; href: string }
+
+interface Props {
+  title: string;
+  description: string;
+  image?: ImageMetadata;
+  crumbs?: Crumb[];
+  schema?: object[];
+  noindex?: boolean;
+}
+
+const { title, description, image = defaultOg, crumbs = [], schema = [], noindex = false } = Astro.props;
+const canonical = new URL(Astro.url.pathname, site.url).href;
+const og = await getImage({ src: image, width: 1200, height: 630, fit: &#x27;cover&#x27;, format: &#x27;jpg&#x27; });
+const ogUrl = new URL(og.src, site.url).href;
+
+// Организация — на каждой странице: Яндекс и Google связывают сайт с карточкой на картах.
+const org = {
+  &#x27;@context&#x27;: &#x27;https://schema.org&#x27;,
+  &#x27;@type&#x27;: &#x27;FurnitureStore&#x27;,
+  &#x27;@id&#x27;: `${site.url}/#org`,
+  name: site.name,
+  url: site.url + &#x27;/&#x27;,
+  logo: `${site.url}/logo.png`,
+  image: ogUrl,
+  telephone: [site.phone, site.phone2],
+  email: site.email,
+  priceRange: `от ${site.facts.priceFrom} ₽`,
+  address: {
+    &#x27;@type&#x27;: &#x27;PostalAddress&#x27;,
+    streetAddress: site.address,
+    addressLocality: site.city,
+    addressRegion: site.region,
+    addressCountry: &#x27;RU&#x27;,
+  },
+  geo: { &#x27;@type&#x27;: &#x27;GeoCoordinates&#x27;, latitude: site.geo.lat, longitude: site.geo.lng },
+  openingHoursSpecification: [{
+    &#x27;@type&#x27;: &#x27;OpeningHoursSpecification&#x27;,
+    dayOfWeek: [&#x27;Monday&#x27;, &#x27;Tuesday&#x27;, &#x27;Wednesday&#x27;, &#x27;Thursday&#x27;, &#x27;Friday&#x27;, &#x27;Saturday&#x27;, &#x27;Sunday&#x27;],
+    opens: &#x27;10:00&#x27;,
+    closes: &#x27;19:00&#x27;,
+  }],
+  areaServed: site.cities.map((name) =&gt; ({ &#x27;@type&#x27;: &#x27;City&#x27;, name })),
+  sameAs: [site.yandexMaps, site.telegram],
+};
+
+const breadcrumbs = crumbs.length ? {
+  &#x27;@context&#x27;: &#x27;https://schema.org&#x27;,
+  &#x27;@type&#x27;: &#x27;BreadcrumbList&#x27;,
+  itemListElement: [{ name: &#x27;Главная&#x27;, href: &#x27;/&#x27; }, ...crumbs].map((c, i) =&gt; ({
+    &#x27;@type&#x27;: &#x27;ListItem&#x27;,
+    position: i + 1,
+    name: c.name,
+    item: new URL(c.href, site.url).href,
+  })),
+} : null;
+
+const graph = [org, breadcrumbs, ...schema].filter(Boolean);
+---
+&lt;title&gt;{title}&lt;/title&gt;
+&lt;meta name=&quot;description&quot; content={description} /&gt;
+&lt;link rel=&quot;canonical&quot; href={canonical} /&gt;
+{noindex &amp;&amp; &lt;meta name=&quot;robots&quot; content=&quot;noindex, follow&quot; /&gt;}
+
+&lt;meta property=&quot;og:type&quot; content=&quot;website&quot; /&gt;
+&lt;meta property=&quot;og:locale&quot; content=&quot;ru_RU&quot; /&gt;
+&lt;meta property=&quot;og:site_name&quot; content={site.name} /&gt;
+&lt;meta property=&quot;og:title&quot; content={title} /&gt;
+&lt;meta property=&quot;og:description&quot; content={description} /&gt;
+&lt;meta property=&quot;og:url&quot; content={canonical} /&gt;
+&lt;meta property=&quot;og:image&quot; content={ogUrl} /&gt;
+&lt;meta property=&quot;og:image:width&quot; content=&quot;1200&quot; /&gt;
+&lt;meta property=&quot;og:image:height&quot; content=&quot;630&quot; /&gt;
+&lt;meta name=&quot;twitter:card&quot; content=&quot;summary_large_image&quot; /&gt;
+
+&lt;meta name=&quot;geo.region&quot; content=&quot;RU-STA&quot; /&gt;
+&lt;meta name=&quot;geo.placename&quot; content={site.city} /&gt;
+&lt;meta name=&quot;geo.position&quot; content={`${site.geo.lat};${site.geo.lng}`} /&gt;
+
+{graph.map((g) =&gt; &lt;script type=&quot;application/ld+json&quot; set:html={JSON.stringify(g)} /&gt;)}
+</pre></div>
+  </section>
+  <section class="pane" data-pane="Quiz-astro" data-file="Quiz.astro" data-size="9" hidden>
+    <div class="code"><pre data-lang="astro">---
+import { Picture } from &#x27;astro:assets&#x27;;
+import Icon from &#x27;./Icon.astro&#x27;;
+import { categories, cover } from &#x27;../data/kitchens&#x27;;
+
+const questions = [
+  { name: &#x27;Размер&#x27;, title: &#x27;Какой примерно размер кухни?&#x27;, options: [&#x27;До 2,5 м&#x27;, &#x27;2,5–4 м&#x27;, &#x27;Больше 4 м&#x27;, &#x27;Не знаю, нужен замер&#x27;] },
+  { name: &#x27;Стиль&#x27;, title: &#x27;Какой стиль вам ближе?&#x27;, options: [&#x27;Современный, без ручек&#x27;, &#x27;Классика&#x27;, &#x27;Лофт&#x27;, &#x27;Пока не определился&#x27;] },
+  { name: &#x27;Сроки&#x27;, title: &#x27;Когда нужна кухня?&#x27;, options: [&#x27;В течение месяца&#x27;, &#x27;Через 1–3 месяца&#x27;, &#x27;Ремонт только начался&#x27;, &#x27;Пока присматриваюсь&#x27;] },
+];
+const total = questions.length + 2;
+---
+&lt;!-- Без JavaScript все шаги видны сразу и форма всё равно отправляется --&gt;
+&lt;form class=&quot;quiz&quot; action=&quot;/send.php&quot; method=&quot;post&quot; data-quiz data-lead-form novalidate&gt;
+  &lt;input type=&quot;hidden&quot; name=&quot;source&quot; value=&quot;Квиз&quot; /&gt;
+  &lt;input type=&quot;hidden&quot; name=&quot;answers&quot; /&gt;
+  &lt;input class=&quot;form__trap&quot; type=&quot;text&quot; name=&quot;website&quot; tabindex=&quot;-1&quot; autocomplete=&quot;off&quot; aria-hidden=&quot;true&quot; /&gt;
+
+  &lt;div class=&quot;quiz__progress&quot; aria-hidden=&quot;true&quot;&gt;&lt;span data-bar&gt;&lt;/span&gt;&lt;/div&gt;
+  &lt;p class=&quot;quiz__count&quot; data-count&gt;Шаг 1 из {total}&lt;/p&gt;
+
+  &lt;fieldset class=&quot;quiz__step&quot; data-step&gt;
+    &lt;legend&gt;Какая планировка вам нужна?&lt;/legend&gt;
+    &lt;div class=&quot;quiz__cards&quot;&gt;
+      {categories.map((c) =&gt; (
+        &lt;label class=&quot;card&quot;&gt;
+          &lt;input type=&quot;radio&quot; name=&quot;Планировка&quot; value={c.name} /&gt;
+          &lt;Picture src={cover(c.slug)} formats={[&#x27;avif&#x27;, &#x27;webp&#x27;]} fallbackFormat=&quot;jpg&quot; widths={[300, 500]} sizes=&quot;(max-width: 560px) 45vw, 220px&quot; alt=&quot;&quot; /&gt;
+          &lt;span&gt;{c.name}&lt;/span&gt;
+        &lt;/label&gt;
+      ))}
+    &lt;/div&gt;
+  &lt;/fieldset&gt;
+
+  {questions.map((q) =&gt; (
+    &lt;fieldset class=&quot;quiz__step&quot; data-step&gt;
+      &lt;legend&gt;{q.title}&lt;/legend&gt;
+      &lt;div class=&quot;quiz__options&quot;&gt;
+        {q.options.map((o) =&gt; &lt;label class=&quot;opt&quot;&gt;&lt;input type=&quot;radio&quot; name={q.name} value={o} /&gt;&lt;span&gt;{o}&lt;/span&gt;&lt;/label&gt;)}
+      &lt;/div&gt;
+    &lt;/fieldset&gt;
+  ))}
+
+  &lt;fieldset class=&quot;quiz__step quiz__final&quot; data-step&gt;
+    &lt;legend&gt;Расчёт готов к отправке&lt;/legend&gt;
+    &lt;p class=&quot;quiz__gift&quot;&gt;&lt;Icon name=&quot;check&quot; /&gt; Дизайнер подготовит 3 варианта стоимости, а при заказе — &lt;b&gt;каменная мойка в подарок&lt;/b&gt;.&lt;/p&gt;
+    &lt;label class=&quot;field&quot;&gt;&lt;span&gt;Имя&lt;/span&gt;&lt;input type=&quot;text&quot; name=&quot;name&quot; autocomplete=&quot;name&quot; maxlength=&quot;60&quot; /&gt;&lt;/label&gt;
+    &lt;label class=&quot;field&quot;&gt;&lt;span&gt;Телефон *&lt;/span&gt;&lt;input type=&quot;tel&quot; name=&quot;phone&quot; autocomplete=&quot;tel&quot; inputmode=&quot;tel&quot; required placeholder=&quot;+7 (___) ___-__-__&quot; data-phone /&gt;&lt;/label&gt;
+    &lt;div class=&quot;quiz__options quiz__options--row&quot;&gt;
+      &lt;span&gt;Как удобнее связаться?&lt;/span&gt;
+      {[&#x27;Звонок&#x27;, &#x27;WhatsApp&#x27;, &#x27;Telegram&#x27;].map((m, i) =&gt; &lt;label class=&quot;opt opt--sm&quot;&gt;&lt;input type=&quot;radio&quot; name=&quot;Связь&quot; value={m} checked={i === 0} /&gt;&lt;span&gt;{m}&lt;/span&gt;&lt;/label&gt;)}
+    &lt;/div&gt;
+    &lt;label class=&quot;check&quot;&gt;
+      &lt;input type=&quot;checkbox&quot; name=&quot;consent&quot; required /&gt;
+      &lt;span&gt;Согласен на обработку персональных данных в соответствии с &lt;a href=&quot;/politika-konfidencialnosti/&quot; target=&quot;_blank&quot;&gt;политикой конфиденциальности&lt;/a&gt;&lt;/span&gt;
+    &lt;/label&gt;
+    &lt;button class=&quot;btn btn--primary&quot; type=&quot;submit&quot;&gt;Получить расчёт&lt;/button&gt;
+    &lt;p class=&quot;form__status&quot; role=&quot;status&quot; aria-live=&quot;polite&quot;&gt;&lt;/p&gt;
+  &lt;/fieldset&gt;
+
+  &lt;div class=&quot;quiz__nav&quot; data-nav hidden&gt;
+    &lt;button class=&quot;btn btn--ghost&quot; type=&quot;button&quot; data-back&gt;Назад&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/form&gt;
+
+&lt;script&gt;
+  document.querySelectorAll&lt;HTMLFormElement&gt;(&#x27;[data-quiz]&#x27;).forEach((form) =&gt; {
+    const steps = [...form.querySelectorAll&lt;HTMLFieldSetElement&gt;(&#x27;[data-step]&#x27;)];
+    const bar = form.querySelector&lt;HTMLElement&gt;(&#x27;[data-bar]&#x27;)!;
+    const count = form.querySelector&lt;HTMLElement&gt;(&#x27;[data-count]&#x27;)!;
+    const nav = form.querySelector&lt;HTMLElement&gt;(&#x27;[data-nav]&#x27;)!;
+    const answers = form.querySelector&lt;HTMLInputElement&gt;(&#x27;[name=answers]&#x27;)!;
+    let i = 0;
+
+    form.classList.add(&#x27;is-js&#x27;);
+    nav.hidden = false;
+
+    const go = (n: number) =&gt; {
+      i = Math.max(0, Math.min(steps.length - 1, n));
+      steps.forEach((s, k) =&gt; { s.hidden = k !== i; });
+      bar.style.width = `${((i + 1) / steps.length) * 100}%`;
+      count.textContent = `Шаг ${i + 1} из ${steps.length}`;
+      form.querySelector&lt;HTMLElement&gt;(&#x27;[data-back]&#x27;)!.style.visibility = i ? &#x27;visible&#x27; : &#x27;hidden&#x27;;
+      // Собираем ответы в одно поле — так они придут менеджеру одной строкой
+      const data = new FormData(form);
+      answers.value = [&#x27;Планировка&#x27;, &#x27;Размер&#x27;, &#x27;Стиль&#x27;, &#x27;Сроки&#x27;, &#x27;Связь&#x27;]
+        .map((k) =&gt; data.get(k) &amp;&amp; `${k}: ${data.get(k)}`).filter(Boolean).join(&#x27;; &#x27;);
+    };
+
+    // Выбор варианта сразу переводит на следующий шаг — меньше кликов, выше конверсия
+    steps.slice(0, -1).forEach((s, k) =&gt; s.addEventListener(&#x27;change&#x27;, () =&gt; setTimeout(() =&gt; go(k + 1), 220)));
+    form.querySelector(&#x27;[data-back]&#x27;)!.addEventListener(&#x27;click&#x27;, () =&gt; go(i - 1));
+    form.addEventListener(&#x27;change&#x27;, () =&gt; go(i));
+    go(0);
+  });
+&lt;/script&gt;
+
+&lt;script&gt;
+  import { initLeadForms } from &#x27;../scripts/lead&#x27;;
+  initLeadForms();
+&lt;/script&gt;
+
+&lt;style&gt;
+  .quiz { display: grid; gap: 24px; max-width: 920px; padding: clamp(20px, 4vw, 48px); border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); }
+  .quiz__progress { height: 4px; border-radius: 4px; background: var(--line); overflow: hidden; }
+  .quiz__progress span { display: block; height: 100%; width: 0; background: var(--brand); transition: width .4s var(--ease); }
+  .quiz__count { font-size: .85rem; color: var(--muted); font-weight: 600; }
+  .quiz:not(.is-js) .quiz__progress, .quiz:not(.is-js) .quiz__count { display: none; }
+  .quiz__step { margin: 0; padding: 0; border: 0; display: grid; gap: 16px; }
+  .quiz__step[hidden] { display: none; }
+  .quiz__step legend { padding: 0; margin-bottom: 20px; font-family: var(--font-display); font-size: clamp(1.5rem, 3vw, 2.1rem); }
+  .form__trap { position: absolute; left: -9999px; opacity: 0; }
+
+  .card input, .opt input { position: absolute; opacity: 0; pointer-events: none; }
+  .quiz__cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .card { display: grid; gap: 10px; padding: 8px 8px 14px; border: 2px solid var(--line); border-radius: var(--radius); cursor: pointer; text-align: center; font-weight: 700; transition: border-color .2s; }
+  .card :global(img) { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius-sm); }
+  .card:hover, .card:has(input:checked) { border-color: var(--brand); }
+  .card:has(input:focus-visible) { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+  .quiz__options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .opt span { display: flex; align-items: center; min-height: 60px; padding: 0 20px; border: 2px solid var(--line); border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; transition: border-color .2s, background .2s; }
+  .opt:hover span, .opt input:checked + span { border-color: var(--brand); background: rgb(176 26 26 / .04); }
+  .opt input:focus-visible + span { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .quiz__options--row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .quiz__options--row &gt; span { width: 100%; font-size: .85rem; font-weight: 600; color: var(--muted); }
+  .opt--sm span { min-height: 44px; padding: 0 16px; }
+
+  .quiz__gift { display: flex; gap: 10px; align-items: flex-start; padding: 14px 16px; border-radius: var(--radius-sm); background: rgb(176 26 26 / .06); }
+  .quiz__gift :global(svg) { width: 20px; flex: none; color: var(--brand); margin-top: 3px; }
+  .field { display: grid; gap: 6px; font-size: .85rem; font-weight: 600; color: var(--muted); }
+  .field input { padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--bg); font-size: 1rem; }
+  .field input:focus { outline: none; border-color: var(--brand); }
+  .field :global(.is-invalid) { border-color: #d0453b; }
+  .check { display: flex; gap: 12px; align-items: flex-start; font-size: .82rem; color: var(--muted); line-height: 1.45; }
+  .check input { width: 20px; height: 20px; margin: 0; flex: none; accent-color: var(--brand); }
+  .form__status { min-height: 1.4em; font-size: .92rem; }
+  .form__status[data-state=&#x27;ok&#x27;] { color: #2f8a46; }
+  .form__status[data-state=&#x27;error&#x27;] { color: #c0392b; }
+  .quiz__nav { display: flex; }
+  .quiz__nav[hidden] { display: none; }
+
+  @media (max-width: 700px) { .quiz__cards { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 480px) { .quiz__options { grid-template-columns: 1fr; } }
+&lt;/style&gt;
+</pre></div>
+  </section>
+  <section class="pane" data-pane="global-css" data-file="global.css" data-size="4" hidden>
+    <div class="code"><pre data-lang="css">@import &#x27;@fontsource-variable/manrope&#x27;;
+@import &#x27;@fontsource-variable/playfair-display&#x27;;
+
+:root {
+  --bg: #f6f3ee;
+  --surface: #ffffff;
+  --ink: #1c1b1a;
+  --ink-2: #4a4743;
+  --muted: #69645d;
+  --line: #e4ded5;
+  --dark: #1f1e1c;
+  --dark-2: #2b2926;
+  --on-dark: #f3efe8;
+  --brand: #b01a1a;
+  --brand-hover: #921414;
+  --wood: #b98a5a;
+
+  --font: &#x27;Manrope Variable&#x27;, system-ui, sans-serif;
+  --font-display: &#x27;Playfair Display Variable&#x27;, Georgia, serif;
+
+  --radius: 14px;
+  --radius-sm: 8px;
+  --container: 1240px;
+  --gutter: clamp(16px, 4vw, 40px);
+  --section: clamp(64px, 9vw, 120px);
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  --shadow: 0 18px 50px -20px rgb(28 27 26 / .25);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 88px; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 17px/1.6 var(--font);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+img { display: block; max-width: 100%; height: auto; }
+a { color: inherit; }
+button, input, textarea, select { font: inherit; color: inherit; }
+
+h1, h2, h3 { margin: 0; line-height: 1.15; letter-spacing: -.01em; }
+h1, h2 { font-family: var(--font-display); font-weight: 500; }
+h1 { font-size: clamp(2.2rem, 5.5vw, 4.4rem); }
+h2 { font-size: clamp(1.8rem, 3.8vw, 3rem); }
+h3 { font-size: 1.2rem; font-weight: 700; }
+h1 em, h2 em { font-style: italic; color: var(--brand); }
+.section--dark h2 em { color: #e8968e; }
+p { margin: 0; }
+
+.container { width: min(100% - 2 * var(--gutter), var(--container)); margin-inline: auto; }
+.section { padding-block: var(--section); }
+.section--dark { background: var(--dark); color: var(--on-dark); }
+.section--surface { background: var(--surface); }
+.section-head { display: grid; gap: 16px; max-width: 720px; margin-bottom: clamp(32px, 5vw, 56px); }
+.section-head p { color: var(--muted); font-size: 1.05rem; }
+.section--dark .section-head p { color: #b8b2a8; }
+.eyebrow {
+  font-size: .78rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--brand);
+}
+.section--dark .eyebrow { color: #e0827a; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 52px; padding: 0 28px; border: 1px solid transparent; border-radius: 999px;
+  font-weight: 700; font-size: .98rem; text-decoration: none; cursor: pointer;
+  transition: background .25s var(--ease), color .25s var(--ease), border-color .25s var(--ease), transform .25s var(--ease);
+}
+.btn:active { transform: scale(.98); }
+.btn--primary { background: var(--brand); color: #fff; }
+.btn--primary:hover { background: var(--brand-hover); }
+.btn--ghost { border-color: currentColor; background: transparent; }
+.btn--ghost:hover { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.section--dark .btn--ghost:hover, .on-dark .btn--ghost:hover { background: var(--on-dark); color: var(--dark); border-color: var(--on-dark); }
+.btn svg { width: 20px; height: 20px; flex: none; }
+
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Анимация появления — только на устройствах с мышью и без «уменьшить движение» */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .js [data-reveal] { opacity: 0; transform: translateY(24px); transition: opacity .8s var(--ease), transform .8s var(--ease); }
+  .js [data-reveal].is-visible { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+</pre></div>
+  </section>
+</main>
+
+<footer class="foot wrap">
+  <span>страница кода · исходник встроен целиком, подсветка своя</span>
+  <div class="foot__r">
+    <a href="index.html">демо ↗</a>
+    <a href="../../index.html">в портфолио</a>
+  </div>
+</footer>
+
+<script>
+(() => {
+  "use strict";
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const tabs = $$(".tab");
+  const panes = $$(".pane");
+
+  const MAP = { "&": "&amp;", "<": "&lt;", ">": "&gt;" };
+  const esc = (s) => s.replace(/[&<>]/g, (c) => MAP[c]);
+
+  /* ——— лексер: комментарии и строки, затем ключевые слова ——— */
+  /* угловые скобки разметки пишем как \x3C: их литералы ломают разбор скрипта */
+  const TOKEN = /(\/\*[\s\S]*?\*\/|\/\/[^\n]*|\x3C!--[\s\S]*?--\x3E|`(?:\\[\s\S]|[^`\\])*`|"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*')/g;
+  const KW = /\b(const|let|var|function|return|if|else|for|while|do|switch|case|break|continue|new|class|extends|this|null|undefined|true|false|await|async|of|in|typeof|instanceof|delete|try|catch|finally|throw|import|export|from|default)\b/g;
+  const NUM = /\b\d+(?:\.\d+)?(?:e[+-]?\d+)?\b|\b0x[0-9a-fA-F]+\b/g;
+  const TAG = /\x3C!--[\s\S]*?--\x3E|\x3C\/?[a-zA-Z][^>]*>/g;
+  const ATTR = /([\w:@.\-]+)(\s*=\s*)("[^"]*"|'[^']*'|[^\s>]+)|([\w:@.\-]+)|([\s\S])/g;
+
+  const paintJs = (s) => esc(s).replace(KW, '<span class="tok-kw">$1</span>').replace(NUM, '<span class="tok-num">$&</span>');
+  const paintCss = (s) => esc(s)
+    .replace(/(@[\w-]+)/g, '<span class="tok-at">$1</span>')
+    .replace(/([\w-]+)(?=\s*:)/g, '<span class="tok-prop">$1</span>')
+    .replace(NUM, '<span class="tok-num">$&</span>');
+
+  function paintCode(src, lang) {
+    const body = lang === "css" ? paintCss : paintJs;
+    let out = "", last = 0, m;
+    TOKEN.lastIndex = 0;
+    while ((m = TOKEN.exec(src))) {
+      out += body(src.slice(last, m.index));
+      const t = m[0];
+      const isComment = t.startsWith("\x3C!--") || t.startsWith("/*") || t.startsWith("//");
+      out += '<span class="' + (isComment ? "tok-com" : "tok-str") + '">' + esc(t) + "</span>";
+      last = m.index + t.length;
+    }
+    return out + body(src.slice(last));
+  }
+
+  function paintTag(tag) {
+    if (tag.startsWith("\x3C!--")) return '<span class="tok-com">' + esc(tag) + "</span>";
+    const m = /^<(\/?)([a-zA-Z][\w:-]*)([\s\S]*?)(\/?)>$/.exec(tag);
+    if (!m) return esc(tag);
+    const [, slash, name, attrs, selfClose] = m;
+    let painted = "", a;
+    ATTR.lastIndex = 0;
+    while ((a = ATTR.exec(attrs))) {
+      if (a[4] !== undefined) painted += '<span class="tok-attr">' + esc(a[4]) + "</span>";
+      else if (a[1] !== undefined) {
+        painted += '<span class="tok-attr">' + esc(a[1]) + "</span>" + esc(a[2] || "") +
+          '<span class="tok-str">' + esc(a[3] || "") + "</span>";
+      } else painted += esc(a[5]);
+    }
+    return esc("<") + esc(slash || "") + '<span class="tok-tag">' + esc(name) + "</span>" +
+      painted + esc(selfClose || "") + esc(">");
+  }
+
+  function paintHtml(src) {
+    let out = "", i = 0, m;
+    while (i < src.length) {
+      TAG.lastIndex = i;
+      m = TAG.exec(src);
+      if (!m) { out += esc(src.slice(i)); break; }
+      out += esc(src.slice(i, m.index));
+      out += paintTag(m[0]);
+      i = m.index + m[0].length;
+      /* внутри script и style подсвечиваем по правилам их языков */
+      const open = /^\x3C(script|style)\b/i.exec(m[0]);
+      if (open && !/\/>$/.test(m[0])) {
+        const name = open[1].toLowerCase();
+        const close = src.toLowerCase().indexOf("</" + name, i);
+        const end = close === -1 ? src.length : close;
+        out += name === "script" ? paintCode(src.slice(i, end), "js") : paintCode(src.slice(i, end), "css");
+        i = end;
+      }
+    }
+    return out;
+  }
+
+  function paintAstro(src) {
+    const fm = /^---\r?\n([\s\S]*?)\r?\n---/.exec(src);
+    if (!fm) return paintHtml(src);
+    const head = paintCode(fm[1], "js");
+    const rest = src.slice(fm[0].length);
+    return '<span class="tok-com">---</span>\n' + head + '\n<span class="tok-com">---</span>' + paintHtml(rest);
+  }
+
+  function paintLine(line, lang, state) {
+    if (lang === "css" || lang === "js") {
+      if (state.comment) {
+        const end = line.indexOf("*/");
+        if (end === -1) return '<span class="tok-com">' + esc(line) + "</span>";
+        state.comment = false;
+        return '<span class="tok-com">' + esc(line.slice(0, end + 2)) + "</span>" + paintCode(line.slice(end + 2), lang);
+      }
+      const out = paintCode(line, lang);
+      if (/\/\*(?![\s\S]*\*\/)/.test(line)) state.comment = true;
+      return out;
+    }
+    if (lang === "html" || lang === "astro") return lang === "astro" ? paintAstro(line) : paintHtml(line);
+    return esc(line);
+  }
+
+  function render(pre) {
+    if (pre.dataset.done) return;
+    const lang = pre.dataset.lang || "html";
+    const lines = pre.textContent.replace(/\t/g, "  ").split("\n");
+    const state = { comment: false };
+    /* строки — блочные span'ы, переносов в тексте нет: собираем их обратно
+       при копировании и скачивании, иначе файл выгрузится одной строкой */
+    pre.innerHTML = lines
+      .map((line, i) => '<span class="ln" data-n="' + (i + 1) + '">' + paintLine(line, lang, state) + "</span>")
+      .join("");
+    pre.dataset.done = "1";
+    pre.dataset.lines = lines.length;
+  }
+
+  const rawText = (pre) => Array.from(pre.children).map((el) => el.textContent).join("\n");
+
+  function select(name) {
+    tabs.forEach((t) => t.setAttribute("aria-selected", String(t.dataset.tab === name)));
+    panes.forEach((p) => (p.hidden = p.dataset.pane !== name));
+    const active = panes.find((p) => p.dataset.pane === name);
+    if (active) {
+      const pre = active.querySelector("pre");
+      render(pre);
+      document.getElementById("stat-lines").textContent = pre.dataset.lines;
+      document.getElementById("stat-size").textContent = active.dataset.size + " КБ";
+      document.getElementById("stat-file").textContent = active.dataset.file;
+      pre.classList.remove("wrap-lines");
+      const wb = document.getElementById("wrap");
+      wb.textContent = "Переносы строк"; wb.dataset.done = "0";
+    }
+    if (location.hash !== "#" + name) history.replaceState(null, "", "#" + name);
+  }
+
+  tabs.forEach((t) => t.addEventListener("click", () => select(t.dataset.tab)));
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    if (/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
+    const i = tabs.findIndex((t) => t.getAttribute("aria-selected") === "true");
+    const next = (i + (e.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
+    tabs[next].click();
+    tabs[next].focus();
+  });
+
+  function current() {
+    const pane = panes.find((p) => !p.hidden);
+    return { pane, pre: pane.querySelector("pre"), name: pane.dataset.file };
+  }
+
+  document.getElementById("copy").addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    try {
+      await navigator.clipboard.writeText(rawText(current().pre));
+      btn.dataset.done = "1";
+      btn.textContent = "Скопировано";
+    } catch {
+      btn.textContent = "Выделите вручную";
+    }
+    setTimeout(() => { btn.textContent = "Копировать"; delete btn.dataset.done; }, 1800);
+  });
+
+  document.getElementById("download").addEventListener("click", () => {
+    const { pre, name } = current();
+    const blob = new Blob([rawText(pre)], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
+  const wrapBtn = document.getElementById("wrap");
+  wrapBtn.addEventListener("click", () => {
+    const on = current().pre.classList.toggle("wrap-lines");
+    wrapBtn.dataset.done = on ? "1" : "0";
+    wrapBtn.textContent = on ? "Без переносов" : "Переносы строк";
+  });
+
+  select(location.hash.slice(1) || panes[0].dataset.pane);
+})();
+</script>
+</body>
+</html>

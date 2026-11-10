@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Код · Скала — панель продукта</title>
+<meta name="description" content="Четыре экрана, canvas-графики, когорты и выгрузка CSV — один HTML-документ без библиотек. Подсветка, нумерация строк, копирование и скачивание файла целиком.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0b0c09">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230d0e0b'/%3E%3Cpath d='M9 22l5-12h4l5 12h-3l-1.2-3h-5.6L12 22z' fill='%23c9f24e'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600&family=Golos+Text:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#0b0c09; --panel:#111310; --panel2:#15170f; --line:rgba(241,240,229,.15);
+  --ink:#f1f0e5; --muted:#94948a; --acc:#c9f24e; --acc-ink:#0b0c09;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+  --sans:"Golos Text",system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{width:100%;max-width:1180px;margin:0 auto;padding:0 28px}
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.top__in{display:flex;align-items:center;gap:16px;height:56px}
+.back{font-family:var(--mono);font-size:11.5px;text-decoration:none;color:var(--muted);
+  border-bottom:1px solid transparent;padding-bottom:1px;transition:.15s}
+.back:hover{color:var(--ink);border-color:var(--acc)}
+.top__name{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.top__right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.head{padding:44px 0 18px}
+.kind{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--acc);margin:0 0 14px}
+h1{font-family:"Unbounded",var(--sans);font-weight:600;font-size:clamp(26px,3.4vw,40px);line-height:1.02;
+  letter-spacing:-.04em;margin:0}
+.note{color:var(--muted);max-width:70ch;margin:14px 0 0;font-size:14.5px}
+.meta{display:flex;flex-wrap:wrap;gap:8px 22px;margin:20px 0 0;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.meta b{color:var(--ink);font-weight:500}
+
+.bar{border-top:1px solid var(--line);border-bottom:1px solid var(--line);position:sticky;top:56px;
+  z-index:15;background:var(--bg);margin-top:22px}
+.bar__in{display:flex;align-items:center;gap:6px;padding:9px 0;overflow:auto}
+.tab{
+  font-family:var(--mono);font-size:11.5px;padding:7px 12px;border:1px solid var(--line);border-radius:7px;
+  background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;transition:.15s
+}
+.tab:hover{color:var(--ink);border-color:rgba(241,240,229,.4)}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tab em{font-style:normal;opacity:.55;margin-left:7px;font-size:10px}
+.bar__tools{margin-left:auto;display:flex;gap:6px;flex-shrink:0}
+.btn{
+  font-family:var(--mono);font-size:11px;padding:7px 11px;border-radius:7px;border:1px solid var(--line);
+  background:var(--panel2);color:var(--ink);cursor:pointer;transition:.15s
+}
+.btn:hover{border-color:rgba(241,240,229,.45);background:#1c1f14}
+.btn[data-done="1"]{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+
+.code{margin:0 0 40px;border:1px solid var(--line);border-top:0;background:var(--panel);overflow:auto}
+.code pre{margin:0;padding:16px 18px 20px;font-family:var(--mono);font-size:12.5px;line-height:1.68;
+  tab-size:2;white-space:pre;color:#cfd3c6}
+.code pre.wrap-lines{white-space:pre-wrap;word-break:break-word}
+.ln{display:block;position:relative;padding-left:52px;min-height:1.68em}
+.ln::before{content:attr(data-n);position:absolute;left:0;width:34px;text-align:right;color:#43483f;
+  font-size:11px;user-select:none}
+.ln:hover::before{color:var(--acc)}
+.tok-com{color:#5f6b58;font-style:italic}
+.tok-str{color:#e3b478}
+.tok-tag{color:#8fd6ff}
+.tok-attr{color:var(--acc)}
+.tok-kw{color:#ff9ecb}
+.tok-num{color:#b6e05a}
+.tok-prop{color:#9ad0ff}
+.tok-at{color:#c4a6ff}
+
+.foot{display:flex;gap:18px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--line);
+  padding:18px 0 40px;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.foot a{text-decoration:none;border-bottom:1px solid var(--line);padding-bottom:1px}
+.foot a:hover{border-color:var(--acc);color:var(--ink)}
+.foot__r{margin-left:auto;display:flex;gap:16px}
+@media (max-width:640px){
+  .wrap{padding:0 16px}
+  .head{padding:28px 0 14px}
+  .top__name{display:none}
+  .code pre{font-size:11.5px;padding:12px 10px}
+  .ln{padding-left:38px}
+  .ln::before{width:24px;font-size:10px}
+  .bar{top:52px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="wrap top__in">
+    <a class="back" href="index.html">← к демо</a>
+    <span class="top__name">скала · код</span>
+    <div class="top__right"><a class="back" href="../../index.html">в портфолио</a></div>
+  </div>
+</div>
+
+<header class="head">
+  <div class="wrap">
+    <p class="kind">скала · код</p>
+    <h1>Скала: весь дашборд одним файлом</h1>
+    <p class="note">Четыре экрана, canvas-графики, когорты и выгрузка CSV — один HTML-документ без библиотек. Подсветка, нумерация строк, копирование и скачивание файла целиком.</p>
+    <p class="meta">
+      <span>файлов: <b>1</b></span>
+      <span>открыт: <b id="stat-file">—</b></span>
+      <span>строк: <b id="stat-lines">—</b></span>
+      <span>размер: <b id="stat-size">—</b></span>
+    </p>
+  </div>
+</header>
+
+<div class="bar">
+  <div class="wrap bar__in" role="tablist" aria-label="Файлы">
+    <button class="tab" type="button" role="tab" data-tab="index-html" aria-selected="true">index.html<em>44 КБ</em></button>
+    <div class="bar__tools">
+      <button class="btn" type="button" id="wrap">Переносы строк</button>
+      <button class="btn" type="button" id="download">Скачать</button>
+      <button class="btn" type="button" id="copy">Копировать</button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+  <section class="pane" data-pane="index-html" data-file="index.html" data-size="44" >
+    <div class="code"><pre data-lang="html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;ru&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+&lt;title&gt;Скала — панель продукта&lt;/title&gt;
+&lt;meta name=&quot;description&quot; content=&quot;Демо-стенд: дашборд продуктовой аналитики на ванильном JS и canvas — обзор, трафик, воронка, отчёты с экспортом CSV.&quot;&gt;
+&lt;meta name=&quot;theme-color&quot; content=&quot;#0a0c0e&quot;&gt;
+&lt;link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot;&gt;
+&lt;link rel=&quot;preconnect&quot; href=&quot;https://fonts.gstatic.com&quot; crossorigin&gt;
+&lt;link rel=&quot;stylesheet&quot; href=&quot;https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap&quot;&gt;
+&lt;style&gt;
+:root{
+  --bg:#0a0c0e; --panel:#101418; --panel-2:#141a1f; --line:#222c33;
+  --ink:#e8eef2; --muted:#7d8f9b; --acc:#4de3d0; --acc-dim:#1c4b47; --warn:#ffb25e; --bad:#ff6b6b;
+  --r:14px; --mono:&quot;JetBrains Mono&quot;,ui-monospace,monospace; --sans:&quot;Golos Text&quot;,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--sans);
+  font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(1200px 600px at 80% -10%,#123 0%,transparent 60%);
+  min-height:100vh;
+}
+.app{display:grid; grid-template-columns:76px 1fr; min-height:100vh}
+/* ——— рейл ——— */
+.rail{border-right:1px solid var(--line); display:flex; flex-direction:column; align-items:center; gap:6px; padding:18px 0; position:sticky; top:0; height:100vh}
+.rail__logo{width:38px;height:38px;border:1px solid var(--acc);border-radius:11px;display:grid;place-items:center;color:var(--acc);font-family:var(--mono);font-weight:700;margin-bottom:14px}
+.rail button{
+  width:44px;height:44px;border:0;background:transparent;color:var(--muted);border-radius:11px;
+  cursor:pointer;display:grid;place-items:center;transition:.18s;position:relative
+}
+.rail button:hover{background:var(--panel-2);color:var(--ink)}
+.rail button[aria-current=&quot;page&quot;]{background:var(--acc-dim);color:var(--acc)}
+.rail button[aria-current=&quot;page&quot;]::before{content:&quot;&quot;;position:absolute;left:-18px;top:12px;bottom:12px;width:2px;background:var(--acc)}
+.rail svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.rail .rail__foot{margin-top:auto;font-family:var(--mono);font-size:9px;color:#41525d;writing-mode:vertical-rl;letter-spacing:.18em}
+/* ——— шапка ——— */
+.head{display:flex;align-items:center;gap:16px;padding:22px 28px 0;flex-wrap:wrap}
+.head h1{font-size:19px;margin:0;font-weight:600;letter-spacing:-.01em}
+.head__crumb{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase}
+.head__live{margin-left:auto;display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 0 rgba(77,227,208,.6);animation:pulse 2.4s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(77,227,208,.5)}70%{box-shadow:0 0 0 9px rgba(77,227,208,0)}100%{box-shadow:0 0 0 0 rgba(77,227,208,0)}}
+/* ——— контролы ——— */
+.chips{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px;margin-left:auto}
+.chips button{
+  font-family:var(--mono);font-size:11px;padding:6px 11px;border:0;border-radius:7px;background:transparent;
+  color:var(--muted);cursor:pointer;transition:.16s
+}
+.chips button:hover{color:var(--ink)}
+.chips button[aria-pressed=&quot;true&quot;]{background:var(--acc);color:#04211f;font-weight:700}
+/* ——— сетка ——— */
+main{padding:18px 28px 40px;display:grid;gap:14px}
+.view{display:grid;gap:14px}
+.view[hidden]{display:none}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 16px 12px;position:relative;overflow:hidden}
+.card__k{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.card__v{font-family:var(--mono);font-size:27px;font-weight:700;letter-spacing:-.02em;margin:6px 0 2px;font-variant-numeric:tabular-nums}
+.card__d{font-size:12px;font-family:var(--mono)}
+.up{color:var(--acc)} .down{color:var(--bad)} .flat{color:var(--muted)}
+.card canvas{position:absolute;right:0;bottom:0;width:100%;height:44px;opacity:.85}
+.dash{display:grid;grid-template-columns:1.55fr 1fr;gap:14px}
+.dash--even{grid-template-columns:1fr 1fr}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.panel__head{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}
+.panel__t{margin:0;font-size:13px;font-weight:600;letter-spacing:.01em}
+.panel__s{font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:auto}
+.legend{display:flex;gap:14px;font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:6px}
+.legend i{display:inline-block;width:9px;height:2px;vertical-align:middle;margin-right:6px}
+.chart{position:relative}
+.chart canvas{display:block;width:100%}
+.tip{
+  position:absolute;pointer-events:none;background:#04100f;border:1px solid var(--acc-dim);
+  border-radius:9px;padding:8px 10px;font-family:var(--mono);font-size:11px;line-height:1.55;
+  opacity:0;transform:translate(-50%,-118%);transition:opacity .12s;white-space:nowrap;z-index:3
+}
+.tip b{color:var(--acc);font-weight:700}
+.bars{display:grid;gap:12px;margin-top:14px}
+.bar__row{display:grid;grid-template-columns:96px 1fr 46px;align-items:center;gap:10px;font-family:var(--mono);font-size:11px}
+.bar__track{height:6px;background:#182026;border-radius:99px;overflow:hidden}
+.bar__fill{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#1c4b47,var(--acc));width:0;transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.bar__v{text-align:right;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:left;padding:0 0 9px;font-weight:400;border-bottom:1px solid var(--line)}
+td{padding:9px 0;border-bottom:1px solid #171f24;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+td.mono{font-family:var(--mono);font-size:12px}
+th.r,td.r{text-align:right}
+.tag{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
+.spark-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.spark{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.spark__k{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.spark__v{font-family:var(--mono);font-size:18px;font-weight:700;margin-top:2px}
+/* ——— трафик: пончик и легенда ——— */
+.donut{display:grid;grid-template-columns:146px 1fr;gap:16px;align-items:center}
+.donut canvas{width:146px;height:146px}
+.donut__legend{list-style:none;margin:0;padding:0;display:grid;gap:8px;font-family:var(--mono);font-size:11px}
+.donut__legend li{display:grid;grid-template-columns:10px 1fr auto;gap:8px;align-items:center}
+.donut__legend i{width:9px;height:9px;border-radius:3px;display:block}
+.donut__legend b{font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums}
+/* ——— воронка ——— */
+.funnel{display:grid;gap:9px;margin-top:6px}
+.fstage{display:grid;grid-template-columns:168px 1fr 74px;gap:12px;align-items:center}
+.fstage__n{font-size:12px;color:var(--muted)}
+.fstage__n b{color:var(--ink);font-weight:500;display:block;font-size:12.5px;margin-bottom:1px}
+.fbar{height:30px;background:#0d1216;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.fbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#123c39,var(--acc));transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.fstage__v{font-family:var(--mono);font-size:11px;text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
+.fstage__v small{display:block;color:var(--muted);font-size:10px}
+/* ——— когорты ——— */
+.heat{width:100%;border-collapse:separate;border-spacing:3px;font-family:var(--mono);font-size:11px}
+.heat th{border:0;padding:2px 4px;font-size:9.5px;letter-spacing:.08em}
+.heat td{padding:0;border:0}
+.heat td.sp{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap;padding-right:8px}
+.heat .cell{
+  text-align:center;padding:7px 4px;border-radius:5px;background:#121a1f;color:#8fa3ad;
+  border:1px solid #1b242b;font-variant-numeric:tabular-nums
+}
+.heat .cell.is-empty{background:#0f1418;color:#3b4a52;border-color:#161d22}
+.heat__legend{display:flex;align-items:center;gap:5px;margin:10px 0 0;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.heat__legend i{width:14px;height:10px;border-radius:2px;display:block}
+.heat__note{margin-left:12px;color:#5c6d77}
+/* ——— отчёты ——— */
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.btn{
+  font-family:var(--mono);font-size:11px;padding:8px 12px;border-radius:8px;cursor:pointer;
+  border:1px solid var(--line);background:var(--panel-2);color:var(--ink);transition:.16s
+}
+.btn:hover{border-color:#3c4a53;background:#1b2329}
+.btn--main{background:var(--acc);color:#04211f;border-color:var(--acc);font-weight:700}
+.btn--main:hover{background:#6ff0e0}
+.btn[data-done=&quot;1&quot;]{background:var(--acc);color:#04211f;border-color:var(--acc)}
+.rep{
+  display:grid;grid-template-columns:minmax(150px,1.5fr) .7fr .7fr .8fr auto;gap:12px;align-items:center;
+  padding:12px 2px;border-bottom:1px solid #171f24;font-size:13px
+}
+.rep:last-child{border-bottom:0}
+.rep__name{font-weight:500}
+.rep__name small{display:block;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.04em;margin-top:2px}
+.rep__m{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.status{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:99px;border:1px solid var(--acc-dim);color:var(--acc);justify-self:start}
+.empty{font-family:var(--mono);font-size:12px;color:var(--muted);padding:18px 0}
+.toast{
+  position:fixed;right:20px;bottom:20px;z-index:40;background:#04100f;border:1px solid var(--acc-dim);
+  border-radius:10px;padding:11px 14px;font-family:var(--mono);font-size:11.5px;color:var(--ink);
+  opacity:0;transform:translateY(10px);transition:opacity .25s,transform .25s;pointer-events:none
+}
+.toast[data-show=&quot;1&quot;]{opacity:1;transform:none}
+footer{padding:0 28px 26px;font-family:var(--mono);font-size:10px;color:#4a5b66;display:flex;gap:18px;flex-wrap:wrap}
+footer a{color:var(--acc);text-decoration:none;border-bottom:1px solid var(--acc-dim)}
+@media (max-width:1080px){
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .dash,.dash--even{grid-template-columns:1fr}
+  .spark-row{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:720px){
+  .app{grid-template-columns:1fr}
+  .rail{flex-direction:row;height:auto;position:static;border-right:0;border-bottom:1px solid var(--line);padding:10px 12px;overflow:auto}
+  .rail__logo{margin:0 8px 0 0}
+  .rail .rail__foot{display:none}
+  .rail button[aria-current=&quot;page&quot;]::before{display:none}
+  main,.head,footer{padding-left:16px;padding-right:16px}
+  .head{padding-top:16px}
+  .chips{margin-left:0;width:100%;justify-content:space-between}
+  .kpis,.spark-row{grid-template-columns:1fr}
+  .fstage{grid-template-columns:1fr 62px;gap:8px}
+  .fstage__n{grid-column:1/-1}
+  .rep{grid-template-columns:1fr auto;gap:6px}
+  .rep__m:nth-child(3){display:none}
+  .donut{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;app&quot;&gt;
+
+  &lt;nav class=&quot;rail&quot; aria-label=&quot;Разделы панели&quot;&gt;
+    &lt;div class=&quot;rail__logo&quot; aria-hidden=&quot;true&quot;&gt;С&lt;/div&gt;
+    &lt;button type=&quot;button&quot; data-view=&quot;overview&quot; aria-current=&quot;page&quot; aria-label=&quot;Обзор&quot; title=&quot;Обзор&quot;&gt;
+      &lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;rect x=&quot;3&quot; y=&quot;3&quot; width=&quot;7&quot; height=&quot;9&quot; rx=&quot;1.5&quot;/&gt;&lt;rect x=&quot;14&quot; y=&quot;3&quot; width=&quot;7&quot; height=&quot;5&quot; rx=&quot;1.5&quot;/&gt;&lt;rect x=&quot;14&quot; y=&quot;12&quot; width=&quot;7&quot; height=&quot;9&quot; rx=&quot;1.5&quot;/&gt;&lt;rect x=&quot;3&quot; y=&quot;16&quot; width=&quot;7&quot; height=&quot;5&quot; rx=&quot;1.5&quot;/&gt;&lt;/svg&gt;
+    &lt;/button&gt;
+    &lt;button type=&quot;button&quot; data-view=&quot;traffic&quot; aria-label=&quot;Трафик&quot; title=&quot;Трафик&quot;&gt;
+      &lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M3 17l5-6 4 3 4-7 5 4&quot;/&gt;&lt;path d=&quot;M3 21h18&quot;/&gt;&lt;/svg&gt;
+    &lt;/button&gt;
+    &lt;button type=&quot;button&quot; data-view=&quot;funnel&quot; aria-label=&quot;Воронка&quot; title=&quot;Воронка&quot;&gt;
+      &lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M4 5h16l-6 7v6l-4 2v-8L4 5z&quot;/&gt;&lt;/svg&gt;
+    &lt;/button&gt;
+    &lt;button type=&quot;button&quot; data-view=&quot;reports&quot; aria-label=&quot;Отчёты&quot; title=&quot;Отчёты&quot;&gt;
+      &lt;svg viewBox=&quot;0 0 24 24&quot;&gt;&lt;path d=&quot;M7 3h7l4 4v14H7z&quot;/&gt;&lt;path d=&quot;M14 3v4h4M10 12h5M10 16h5&quot;/&gt;&lt;/svg&gt;
+    &lt;/button&gt;
+    &lt;span class=&quot;rail__foot&quot;&gt;skala demo&lt;/span&gt;
+  &lt;/nav&gt;
+
+  &lt;div&gt;
+    &lt;header class=&quot;head&quot;&gt;
+      &lt;div&gt;
+        &lt;p class=&quot;head__crumb&quot; id=&quot;crumb&quot;&gt;Продукт / обзор&lt;/p&gt;
+        &lt;h1 id=&quot;title&quot;&gt;Скала — метрики продукта&lt;/h1&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;head__live&quot;&gt;&lt;span class=&quot;dot&quot;&gt;&lt;/span&gt;&lt;span id=&quot;live-clock&quot;&gt;--:--:--&lt;/span&gt; · данные обновляются&lt;/div&gt;
+      &lt;div class=&quot;chips&quot; role=&quot;group&quot; aria-label=&quot;Период&quot; id=&quot;range-chips&quot;&gt;
+        &lt;button type=&quot;button&quot; data-range=&quot;7&quot; aria-pressed=&quot;false&quot;&gt;7 дн&lt;/button&gt;
+        &lt;button type=&quot;button&quot; data-range=&quot;30&quot; aria-pressed=&quot;true&quot;&gt;30 дн&lt;/button&gt;
+        &lt;button type=&quot;button&quot; data-range=&quot;90&quot; aria-pressed=&quot;false&quot;&gt;90 дн&lt;/button&gt;
+        &lt;button type=&quot;button&quot; id=&quot;shuffle&quot;&gt;Обновить&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/header&gt;
+
+    &lt;main&gt;
+      &lt;!-- ═══════ ОБЗОР ═══════ --&gt;
+      &lt;section class=&quot;view&quot; id=&quot;view-overview&quot; aria-label=&quot;Обзор&quot;&gt;
+        &lt;div class=&quot;kpis&quot;&gt;
+          &lt;article class=&quot;card&quot;&gt;
+            &lt;p class=&quot;card__k&quot;&gt;Активные за день&lt;/p&gt;
+            &lt;p class=&quot;card__v&quot; id=&quot;k-dau&quot;&gt;—&lt;/p&gt;
+            &lt;p class=&quot;card__d up&quot; id=&quot;k-dau-d&quot;&gt;—&lt;/p&gt;
+            &lt;canvas data-spark=&quot;0&quot; aria-hidden=&quot;true&quot;&gt;&lt;/canvas&gt;
+          &lt;/article&gt;
+          &lt;article class=&quot;card&quot;&gt;
+            &lt;p class=&quot;card__k&quot;&gt;Регистрации&lt;/p&gt;
+            &lt;p class=&quot;card__v&quot; id=&quot;k-reg&quot;&gt;—&lt;/p&gt;
+            &lt;p class=&quot;card__d up&quot; id=&quot;k-reg-d&quot;&gt;—&lt;/p&gt;
+            &lt;canvas data-spark=&quot;1&quot; aria-hidden=&quot;true&quot;&gt;&lt;/canvas&gt;
+          &lt;/article&gt;
+          &lt;article class=&quot;card&quot;&gt;
+            &lt;p class=&quot;card__k&quot;&gt;Конверсия в оплату&lt;/p&gt;
+            &lt;p class=&quot;card__v&quot; id=&quot;k-cvr&quot;&gt;—&lt;/p&gt;
+            &lt;p class=&quot;card__d&quot; id=&quot;k-cvr-d&quot;&gt;—&lt;/p&gt;
+            &lt;canvas data-spark=&quot;2&quot; aria-hidden=&quot;true&quot;&gt;&lt;/canvas&gt;
+          &lt;/article&gt;
+          &lt;article class=&quot;card&quot;&gt;
+            &lt;p class=&quot;card__k&quot;&gt;Отток&lt;/p&gt;
+            &lt;p class=&quot;card__v&quot; id=&quot;k-churn&quot;&gt;—&lt;/p&gt;
+            &lt;p class=&quot;card__d down&quot; id=&quot;k-churn-d&quot;&gt;—&lt;/p&gt;
+            &lt;canvas data-spark=&quot;3&quot; aria-hidden=&quot;true&quot;&gt;&lt;/canvas&gt;
+          &lt;/article&gt;
+        &lt;/div&gt;
+
+        &lt;div class=&quot;dash&quot;&gt;
+          &lt;section class=&quot;panel&quot; aria-labelledby=&quot;t-traffic&quot;&gt;
+            &lt;div class=&quot;panel__head&quot;&gt;
+              &lt;h2 class=&quot;panel__t&quot; id=&quot;t-traffic&quot;&gt;Визиты и регистрации&lt;/h2&gt;
+              &lt;span class=&quot;panel__s&quot; id=&quot;chart-range&quot;&gt;30 дней&lt;/span&gt;
+            &lt;/div&gt;
+            &lt;div class=&quot;legend&quot;&gt;
+              &lt;span&gt;&lt;i style=&quot;background:#4de3d0&quot;&gt;&lt;/i&gt;визиты&lt;/span&gt;
+              &lt;span&gt;&lt;i style=&quot;background:#ffb25e&quot;&gt;&lt;/i&gt;регистрации&lt;/span&gt;
+            &lt;/div&gt;
+            &lt;div class=&quot;chart&quot; id=&quot;chart-main&quot; tabindex=&quot;0&quot; role=&quot;img&quot; aria-label=&quot;График визитов и регистраций по дням&quot;&gt;
+              &lt;canvas id=&quot;area-main&quot;&gt;&lt;/canvas&gt;
+              &lt;div class=&quot;tip&quot; id=&quot;tip-main&quot;&gt;&lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/section&gt;
+
+          &lt;section class=&quot;panel&quot; aria-labelledby=&quot;t-src&quot;&gt;
+            &lt;div class=&quot;panel__head&quot;&gt;
+              &lt;h2 class=&quot;panel__t&quot; id=&quot;t-src&quot;&gt;Источники&lt;/h2&gt;
+              &lt;span class=&quot;panel__s&quot;&gt;доля визитов&lt;/span&gt;
+            &lt;/div&gt;
+            &lt;div class=&quot;bars&quot; id=&quot;bars&quot;&gt;&lt;/div&gt;
+          &lt;/section&gt;
+        &lt;/div&gt;
+
+        &lt;section class=&quot;spark-row&quot; aria-label=&quot;Мини-метрики&quot;&gt;
+          &lt;div class=&quot;spark&quot;&gt;&lt;p class=&quot;spark__k&quot;&gt;Средний чек&lt;/p&gt;&lt;p class=&quot;spark__v&quot; id=&quot;s-aov&quot;&gt;—&lt;/p&gt;&lt;/div&gt;
+          &lt;div class=&quot;spark&quot;&gt;&lt;p class=&quot;spark__k&quot;&gt;Сессия&lt;/p&gt;&lt;p class=&quot;spark__v&quot; id=&quot;s-dur&quot;&gt;—&lt;/p&gt;&lt;/div&gt;
+          &lt;div class=&quot;spark&quot;&gt;&lt;p class=&quot;spark__k&quot;&gt;Отказы&lt;/p&gt;&lt;p class=&quot;spark__v&quot; id=&quot;s-bounce&quot;&gt;—&lt;/p&gt;&lt;/div&gt;
+          &lt;div class=&quot;spark&quot;&gt;&lt;p class=&quot;spark__k&quot;&gt;Страниц за сессию&lt;/p&gt;&lt;p class=&quot;spark__v&quot; id=&quot;s-pv&quot;&gt;—&lt;/p&gt;&lt;/div&gt;
+        &lt;/section&gt;
+
+        &lt;section class=&quot;panel&quot; aria-labelledby=&quot;t-pages&quot;&gt;
+          &lt;div class=&quot;panel__head&quot;&gt;
+            &lt;h2 class=&quot;panel__t&quot; id=&quot;t-pages&quot;&gt;Топ страниц&lt;/h2&gt;
+            &lt;span class=&quot;panel__s&quot;&gt;за период&lt;/span&gt;
+          &lt;/div&gt;
+          &lt;table&gt;
+            &lt;thead&gt;&lt;tr&gt;&lt;th scope=&quot;col&quot;&gt;Страница&lt;/th&gt;&lt;th scope=&quot;col&quot; class=&quot;r&quot;&gt;Визиты&lt;/th&gt;&lt;th scope=&quot;col&quot; class=&quot;r&quot;&gt;Конверсия&lt;/th&gt;&lt;th scope=&quot;col&quot; class=&quot;r&quot;&gt;Ср. время&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+            &lt;tbody id=&quot;pages&quot;&gt;&lt;/tbody&gt;
+          &lt;/table&gt;
+        &lt;/section&gt;
+      &lt;/section&gt;
+
+      &lt;!-- ═══════ ТРАФИК ═══════ --&gt;
+      &lt;section class=&quot;view&quot; id=&quot;view-traffic&quot; aria-label=&quot;Трафик&quot; hidden&gt;
+        &lt;div class=&quot;dash&quot;&gt;
+          &lt;section class=&quot;panel&quot; aria-labelledby=&quot;t-uniques&quot;&gt;
+            &lt;div class=&quot;panel__head&quot;&gt;
+              &lt;h2 class=&quot;panel__t&quot; id=&quot;t-uniques&quot;&gt;Уникальные посетители&lt;/h2&gt;
+              &lt;span class=&quot;panel__s&quot; id=&quot;tr-range&quot;&gt;30 дней&lt;/span&gt;
+            &lt;/div&gt;
+            &lt;div class=&quot;legend&quot;&gt;&lt;span&gt;&lt;i style=&quot;background:#4de3d0&quot;&gt;&lt;/i&gt;уникальные&lt;/span&gt;&lt;/div&gt;
+            &lt;div class=&quot;chart&quot; id=&quot;chart-traffic&quot; tabindex=&quot;0&quot; role=&quot;img&quot; aria-label=&quot;График уникальных посетителей&quot;&gt;
+              &lt;canvas id=&quot;area-traffic&quot;&gt;&lt;/canvas&gt;
+              &lt;div class=&quot;tip&quot; id=&quot;tip-traffic&quot;&gt;&lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/section&gt;
+
+          &lt;section class=&quot;panel&quot; aria-labelledby=&quot;t-devices&quot;&gt;
+            &lt;div class=&quot;panel__head&quot;&gt;
+              &lt;h2 class=&quot;panel__t&quot; id=&quot;t-devices&quot;&gt;Устройства&lt;/h2&gt;
+              &lt;span class=&quot;panel__s&quot;&gt;доля сессий&lt;/span&gt;
+            &lt;/div&gt;
+            &lt;div class=&quot;donut&quot;&gt;
+              &lt;canvas id=&quot;donut&quot; width=&quot;292&quot; height=&quot;292&quot; role=&quot;img&quot; aria-label=&quot;Распределение по устройствам&quot;&gt;&lt;/canvas&gt;
+              &lt;ul class=&quot;donut__legend&quot; id=&quot;device-legend&quot;&gt;&lt;/ul&gt;
+            &lt;/div&gt;
+          &lt;/section&gt;
+        &lt;/div&gt;
+
+        &lt;div class=&quot;dash dash--even&quot;&gt;
+          &lt;section class=&quot;panel&quot; aria-labelledby=&quot;t-channels&quot;&gt;
+            &lt;div class=&quot;panel__head&quot;&gt;
+              &lt;h2 class=&quot;panel__t&quot; id=&quot;t-channels&quot;&gt;Каналы&lt;/h2&gt;
+              &lt;span class=&quot;panel__s&quot;&gt;визиты · конверсия&lt;/span&gt;
+            &lt;/div&gt;
+            &lt;table&gt;
+              &lt;thead&gt;&lt;tr&gt;&lt;th scope=&quot;col&quot;&gt;Канал&lt;/th&gt;&lt;th scope=&quot;col&quot; class=&quot;r&quot;&gt;Визиты&lt;/th&gt;&lt;th scope=&quot;col&quot; class=&quot;r&quot;&gt;Регистрации&lt;/th&gt;&lt;th scope=&quot;col&quot; class=&quot;r&quot;&gt;CR&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+              &lt;tbody id=&quot;channels&quot;&gt;&lt;/tbody&gt;
+            &lt;/table&gt;
+          &lt;/section&gt;
+
+          &lt;section class=&quot;panel&quot; aria-labelledby=&quot;t-geo&quot;&gt;
+            &lt;div class=&quot;panel__head&quot;&gt;
+              &lt;h2 class=&quot;panel__t&quot; id=&quot;t-geo&quot;&gt;География&lt;/h2&gt;
+              &lt;span class=&quot;panel__s&quot;&gt;доля визитов&lt;/span&gt;
+            &lt;/div&gt;
+            &lt;div class=&quot;bars&quot; id=&quot;geo&quot;&gt;&lt;/div&gt;
+          &lt;/section&gt;
+        &lt;/div&gt;
+      &lt;/section&gt;
+
+      &lt;!-- ═══════ ВОРОНКА ═══════ --&gt;
+      &lt;section class=&quot;view&quot; id=&quot;view-funnel&quot; aria-label=&quot;Воронка&quot; hidden&gt;
+        &lt;div class=&quot;dash&quot;&gt;
+          &lt;section class=&quot;panel&quot; aria-labelledby=&quot;t-funnel&quot;&gt;
+            &lt;div class=&quot;panel__head&quot;&gt;
+              &lt;h2 class=&quot;panel__t&quot; id=&quot;t-funnel&quot;&gt;Путь до повторной оплаты&lt;/h2&gt;
+              &lt;span class=&quot;panel__s&quot; id=&quot;funnel-note&quot;&gt;30 дней&lt;/span&gt;
+            &lt;/div&gt;
+            &lt;div class=&quot;funnel&quot; id=&quot;funnel&quot;&gt;&lt;/div&gt;
+          &lt;/section&gt;
+
+          &lt;section class=&quot;panel&quot; aria-labelledby=&quot;t-steps&quot;&gt;
+            &lt;div class=&quot;panel__head&quot;&gt;
+              &lt;h2 class=&quot;panel__t&quot; id=&quot;t-steps&quot;&gt;Шаги воронки&lt;/h2&gt;
+              &lt;span class=&quot;panel__s&quot;&gt;переход от шага&lt;/span&gt;
+            &lt;/div&gt;
+            &lt;table&gt;
+              &lt;thead&gt;&lt;tr&gt;&lt;th scope=&quot;col&quot;&gt;Шаг&lt;/th&gt;&lt;th scope=&quot;col&quot; class=&quot;r&quot;&gt;Переход&lt;/th&gt;&lt;th scope=&quot;col&quot; class=&quot;r&quot;&gt;Потери&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+              &lt;tbody id=&quot;steps&quot;&gt;&lt;/tbody&gt;
+            &lt;/table&gt;
+          &lt;/section&gt;
+        &lt;/div&gt;
+
+        &lt;section class=&quot;panel&quot; aria-labelledby=&quot;t-cohort&quot;&gt;
+          &lt;div class=&quot;panel__head&quot;&gt;
+            &lt;h2 class=&quot;panel__t&quot; id=&quot;t-cohort&quot;&gt;Когорты по месяцу регистрации&lt;/h2&gt;
+            &lt;span class=&quot;panel__s&quot;&gt;6 месяцев · не зависит от периода&lt;/span&gt;
+          &lt;/div&gt;
+          &lt;table class=&quot;heat&quot; id=&quot;cohort&quot;&gt;
+            &lt;thead&gt;
+              &lt;tr&gt;&lt;th scope=&quot;col&quot;&gt;&amp;nbsp;&lt;/th&gt;&lt;th scope=&quot;col&quot;&gt;W0&lt;/th&gt;&lt;th scope=&quot;col&quot;&gt;W1&lt;/th&gt;&lt;th scope=&quot;col&quot;&gt;W2&lt;/th&gt;&lt;th scope=&quot;col&quot;&gt;W3&lt;/th&gt;&lt;th scope=&quot;col&quot;&gt;W4&lt;/th&gt;&lt;/tr&gt;
+            &lt;/thead&gt;
+            &lt;tbody id=&quot;cohort-body&quot;&gt;&lt;/tbody&gt;
+          &lt;/table&gt;
+          &lt;p class=&quot;heat__legend&quot;&gt;&lt;span&gt;меньше&lt;/span&gt;&lt;i style=&quot;background:rgba(77,227,208,.12)&quot;&gt;&lt;/i&gt;&lt;i style=&quot;background:rgba(77,227,208,.3)&quot;&gt;&lt;/i&gt;&lt;i style=&quot;background:rgba(77,227,208,.48)&quot;&gt;&lt;/i&gt;&lt;i style=&quot;background:rgba(77,227,208,.66)&quot;&gt;&lt;/i&gt;&lt;span&gt;больше&lt;/span&gt;&lt;span class=&quot;heat__note&quot;&gt;— неделя ещё не прошла&lt;/span&gt;&lt;/p&gt;
+        &lt;/section&gt;
+      &lt;/section&gt;
+
+      &lt;!-- ═══════ ОТЧЁТЫ ═══════ --&gt;
+      &lt;section class=&quot;view&quot; id=&quot;view-reports&quot; aria-label=&quot;Отчёты&quot; hidden&gt;
+        &lt;section class=&quot;panel&quot; aria-labelledby=&quot;t-reports&quot;&gt;
+          &lt;div class=&quot;panel__head&quot;&gt;
+            &lt;h2 class=&quot;panel__t&quot; id=&quot;t-reports&quot;&gt;Отчёты&lt;/h2&gt;
+            &lt;span class=&quot;panel__s&quot;&gt;экспорт считается в браузере&lt;/span&gt;
+          &lt;/div&gt;
+          &lt;div class=&quot;toolbar&quot;&gt;
+            &lt;button class=&quot;btn btn--main&quot; type=&quot;button&quot; id=&quot;make-report&quot;&gt;Сформировать отчёт&lt;/button&gt;
+            &lt;button class=&quot;btn&quot; type=&quot;button&quot; id=&quot;download-all&quot;&gt;Скачать всё одним CSV&lt;/button&gt;
+            &lt;span class=&quot;rep__m&quot; id=&quot;rep-count&quot;&gt;&lt;/span&gt;
+          &lt;/div&gt;
+          &lt;div class=&quot;rep&quot; aria-hidden=&quot;true&quot; style=&quot;border-bottom:1px solid var(--line);padding-bottom:8px&quot;&gt;
+            &lt;span class=&quot;rep__m&quot;&gt;Отчёт&lt;/span&gt;&lt;span class=&quot;rep__m&quot;&gt;Период&lt;/span&gt;&lt;span class=&quot;rep__m&quot;&gt;Строк&lt;/span&gt;&lt;span class=&quot;rep__m&quot;&gt;Статус&lt;/span&gt;&lt;span&gt;&lt;/span&gt;
+          &lt;/div&gt;
+          &lt;div id=&quot;report-list&quot;&gt;&lt;/div&gt;
+        &lt;/section&gt;
+      &lt;/section&gt;
+    &lt;/main&gt;
+
+    &lt;footer&gt;
+      &lt;span&gt;демо-стенд · данные синтетические, генерируются в браузере&lt;/span&gt;
+      &lt;a href=&quot;../../index.html&quot;&gt;← вернуться в портфолио&lt;/a&gt;
+    &lt;/footer&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;toast&quot; id=&quot;toast&quot; role=&quot;status&quot; aria-live=&quot;polite&quot;&gt;&lt;/div&gt;
+
+&lt;script&gt;
+(() =&gt; {
+  &quot;use strict&quot;;
+
+  const $ = (s, r = document) =&gt; r.querySelector(s);
+  const $$ = (s, r = document) =&gt; Array.from(r.querySelectorAll(s));
+  const fmt = new Intl.NumberFormat(&quot;ru-RU&quot;);
+  const ru = (n, d = 1) =&gt; n.toFixed(d).replace(&quot;.&quot;, &quot;,&quot;);
+
+  /* ——— детерминированный PRNG: графики не дёргаются между перерисовками ——— */
+  let seed = 20260214;
+  const rnd = () =&gt; {
+    seed = (seed * 1664525 + 1013904223) % 4294967296;
+    return seed / 4294967296;
+  };
+
+  const state = { view: &quot;overview&quot;, range: 30, series: [], traffic: [] };
+
+  function buildSeries(days) {
+    const out = [];
+    let base = 2400 + (seed % 900);
+    for (let i = 0; i &lt; days; i++) {
+      const dow = (i + 3) % 7;
+      const weekend = dow === 5 || dow === 6 ? 0.72 : 1;
+      const trend = 1 + i * 0.004;
+      const visits = Math.round(base * weekend * trend * (0.9 + rnd() * 0.2));
+      const uniq = Math.round(visits * (0.62 + rnd() * 0.1));
+      const regs = Math.round(visits * (0.055 + rnd() * 0.02));
+      out.push({ visits, uniq, regs });
+    }
+    return out;
+  }
+
+  /* ——— canvas с учётом плотности пикселей ——— */
+  function setup(canvas, cssW, cssH) {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    canvas.style.height = cssH + &quot;px&quot;;
+    const ctx = canvas.getContext(&quot;2d&quot;);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return ctx;
+  }
+
+  function drawSpark(canvas, values, accent) {
+    const w = canvas.clientWidth, h = 44;
+    if (!w) return;
+    const ctx = setup(canvas, w, h);
+    const max = Math.max(...values), min = Math.min(...values);
+    const x = (i) =&gt; (i / (values.length - 1)) * w;
+    const y = (v) =&gt; h - 6 - ((v - min) / (max - min || 1)) * (h - 14);
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, accent + &quot;55&quot;);
+    grad.addColorStop(1, accent + &quot;00&quot;);
+    ctx.beginPath();
+    values.forEach((v, i) =&gt; (i ? ctx.lineTo(x(i), y(v)) : ctx.moveTo(x(i), y(v))));
+    ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.closePath();
+    ctx.fillStyle = grad; ctx.fill();
+    ctx.beginPath();
+    values.forEach((v, i) =&gt; (i ? ctx.lineTo(x(i), y(v)) : ctx.moveTo(x(i), y(v))));
+    ctx.strokeStyle = accent; ctx.lineWidth = 1.6; ctx.stroke();
+  }
+
+  /* ——— график-область, параметризованный ——— */
+  function makeArea({ box, canvas, tip, getValues, getSecond, labelA, labelB }) {
+    let geo = null;
+
+    function draw() {
+      const w = box.clientWidth;
+      if (!w) return;
+      const h = Math.max(200, Math.min(320, Math.round(w * 0.32)));
+      const ctx = setup(canvas, w, h);
+      const data = getValues();
+      if (!data.length) return;
+      const padL = 44, padR = 10, padT = 14, padB = 26;
+      const iw = w - padL - padR, ih = h - padT - padB;
+      const maxV = Math.max(...data) * 1.14;
+      const X = (i) =&gt; padL + (i / (data.length - 1)) * iw;
+      const Y = (v) =&gt; padT + ih - (v / maxV) * ih;
+
+      ctx.clearRect(0, 0, w, h);
+      ctx.font = &quot;10px &#x27;JetBrains Mono&#x27;, monospace&quot;;
+      ctx.fillStyle = &quot;#6d828d&quot;;
+      ctx.textAlign = &quot;right&quot;;
+      for (let g = 0; g &lt;= 4; g++) {
+        const v = (maxV / 4) * g, yy = Y(v);
+        ctx.strokeStyle = g === 0 ? &quot;#2a3941&quot; : &quot;#182026&quot;;
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(padL, yy + .5); ctx.lineTo(w - padR, yy + .5); ctx.stroke();
+        ctx.fillText(Math.round(v / 100) / 10 + &quot;k&quot;, padL - 8, yy + 3);
+      }
+
+      const grad = ctx.createLinearGradient(0, padT, 0, padT + ih);
+      grad.addColorStop(0, &quot;rgba(77,227,208,.34)&quot;);
+      grad.addColorStop(1, &quot;rgba(77,227,208,0)&quot;);
+      ctx.beginPath();
+      data.forEach((v, i) =&gt; (i ? ctx.lineTo(X(i), Y(v)) : ctx.moveTo(X(i), Y(v))));
+      ctx.lineTo(X(data.length - 1), padT + ih);
+      ctx.lineTo(X(0), padT + ih);
+      ctx.closePath();
+      ctx.fillStyle = grad; ctx.fill();
+
+      ctx.beginPath();
+      data.forEach((v, i) =&gt; (i ? ctx.lineTo(X(i), Y(v)) : ctx.moveTo(X(i), Y(v))));
+      ctx.strokeStyle = &quot;#4de3d0&quot;; ctx.lineWidth = 2; ctx.lineJoin = &quot;round&quot;; ctx.stroke();
+
+      const second = getSecond ? getSecond() : null;
+      if (second) {
+        const regMax = Math.max(...second) * 1.6;
+        const YR = (v) =&gt; padT + ih - (v / regMax) * ih;
+        ctx.beginPath();
+        second.forEach((v, i) =&gt; (i ? ctx.lineTo(X(i), YR(v)) : ctx.moveTo(X(i), YR(v))));
+        ctx.strokeStyle = &quot;#ffb25e&quot;; ctx.lineWidth = 1.6; ctx.setLineDash([4, 3]); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      ctx.textAlign = &quot;center&quot;;
+      ctx.fillStyle = &quot;#6d828d&quot;;
+      const step = Math.ceil(data.length / 6);
+      data.forEach((_, i) =&gt; {
+        if (i % step) return;
+        const day = new Date(Date.now() - (data.length - 1 - i) * 864e5);
+        ctx.fillText(day.toLocaleDateString(&quot;ru-RU&quot;, { day: &quot;2-digit&quot;, month: &quot;2-digit&quot; }), X(i), h - 8);
+      });
+
+      geo = { X, Y, padL, padR, w };
+    }
+
+    function move(ev) {
+      if (!geo) return;
+      const rect = box.getBoundingClientRect();
+      const px = ev.clientX - rect.left;
+      const ratio = Math.min(1, Math.max(0, (px - geo.padL) / (geo.w - geo.padL - geo.padR)));
+      const data = getValues();
+      const idx = Math.round(ratio * (data.length - 1));
+      const day = new Date(Date.now() - (data.length - 1 - idx) * 864e5);
+      let html = day.toLocaleDateString(&quot;ru-RU&quot;, { day: &quot;2-digit&quot;, month: &quot;long&quot; }) +
+        &quot;&lt;br&gt;&quot; + labelA + &quot; &lt;b&gt;&quot; + fmt.format(data[idx]) + &quot;&lt;/b&gt;&quot;;
+      const second = getSecond ? getSecond() : null;
+      if (second) html += &quot;&lt;br&gt;&quot; + labelB + &quot; &lt;b&gt;&quot; + fmt.format(second[idx]) + &quot;&lt;/b&gt;&quot;;
+      tip.innerHTML = html;
+      tip.style.left = geo.X(idx) + &quot;px&quot;;
+      tip.style.top = geo.Y(data[idx]) + &quot;px&quot;;
+      tip.style.opacity = 1;
+    }
+
+    box.addEventListener(&quot;pointermove&quot;, move);
+    box.addEventListener(&quot;pointerleave&quot;, () =&gt; (tip.style.opacity = 0));
+    if (&quot;ResizeObserver&quot; in window) new ResizeObserver(() =&gt; draw()).observe(box);
+    return draw;
+  }
+
+  const drawMain = makeArea({
+    box: $(&quot;#chart-main&quot;), canvas: $(&quot;#area-main&quot;), tip: $(&quot;#tip-main&quot;),
+    getValues: () =&gt; state.series.map((d) =&gt; d.visits),
+    getSecond: () =&gt; state.series.map((d) =&gt; d.regs),
+    labelA: &quot;визиты&quot;, labelB: &quot;регистрации&quot;,
+  });
+  const drawTraffic = makeArea({
+    box: $(&quot;#chart-traffic&quot;), canvas: $(&quot;#area-traffic&quot;), tip: $(&quot;#tip-traffic&quot;),
+    getValues: () =&gt; state.series.map((d) =&gt; d.uniq),
+    labelA: &quot;уникальные&quot;,
+  });
+
+  /* ——— обзор ——— */
+  function renderOverview() {
+    const data = state.series;
+    const total = data.reduce((s, d) =&gt; s + d.visits, 0);
+    const regs = data.reduce((s, d) =&gt; s + d.regs, 0);
+    const cvr = (regs / total) * 100;
+
+    const set = (id, v) =&gt; ($(&quot;#&quot; + id).textContent = v);
+    set(&quot;k-dau&quot;, fmt.format(Math.round(total / state.range)));
+    set(&quot;k-dau-d&quot;, &quot;+&quot; + ru(3 + rnd() * 9) + &quot;% к прошлому периоду&quot;);
+    set(&quot;k-reg&quot;, fmt.format(regs));
+    set(&quot;k-reg-d&quot;, &quot;+&quot; + ru(2 + rnd() * 12) + &quot;% к прошлому периоду&quot;);
+    set(&quot;k-cvr&quot;, ru(cvr) + &quot;%&quot;);
+    set(&quot;k-cvr-d&quot;, cvr &gt; 5.4 ? &quot;выше цели 5,4%&quot; : &quot;ниже цели 5,4%&quot;);
+    $(&quot;#k-cvr-d&quot;).className = &quot;card__d &quot; + (cvr &gt; 5.4 ? &quot;up&quot; : &quot;down&quot;);
+    const churn = 1.4 + rnd() * 2.1;
+    set(&quot;k-churn&quot;, ru(churn) + &quot;%&quot;);
+    set(&quot;k-churn-d&quot;, churn &lt; 2.4 ? &quot;−0,&quot; + Math.round(rnd() * 4 + 1) + &quot; п.п.&quot; : &quot;+0,&quot; + Math.round(rnd() * 4 + 1) + &quot; п.п.&quot;);
+    $(&quot;#chart-range&quot;).textContent = state.range + &quot; дней&quot;;
+
+    const sparks = [
+      [data.map((d) =&gt; d.visits), &quot;#4de3d0&quot;],
+      [data.map((d) =&gt; d.regs), &quot;#4de3d0&quot;],
+      [data.map((d) =&gt; (d.regs / d.visits) * 1000), &quot;#4de3d0&quot;],
+      [data.map(() =&gt; 1.6 + rnd()), &quot;#ff6b6b&quot;],
+    ];
+    $$(&quot;[data-spark]&quot;).forEach((c) =&gt; {
+      const [vals, color] = sparks[+c.dataset.spark];
+      drawSpark(c, vals, color);
+    });
+
+    set(&quot;s-aov&quot;, fmt.format(Math.round(2400 + rnd() * 2600)) + &quot; ₽&quot;);
+    set(&quot;s-dur&quot;, ru(2 + rnd() * 4) + &quot; мин&quot;);
+    set(&quot;s-bounce&quot;, Math.round(22 + rnd() * 14) + &quot;%&quot;);
+    set(&quot;s-pv&quot;, ru(2.4 + rnd() * 2.6));
+
+    const bars = $(&quot;#bars&quot;);
+    bars.innerHTML = &quot;&quot;;
+    const sources = [[&quot;Поиск&quot;, 0.42], [&quot;Прямые&quot;, 0.21], [&quot;Соцсети&quot;, 0.16], [&quot;Реклама&quot;, 0.13], [&quot;Почта&quot;, 0.08]];
+    sources.forEach(([name, share]) =&gt; {
+      const pct = Math.min(0.72, share * (0.85 + rnd() * 0.3));
+      const row = document.createElement(&quot;div&quot;);
+      row.className = &quot;bar__row&quot;;
+      row.innerHTML = &#x27;&lt;span&gt;&#x27; + name + &#x27;&lt;/span&gt;&lt;span class=&quot;bar__track&quot;&gt;&lt;span class=&quot;bar__fill&quot;&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;bar__v&quot;&gt;&#x27; + Math.round(pct * 100) + &quot;%&lt;/span&gt;&quot;;
+      bars.appendChild(row);
+      requestAnimationFrame(() =&gt; (row.querySelector(&quot;.bar__fill&quot;).style.width = (pct / 0.72) * 100 + &quot;%&quot;));
+    });
+
+    const pages = [
+      [&quot;/&quot;, &quot;Главная&quot;, 0.031, &quot;0:52&quot;],
+      [&quot;/tarify&quot;, &quot;Тарифы&quot;, 0.088, &quot;1:41&quot;],
+      [&quot;/blog/seo-struktura&quot;, &quot;Блог · SEO-структура&quot;, 0.012, &quot;3:08&quot;],
+      [&quot;/keysy&quot;, &quot;Кейсы&quot;, 0.041, &quot;2:13&quot;],
+      [&quot;/registraciya&quot;, &quot;Регистрация&quot;, 0.164, &quot;1:07&quot;],
+    ];
+    const tbody = $(&quot;#pages&quot;);
+    tbody.innerHTML = &quot;&quot;;
+    pages.forEach(([url, title, cr, time]) =&gt; {
+      const visits = Math.round((total / pages.length) * (0.5 + rnd()));
+      const tr = document.createElement(&quot;tr&quot;);
+      tr.innerHTML =
+        &#x27;&lt;td&gt;&lt;span class=&quot;tag&quot;&gt;&#x27; + url + &quot;&lt;/span&gt; &quot; + title + &quot;&lt;/td&gt;&quot; +
+        &#x27;&lt;td class=&quot;mono r&quot;&gt;&#x27; + fmt.format(visits) + &quot;&lt;/td&gt;&quot; +
+        &#x27;&lt;td class=&quot;mono r&quot;&gt;&#x27; + ru(cr * 100) + &quot;%&lt;/td&gt;&quot; +
+        &#x27;&lt;td class=&quot;mono r&quot;&gt;&#x27; + time + &quot;&lt;/td&gt;&quot;;
+      tbody.appendChild(tr);
+    });
+
+    drawMain();
+  }
+
+  /* ——— трафик ——— */
+  const DEVICES = [
+    [&quot;Десктоп&quot;, 0.61, &quot;#4de3d0&quot;],
+    [&quot;Мобильные&quot;, 0.33, &quot;#ffb25e&quot;],
+    [&quot;Планшеты&quot;, 0.06, &quot;#8a7dff&quot;],
+  ];
+
+  function drawDonut() {
+    const c = $(&quot;#donut&quot;);
+    const size = 146;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    c.width = size * dpr; c.height = size * dpr;
+    c.style.width = size + &quot;px&quot;; c.style.height = size + &quot;px&quot;;
+    const ctx = c.getContext(&quot;2d&quot;);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const cx = size / 2, cy = size / 2, r = 56, lw = 17;
+    let start = -Math.PI / 2;
+    ctx.clearRect(0, 0, size, size);
+    DEVICES.forEach(([, share, color]) =&gt; {
+      const end = start + share * Math.PI * 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, start + 0.02, end - 0.02);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lw;
+      ctx.lineCap = &quot;butt&quot;;
+      ctx.stroke();
+      start = end;
+    });
+    ctx.fillStyle = &quot;#e8eef2&quot;;
+    ctx.font = &quot;600 17px &#x27;Golos Text&#x27;, sans-serif&quot;;
+    ctx.textAlign = &quot;center&quot;;
+    ctx.fillText(&quot;61%&quot;, cx, cy - 2);
+    ctx.fillStyle = &quot;#7d8f9b&quot;;
+    ctx.font = &quot;9px &#x27;JetBrains Mono&#x27;, monospace&quot;;
+    ctx.fillText(&quot;ДЕСКТОП&quot;, cx, cy + 14);
+  }
+
+  function renderTraffic() {
+    $(&quot;#tr-range&quot;).textContent = state.range + &quot; дней&quot;;
+    drawTraffic();
+    drawDonut();
+
+    $(&quot;#device-legend&quot;).innerHTML = DEVICES
+      .map(([name, share, color]) =&gt; &#x27;&lt;li&gt;&lt;i style=&quot;background:&#x27; + color + &#x27;&quot;&gt;&lt;/i&gt;&#x27; + name + &quot;&lt;b&gt;&quot; + ru(share * 100, 0) + &quot;%&lt;/b&gt;&lt;/li&gt;&quot;)
+      .join(&quot;&quot;);
+
+    const total = state.series.reduce((s, d) =&gt; s + d.visits, 0);
+    const channels = [
+      [&quot;Поиск&quot;, 0.42, 0.061],
+      [&quot;Прямые&quot;, 0.21, 0.044],
+      [&quot;Соцсети&quot;, 0.16, 0.052],
+      [&quot;Реклама&quot;, 0.13, 0.071],
+      [&quot;Почта&quot;, 0.08, 0.034],
+    ];
+    $(&quot;#channels&quot;).innerHTML = channels
+      .map(([name, share, cr]) =&gt; {
+        const v = Math.round(total * share);
+        return &quot;&lt;tr&gt;&lt;td&gt;&quot; + name + &#x27;&lt;/td&gt;&lt;td class=&quot;mono r&quot;&gt;&#x27; + fmt.format(v) +
+          &#x27;&lt;/td&gt;&lt;td class=&quot;mono r&quot;&gt;&#x27; + fmt.format(Math.round(v * cr)) +
+          &#x27;&lt;/td&gt;&lt;td class=&quot;mono r&quot;&gt;&#x27; + ru(cr * 100) + &quot;%&lt;/td&gt;&lt;/tr&gt;&quot;;
+      })
+      .join(&quot;&quot;);
+
+    const geo = [[&quot;Москва&quot;, 0.31], [&quot;Санкт-Петербург&quot;, 0.18], [&quot;Новосибирск&quot;, 0.09], [&quot;Екатеринбург&quot;, 0.07], [&quot;Казань&quot;, 0.05], [&quot;Остальные&quot;, 0.30]];
+    const box = $(&quot;#geo&quot;);
+    box.innerHTML = &quot;&quot;;
+    geo.forEach(([name, share]) =&gt; {
+      const row = document.createElement(&quot;div&quot;);
+      row.className = &quot;bar__row&quot;;
+      row.innerHTML = &#x27;&lt;span&gt;&#x27; + name + &#x27;&lt;/span&gt;&lt;span class=&quot;bar__track&quot;&gt;&lt;span class=&quot;bar__fill&quot;&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;bar__v&quot;&gt;&#x27; + Math.round(share * 100) + &quot;%&lt;/span&gt;&quot;;
+      box.appendChild(row);
+      requestAnimationFrame(() =&gt; (row.querySelector(&quot;.bar__fill&quot;).style.width = (share / 0.31) * 100 + &quot;%&quot;));
+    });
+  }
+
+  /* ——— воронка ——— */
+  function renderFunnel() {
+    const total = state.series.reduce((s, d) =&gt; s + d.visits, 0);
+    const stages = [
+      [&quot;Визит&quot;, &quot;зашли на сайт&quot;, total],
+      [&quot;Просмотр тарифов&quot;, &quot;открыли цены&quot;, Math.round(total * 0.34)],
+      [&quot;Регистрация&quot;, &quot;создали аккаунт&quot;, Math.round(total * 0.071)],
+      [&quot;Активация&quot;, &quot;первый проект&quot;, Math.round(total * 0.041)],
+      [&quot;Оплата&quot;, &quot;подписка&quot;, Math.round(total * 0.024)],
+      [&quot;Повторная оплата&quot;, &quot;второй месяц&quot;, Math.round(total * 0.014)],
+    ];
+    const box = $(&quot;#funnel&quot;);
+    box.innerHTML = stages
+      .map(([name, hint, value], i) =&gt; {
+        const share = (value / stages[0][2]) * 100;
+        return &#x27;&lt;div class=&quot;fstage&quot;&gt;&#x27; +
+          &#x27;&lt;span class=&quot;fstage__n&quot;&gt;&lt;b&gt;&#x27; + name + &quot;&lt;/b&gt;&quot; + hint + &quot;&lt;/span&gt;&quot; +
+          &#x27;&lt;span class=&quot;fbar&quot;&gt;&lt;i data-w=&quot;&#x27; + share + &#x27;&quot;&gt;&lt;/i&gt;&lt;/span&gt;&#x27; +
+          &#x27;&lt;span class=&quot;fstage__v&quot;&gt;&#x27; + fmt.format(value) + &quot;&lt;small&gt;&quot; + ru(share) + &quot;%&lt;/small&gt;&lt;/span&gt;&quot; +
+          &quot;&lt;/div&gt;&quot;;
+      })
+      .join(&quot;&quot;);
+    requestAnimationFrame(() =&gt; {
+      $$(&quot;#funnel .fbar i&quot;).forEach((el) =&gt; (el.style.width = Math.max(1.5, +el.dataset.w) + &quot;%&quot;));
+    });
+
+    // первая строка — база, дальше переход от предыдущего шага и потери
+    $(&quot;#steps&quot;).innerHTML = [&#x27;&lt;tr&gt;&lt;td&gt;Визит&lt;/td&gt;&lt;td class=&quot;mono r&quot;&gt;100%&lt;/td&gt;&lt;td class=&quot;mono r&quot;&gt;—&lt;/td&gt;&lt;/tr&gt;&#x27;]
+      .concat(stages.slice(1).map(([name], i) =&gt; {
+        const prev = stages[i][2], cur = stages[i + 1][2];
+        const conv = (cur / prev) * 100;
+        const lost = prev - cur;
+        return &quot;&lt;tr&gt;&lt;td&gt;&quot; + name + &#x27;&lt;/td&gt;&lt;td class=&quot;mono r&quot;&gt;&#x27; + ru(conv) +
+          &#x27;%&lt;/td&gt;&lt;td class=&quot;mono r&quot;&gt;&#x27; + fmt.format(lost) + &quot;&lt;/td&gt;&lt;/tr&gt;&quot;;
+      }))
+      .join(&quot;&quot;);
+
+    $(&quot;#funnel-note&quot;).textContent = state.range + &quot; дней · % от визитов&quot;;
+
+    // когорты: последние шесть месяцев; недели, которых ещё не было, — без данных
+    const MN = [&quot;Янв&quot;, &quot;Фев&quot;, &quot;Мар&quot;, &quot;Апр&quot;, &quot;Май&quot;, &quot;Июн&quot;, &quot;Июл&quot;, &quot;Авг&quot;, &quot;Сен&quot;, &quot;Окт&quot;, &quot;Ноя&quot;, &quot;Дек&quot;];
+    const now = new Date();
+    const cohorts = [];
+    for (let i = 5; i &gt;= 0; i--) cohorts.push(new Date(now.getFullYear(), now.getMonth() - i, 1));
+
+    $(&quot;#cohort-body&quot;).innerHTML = cohorts
+      .map((start, row) =&gt; {
+        const weeksPassed = Math.floor((now - start) / (7 * 864e5));
+        const cells = [0, 1, 2, 3, 4].map((w) =&gt; {
+          if (w &gt; weeksPassed) {
+            return &#x27;&lt;td&gt;&lt;div class=&quot;cell is-empty&quot; title=&quot;неделя ещё не прошла&quot;&gt;—&lt;/div&gt;&lt;/td&gt;&#x27;;
+          }
+          const v = w === 0 ? 100 : Math.max(6, Math.round(62 - w * 11 - (5 - row) * 1.4 + rnd() * 5));
+          const alpha = 0.06 + (v / 100) * 0.62;
+          const dark = v &gt; 55;
+          return &#x27;&lt;td&gt;&lt;div class=&quot;cell&quot; style=&quot;background:rgba(77,227,208,&#x27; + alpha.toFixed(2) + &quot;);color:&quot; + (dark ? &quot;#04211f&quot; : &quot;#b9c8cf&quot;) + &#x27;&quot;&gt;&#x27; + v + &quot;&lt;/div&gt;&lt;/td&gt;&quot;;
+        }).join(&quot;&quot;);
+        return &#x27;&lt;tr&gt;&lt;td class=&quot;sp&quot;&gt;&#x27; + MN[start.getMonth()] + &quot; &quot; + start.getFullYear() + &quot;&lt;/td&gt;&quot; + cells + &quot;&lt;/tr&gt;&quot;;
+      })
+      .join(&quot;&quot;);
+  }
+
+  /* ——— отчёты ——— */
+  const reports = [
+    { name: &quot;Сводка по продукту&quot;, period: &quot;30 дн&quot;, rows: 1240, at: &quot;09.11, 10:20&quot; },
+    { name: &quot;Каналы и конверсия&quot;, period: &quot;90 дн&quot;, rows: 3860, at: &quot;01.11, 18:05&quot; },
+    { name: &quot;Когорты удержания&quot;, period: &quot;90 дн&quot;, rows: 620, at: &quot;28.10, 12:40&quot; },
+  ];
+
+  function csvFor(period) {
+    const days = { &quot;7 дн&quot;: 7, &quot;30 дн&quot;: 30, &quot;90 дн&quot;: 90 }[period] || 30;
+    const rows = [[&quot;дата&quot;, &quot;визиты&quot;, &quot;уникальные&quot;, &quot;регистрации&quot;]];
+    const series = buildSeries(days);
+    series.forEach((d, i) =&gt; {
+      const day = new Date(Date.now() - (days - 1 - i) * 864e5);
+      rows.push([day.toISOString().slice(0, 10), d.visits, d.uniq, d.regs]);
+    });
+    return &quot;\ufeff&quot; + rows.map((r) =&gt; r.join(&quot;;&quot;)).join(&quot;\r\n&quot;);
+  }
+
+  function download(name, text) {
+    const blob = new Blob([text], { type: &quot;text/csv;charset=utf-8&quot; });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement(&quot;a&quot;);
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() =&gt; URL.revokeObjectURL(url), 1000);
+  }
+
+  function renderReports() {
+    $(&quot;#rep-count&quot;).textContent = &quot;всего отчётов: &quot; + reports.length;
+    $(&quot;#report-list&quot;).innerHTML = reports.length
+      ? reports
+          .map((r, i) =&gt; {
+            const slug = r.period.replace(/\s/g, &quot;-&quot;);
+            return &#x27;&lt;div class=&quot;rep&quot;&gt;&#x27; +
+              &#x27;&lt;span class=&quot;rep__name&quot;&gt;&#x27; + r.name + &quot;&lt;small&gt;&quot; + r.at + &quot;&lt;/small&gt;&lt;/span&gt;&quot; +
+              &#x27;&lt;span class=&quot;rep__m&quot;&gt;&#x27; + r.period + &quot;&lt;/span&gt;&quot; +
+              &#x27;&lt;span class=&quot;rep__m&quot;&gt;&#x27; + fmt.format(r.rows) + &quot;&lt;/span&gt;&quot; +
+              &#x27;&lt;span class=&quot;status&quot;&gt;готов&lt;/span&gt;&#x27; +
+              &#x27;&lt;button class=&quot;btn&quot; type=&quot;button&quot; data-csv=&quot;&#x27; + i + &#x27;&quot;&gt;скачать&lt;/button&gt;&#x27; +
+              &quot;&lt;/div&gt;&quot;;
+          })
+          .join(&quot;&quot;)
+      : &#x27;&lt;p class=&quot;empty&quot;&gt;Отчётов пока нет — сформируйте первый.&lt;/p&gt;&#x27;;
+
+    $$(&quot;#report-list [data-csv]&quot;).forEach((btn) =&gt; {
+      btn.addEventListener(&quot;click&quot;, () =&gt; {
+        const r = reports[+btn.dataset.csv];
+        download(&quot;skala-&quot; + r.period.replace(/\s/g, &quot;-&quot;) + &quot;.csv&quot;, csvFor(r.period));
+        btn.dataset.done = &quot;1&quot;;
+        btn.textContent = &quot;готово&quot;;
+        setTimeout(() =&gt; { btn.textContent = &quot;скачать&quot;; delete btn.dataset.done; }, 1500);
+      });
+    });
+  }
+
+  /* ——— тосты ——— */
+  let toastTimer;
+  function toast(text) {
+    const t = $(&quot;#toast&quot;);
+    t.textContent = text;
+    t.dataset.show = &quot;1&quot;;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() =&gt; (t.dataset.show = &quot;0&quot;), 2600);
+  }
+
+  /* ——— переключение экранов ——— */
+  const TITLES = {
+    overview: [&quot;Продукт / обзор&quot;, &quot;Скала — метрики продукта&quot;],
+    traffic: [&quot;Продукт / трафик&quot;, &quot;Трафик и устройства&quot;],
+    funnel: [&quot;Продукт / воронка&quot;, &quot;Воронка продукта&quot;],
+    reports: [&quot;Продукт / отчёты&quot;, &quot;Отчёты и выгрузка&quot;],
+  };
+
+  function show(view) {
+    state.view = view;
+    $$(&quot;.view&quot;).forEach((v) =&gt; (v.hidden = v.id !== &quot;view-&quot; + view));
+    $$(&quot;.rail button&quot;).forEach((b) =&gt;
+      b.setAttribute(&quot;aria-current&quot;, b.dataset.view === view ? &quot;page&quot; : &quot;false&quot;)
+    );
+    const [crumb, title] = TITLES[view];
+    $(&quot;#crumb&quot;).textContent = crumb;
+    $(&quot;#title&quot;).textContent = title;
+    $(&quot;#range-chips&quot;).style.visibility = view === &quot;reports&quot; ? &quot;hidden&quot; : &quot;visible&quot;;
+
+    // новые размеры контейнеров появляются только после показа
+    requestAnimationFrame(() =&gt; {
+      if (view === &quot;overview&quot;) renderOverview();
+      if (view === &quot;traffic&quot;) renderTraffic();
+      if (view === &quot;funnel&quot;) renderFunnel();
+      if (view === &quot;reports&quot;) renderReports();
+    });
+  }
+
+  $$(&quot;.rail button&quot;).forEach((btn) =&gt; {
+    btn.addEventListener(&quot;click&quot;, () =&gt; show(btn.dataset.view));
+  });
+
+  /* ——— период и обновление ——— */
+  $$(&quot;[data-range]&quot;).forEach((btn) =&gt; {
+    btn.addEventListener(&quot;click&quot;, () =&gt; {
+      state.range = +btn.dataset.range;
+      $$(&quot;[data-range]&quot;).forEach((b) =&gt; b.setAttribute(&quot;aria-pressed&quot;, String(b === btn)));
+      state.series = buildSeries(state.range);
+      show(state.view);
+    });
+  });
+
+  $(&quot;#shuffle&quot;).addEventListener(&quot;click&quot;, () =&gt; {
+    seed += 7919;
+    state.series = buildSeries(state.range);
+    show(state.view);
+    toast(&quot;Данные пересчитаны&quot;);
+  });
+
+  $(&quot;#make-report&quot;).addEventListener(&quot;click&quot;, () =&gt; {
+    const now = new Date();
+    reports.unshift({
+      name: &quot;Сводка по продукту&quot;,
+      period: state.range + &quot; дн&quot;,
+      rows: Math.round(state.range * (38 + rnd() * 20)),
+      at: now.toLocaleDateString(&quot;ru-RU&quot;, { day: &quot;2-digit&quot;, month: &quot;2-digit&quot; }) + &quot;, &quot; +
+          now.toLocaleTimeString(&quot;ru-RU&quot;, { hour: &quot;2-digit&quot;, minute: &quot;2-digit&quot; }),
+    });
+    renderReports();
+    toast(&quot;Отчёт сформирован — лежит первым в списке&quot;);
+  });
+
+  $(&quot;#download-all&quot;).addEventListener(&quot;click&quot;, (e) =&gt; {
+    download(&quot;skala-vse-otchyoty.csv&quot;, csvFor(&quot;90 дн&quot;));
+    const b = e.currentTarget;
+    b.dataset.done = &quot;1&quot;;
+    b.textContent = &quot;Скачано&quot;;
+    setTimeout(() =&gt; { b.textContent = &quot;Скачать всё одним CSV&quot;; delete b.dataset.done; }, 1600);
+  });
+
+  /* ——— часы ——— */
+  const clock = $(&quot;#live-clock&quot;);
+  const tick = () =&gt; (clock.textContent = new Date().toLocaleTimeString(&quot;ru-RU&quot;));
+  tick(); setInterval(tick, 1000);
+
+  /* ——— старт ——— */
+  state.series = buildSeries(state.range);
+  show(&quot;overview&quot;);
+})();
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre></div>
+  </section>
+</main>
+
+<footer class="foot wrap">
+  <span>страница кода · исходник встроен целиком, подсветка своя</span>
+  <div class="foot__r">
+    <a href="index.html">демо ↗</a>
+    <a href="../../index.html">в портфолио</a>
+  </div>
+</footer>
+
+<script>
+(() => {
+  "use strict";
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const tabs = $$(".tab");
+  const panes = $$(".pane");
+
+  const MAP = { "&": "&amp;", "<": "&lt;", ">": "&gt;" };
+  const esc = (s) => s.replace(/[&<>]/g, (c) => MAP[c]);
+
+  /* ——— лексер: комментарии и строки, затем ключевые слова ——— */
+  /* угловые скобки разметки пишем как \x3C: их литералы ломают разбор скрипта */
+  const TOKEN = /(\/\*[\s\S]*?\*\/|\/\/[^\n]*|\x3C!--[\s\S]*?--\x3E|`(?:\\[\s\S]|[^`\\])*`|"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*')/g;
+  const KW = /\b(const|let|var|function|return|if|else|for|while|do|switch|case|break|continue|new|class|extends|this|null|undefined|true|false|await|async|of|in|typeof|instanceof|delete|try|catch|finally|throw|import|export|from|default)\b/g;
+  const NUM = /\b\d+(?:\.\d+)?(?:e[+-]?\d+)?\b|\b0x[0-9a-fA-F]+\b/g;
+  const TAG = /\x3C!--[\s\S]*?--\x3E|\x3C\/?[a-zA-Z][^>]*>/g;
+  const ATTR = /([\w:@.\-]+)(\s*=\s*)("[^"]*"|'[^']*'|[^\s>]+)|([\w:@.\-]+)|([\s\S])/g;
+
+  const paintJs = (s) => esc(s).replace(KW, '<span class="tok-kw">$1</span>').replace(NUM, '<span class="tok-num">$&</span>');
+  const paintCss = (s) => esc(s)
+    .replace(/(@[\w-]+)/g, '<span class="tok-at">$1</span>')
+    .replace(/([\w-]+)(?=\s*:)/g, '<span class="tok-prop">$1</span>')
+    .replace(NUM, '<span class="tok-num">$&</span>');
+
+  function paintCode(src, lang) {
+    const body = lang === "css" ? paintCss : paintJs;
+    let out = "", last = 0, m;
+    TOKEN.lastIndex = 0;
+    while ((m = TOKEN.exec(src))) {
+      out += body(src.slice(last, m.index));
+      const t = m[0];
+      const isComment = t.startsWith("\x3C!--") || t.startsWith("/*") || t.startsWith("//");
+      out += '<span class="' + (isComment ? "tok-com" : "tok-str") + '">' + esc(t) + "</span>";
+      last = m.index + t.length;
+    }
+    return out + body(src.slice(last));
+  }
+
+  function paintTag(tag) {
+    if (tag.startsWith("\x3C!--")) return '<span class="tok-com">' + esc(tag) + "</span>";
+    const m = /^<(\/?)([a-zA-Z][\w:-]*)([\s\S]*?)(\/?)>$/.exec(tag);
+    if (!m) return esc(tag);
+    const [, slash, name, attrs, selfClose] = m;
+    let painted = "", a;
+    ATTR.lastIndex = 0;
+    while ((a = ATTR.exec(attrs))) {
+      if (a[4] !== undefined) painted += '<span class="tok-attr">' + esc(a[4]) + "</span>";
+      else if (a[1] !== undefined) {
+        painted += '<span class="tok-attr">' + esc(a[1]) + "</span>" + esc(a[2] || "") +
+          '<span class="tok-str">' + esc(a[3] || "") + "</span>";
+      } else painted += esc(a[5]);
+    }
+    return esc("<") + esc(slash || "") + '<span class="tok-tag">' + esc(name) + "</span>" +
+      painted + esc(selfClose || "") + esc(">");
+  }
+
+  function paintHtml(src) {
+    let out = "", i = 0, m;
+    while (i < src.length) {
+      TAG.lastIndex = i;
+      m = TAG.exec(src);
+      if (!m) { out += esc(src.slice(i)); break; }
+      out += esc(src.slice(i, m.index));
+      out += paintTag(m[0]);
+      i = m.index + m[0].length;
+      /* внутри script и style подсвечиваем по правилам их языков */
+      const open = /^\x3C(script|style)\b/i.exec(m[0]);
+      if (open && !/\/>$/.test(m[0])) {
+        const name = open[1].toLowerCase();
+        const close = src.toLowerCase().indexOf("</" + name, i);
+        const end = close === -1 ? src.length : close;
+        out += name === "script" ? paintCode(src.slice(i, end), "js") : paintCode(src.slice(i, end), "css");
+        i = end;
+      }
+    }
+    return out;
+  }
+
+  function paintAstro(src) {
+    const fm = /^---\r?\n([\s\S]*?)\r?\n---/.exec(src);
+    if (!fm) return paintHtml(src);
+    const head = paintCode(fm[1], "js");
+    const rest = src.slice(fm[0].length);
+    return '<span class="tok-com">---</span>\n' + head + '\n<span class="tok-com">---</span>' + paintHtml(rest);
+  }
+
+  function paintLine(line, lang, state) {
+    if (lang === "css" || lang === "js") {
+      if (state.comment) {
+        const end = line.indexOf("*/");
+        if (end === -1) return '<span class="tok-com">' + esc(line) + "</span>";
+        state.comment = false;
+        return '<span class="tok-com">' + esc(line.slice(0, end + 2)) + "</span>" + paintCode(line.slice(end + 2), lang);
+      }
+      const out = paintCode(line, lang);
+      if (/\/\*(?![\s\S]*\*\/)/.test(line)) state.comment = true;
+      return out;
+    }
+    if (lang === "html" || lang === "astro") return lang === "astro" ? paintAstro(line) : paintHtml(line);
+    return esc(line);
+  }
+
+  function render(pre) {
+    if (pre.dataset.done) return;
+    const lang = pre.dataset.lang || "html";
+    const lines = pre.textContent.replace(/\t/g, "  ").split("\n");
+    const state = { comment: false };
+    /* строки — блочные span'ы, переносов в тексте нет: собираем их обратно
+       при копировании и скачивании, иначе файл выгрузится одной строкой */
+    pre.innerHTML = lines
+      .map((line, i) => '<span class="ln" data-n="' + (i + 1) + '">' + paintLine(line, lang, state) + "</span>")
+      .join("");
+    pre.dataset.done = "1";
+    pre.dataset.lines = lines.length;
+  }
+
+  const rawText = (pre) => Array.from(pre.children).map((el) => el.textContent).join("\n");
+
+  function select(name) {
+    tabs.forEach((t) => t.setAttribute("aria-selected", String(t.dataset.tab === name)));
+    panes.forEach((p) => (p.hidden = p.dataset.pane !== name));
+    const active = panes.find((p) => p.dataset.pane === name);
+    if (active) {
+      const pre = active.querySelector("pre");
+      render(pre);
+      document.getElementById("stat-lines").textContent = pre.dataset.lines;
+      document.getElementById("stat-size").textContent = active.dataset.size + " КБ";
+      document.getElementById("stat-file").textContent = active.dataset.file;
+      pre.classList.remove("wrap-lines");
+      const wb = document.getElementById("wrap");
+      wb.textContent = "Переносы строк"; wb.dataset.done = "0";
+    }
+    if (location.hash !== "#" + name) history.replaceState(null, "", "#" + name);
+  }
+
+  tabs.forEach((t) => t.addEventListener("click", () => select(t.dataset.tab)));
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    if (/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
+    const i = tabs.findIndex((t) => t.getAttribute("aria-selected") === "true");
+    const next = (i + (e.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
+    tabs[next].click();
+    tabs[next].focus();
+  });
+
+  function current() {
+    const pane = panes.find((p) => !p.hidden);
+    return { pane, pre: pane.querySelector("pre"), name: pane.dataset.file };
+  }
+
+  document.getElementById("copy").addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    try {
+      await navigator.clipboard.writeText(rawText(current().pre));
+      btn.dataset.done = "1";
+      btn.textContent = "Скопировано";
+    } catch {
+      btn.textContent = "Выделите вручную";
+    }
+    setTimeout(() => { btn.textContent = "Копировать"; delete btn.dataset.done; }, 1800);
+  });
+
+  document.getElementById("download").addEventListener("click", () => {
+    const { pre, name } = current();
+    const blob = new Blob([rawText(pre)], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
+  const wrapBtn = document.getElementById("wrap");
+  wrapBtn.addEventListener("click", () => {
+    const on = current().pre.classList.toggle("wrap-lines");
+    wrapBtn.dataset.done = on ? "1" : "0";
+    wrapBtn.textContent = on ? "Без переносов" : "Переносы строк";
+  });
+
+  select(location.hash.slice(1) || panes[0].dataset.pane);
+})();
+</script>
+</body>
+</html>
