@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Скала — панель продукта</title>
-<meta name="description" content="Демо-стенд: дашборд продуктовой аналитики на ванильном JS и canvas. Без библиотек и фреймворков.">
+<meta name="description" content="Демо-стенд: дашборд продуктовой аналитики на ванильном JS и canvas — обзор, трафик, воронка, отчёты с экспортом CSV.">
 <meta name="theme-color" content="#0a0c0e">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,7 +34,7 @@ body{
 .rail button:hover{background:var(--panel-2);color:var(--ink)}
 .rail button[aria-current="page"]{background:var(--acc-dim);color:var(--acc)}
 .rail button[aria-current="page"]::before{content:"";position:absolute;left:-18px;top:12px;bottom:12px;width:2px;background:var(--acc)}
-.rail svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6}
+.rail svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .rail .rail__foot{margin-top:auto;font-family:var(--mono);font-size:9px;color:#41525d;writing-mode:vertical-rl;letter-spacing:.18em}
 /* ——— шапка ——— */
 .head{display:flex;align-items:center;gap:16px;padding:22px 28px 0;flex-wrap:wrap}
@@ -53,6 +53,8 @@ body{
 .chips button[aria-pressed="true"]{background:var(--acc);color:#04211f;font-weight:700}
 /* ——— сетка ——— */
 main{padding:18px 28px 40px;display:grid;gap:14px}
+.view{display:grid;gap:14px}
+.view[hidden]{display:none}
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 16px 12px;position:relative;overflow:hidden}
 .card__k{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
@@ -61,6 +63,7 @@ main{padding:18px 28px 40px;display:grid;gap:14px}
 .up{color:var(--acc)} .down{color:var(--bad)} .flat{color:var(--muted)}
 .card canvas{position:absolute;right:0;bottom:0;width:100%;height:44px;opacity:.85}
 .dash{display:grid;grid-template-columns:1.55fr 1fr;gap:14px}
+.dash--even{grid-template-columns:1fr 1fr}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px}
 .panel__head{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}
 .panel__t{margin:0;font-size:13px;font-weight:600;letter-spacing:.01em}
@@ -78,23 +81,79 @@ main{padding:18px 28px 40px;display:grid;gap:14px}
 .bars{display:grid;gap:12px;margin-top:14px}
 .bar__row{display:grid;grid-template-columns:96px 1fr 46px;align-items:center;gap:10px;font-family:var(--mono);font-size:11px}
 .bar__track{height:6px;background:#182026;border-radius:99px;overflow:hidden}
-.bar__fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#1c4b47,var(--acc));width:0;transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.bar__fill{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#1c4b47,var(--acc));width:0;transition:width .8s cubic-bezier(.2,.8,.2,1)}
 .bar__v{text-align:right;color:var(--muted)}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:left;padding:0 0 9px;font-weight:400;border-bottom:1px solid var(--line)}
 td{padding:9px 0;border-bottom:1px solid #171f24;font-variant-numeric:tabular-nums}
 tr:last-child td{border-bottom:0}
 td.mono{font-family:var(--mono);font-size:12px}
+th.r,td.r{text-align:right}
 .tag{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
 .spark-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 .spark{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
 .spark__k{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
 .spark__v{font-family:var(--mono);font-size:18px;font-weight:700;margin-top:2px}
+/* ——— трафик: пончик и легенда ——— */
+.donut{display:grid;grid-template-columns:146px 1fr;gap:16px;align-items:center}
+.donut canvas{width:146px;height:146px}
+.donut__legend{list-style:none;margin:0;padding:0;display:grid;gap:8px;font-family:var(--mono);font-size:11px}
+.donut__legend li{display:grid;grid-template-columns:10px 1fr auto;gap:8px;align-items:center}
+.donut__legend i{width:9px;height:9px;border-radius:3px;display:block}
+.donut__legend b{font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums}
+/* ——— воронка ——— */
+.funnel{display:grid;gap:9px;margin-top:6px}
+.fstage{display:grid;grid-template-columns:168px 1fr 74px;gap:12px;align-items:center}
+.fstage__n{font-size:12px;color:var(--muted)}
+.fstage__n b{color:var(--ink);font-weight:500;display:block;font-size:12.5px;margin-bottom:1px}
+.fbar{height:30px;background:#0d1216;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.fbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#123c39,var(--acc));transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.fstage__v{font-family:var(--mono);font-size:11px;text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
+.fstage__v small{display:block;color:var(--muted);font-size:10px}
+/* ——— когорты ——— */
+.heat{width:100%;border-collapse:separate;border-spacing:3px;font-family:var(--mono);font-size:11px}
+.heat th{border:0;padding:2px 4px;font-size:9.5px;letter-spacing:.08em}
+.heat td{padding:0;border:0}
+.heat td.sp{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap;padding-right:8px}
+.heat .cell{
+  text-align:center;padding:7px 4px;border-radius:5px;background:#121a1f;color:#8fa3ad;
+  border:1px solid #1b242b;font-variant-numeric:tabular-nums
+}
+.heat .cell.is-empty{background:#0f1418;color:#3b4a52;border-color:#161d22}
+.heat__legend{display:flex;align-items:center;gap:5px;margin:10px 0 0;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.heat__legend i{width:14px;height:10px;border-radius:2px;display:block}
+.heat__note{margin-left:12px;color:#5c6d77}
+/* ——— отчёты ——— */
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.btn{
+  font-family:var(--mono);font-size:11px;padding:8px 12px;border-radius:8px;cursor:pointer;
+  border:1px solid var(--line);background:var(--panel-2);color:var(--ink);transition:.16s
+}
+.btn:hover{border-color:#3c4a53;background:#1b2329}
+.btn--main{background:var(--acc);color:#04211f;border-color:var(--acc);font-weight:700}
+.btn--main:hover{background:#6ff0e0}
+.btn[data-done="1"]{background:var(--acc);color:#04211f;border-color:var(--acc)}
+.rep{
+  display:grid;grid-template-columns:minmax(150px,1.5fr) .7fr .7fr .8fr auto;gap:12px;align-items:center;
+  padding:12px 2px;border-bottom:1px solid #171f24;font-size:13px
+}
+.rep:last-child{border-bottom:0}
+.rep__name{font-weight:500}
+.rep__name small{display:block;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.04em;margin-top:2px}
+.rep__m{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.status{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:99px;border:1px solid var(--acc-dim);color:var(--acc);justify-self:start}
+.empty{font-family:var(--mono);font-size:12px;color:var(--muted);padding:18px 0}
+.toast{
+  position:fixed;right:20px;bottom:20px;z-index:40;background:#04100f;border:1px solid var(--acc-dim);
+  border-radius:10px;padding:11px 14px;font-family:var(--mono);font-size:11.5px;color:var(--ink);
+  opacity:0;transform:translateY(10px);transition:opacity .25s,transform .25s;pointer-events:none
+}
+.toast[data-show="1"]{opacity:1;transform:none}
 footer{padding:0 28px 26px;font-family:var(--mono);font-size:10px;color:#4a5b66;display:flex;gap:18px;flex-wrap:wrap}
 footer a{color:var(--acc);text-decoration:none;border-bottom:1px solid var(--acc-dim)}
 @media (max-width:1080px){
   .kpis{grid-template-columns:repeat(2,1fr)}
-  .dash{grid-template-columns:1fr}
+  .dash,.dash--even{grid-template-columns:1fr}
   .spark-row{grid-template-columns:repeat(2,1fr)}
 }
 @media (max-width:720px){
@@ -107,6 +166,11 @@ footer a{color:var(--acc);text-decoration:none;border-bottom:1px solid var(--acc
   .head{padding-top:16px}
   .chips{margin-left:0;width:100%;justify-content:space-between}
   .kpis,.spark-row{grid-template-columns:1fr}
+  .fstage{grid-template-columns:1fr 62px;gap:8px}
+  .fstage__n{grid-column:1/-1}
+  .rep{grid-template-columns:1fr auto;gap:6px}
+  .rep__m:nth-child(3){display:none}
+  .donut{grid-template-columns:1fr}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 :focus-visible{outline:2px solid var(--acc);outline-offset:3px}
@@ -117,16 +181,16 @@ footer a{color:var(--acc);text-decoration:none;border-bottom:1px solid var(--acc
 
   <nav class="rail" aria-label="Разделы панели">
     <div class="rail__logo" aria-hidden="true">С</div>
-    <button type="button" aria-current="page" aria-label="Обзор">
+    <button type="button" data-view="overview" aria-current="page" aria-label="Обзор" title="Обзор">
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
     </button>
-    <button type="button" aria-label="Трафик">
+    <button type="button" data-view="traffic" aria-label="Трафик" title="Трафик">
       <svg viewBox="0 0 24 24"><path d="M3 17l5-6 4 3 4-7 5 4"/><path d="M3 21h18"/></svg>
     </button>
-    <button type="button" aria-label="Воронка">
+    <button type="button" data-view="funnel" aria-label="Воронка" title="Воронка">
       <svg viewBox="0 0 24 24"><path d="M4 5h16l-6 7v6l-4 2v-8L4 5z"/></svg>
     </button>
-    <button type="button" aria-label="Отчёты">
+    <button type="button" data-view="reports" aria-label="Отчёты" title="Отчёты">
       <svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></svg>
     </button>
     <span class="rail__foot">skala demo</span>
@@ -135,11 +199,11 @@ footer a{color:var(--acc);text-decoration:none;border-bottom:1px solid var(--acc
   <div>
     <header class="head">
       <div>
-        <p class="head__crumb">Продукт / обзор</p>
-        <h1>Скала — метрики продукта</h1>
+        <p class="head__crumb" id="crumb">Продукт / обзор</p>
+        <h1 id="title">Скала — метрики продукта</h1>
       </div>
       <div class="head__live"><span class="dot"></span><span id="live-clock">--:--:--</span> · данные обновляются</div>
-      <div class="chips" role="group" aria-label="Период">
+      <div class="chips" role="group" aria-label="Период" id="range-chips">
         <button type="button" data-range="7" aria-pressed="false">7 дн</button>
         <button type="button" data-range="30" aria-pressed="true">30 дн</button>
         <button type="button" data-range="90" aria-pressed="false">90 дн</button>
@@ -148,74 +212,183 @@ footer a{color:var(--acc);text-decoration:none;border-bottom:1px solid var(--acc
     </header>
 
     <main>
-      <section class="kpis" aria-label="Ключевые метрики">
-        <article class="card">
-          <p class="card__k">Активные за день</p>
-          <p class="card__v" id="k-dau">—</p>
-          <p class="card__d up" id="k-dau-d">—</p>
-          <canvas data-spark="0" aria-hidden="true"></canvas>
-        </article>
-        <article class="card">
-          <p class="card__k">Регистрации</p>
-          <p class="card__v" id="k-reg">—</p>
-          <p class="card__d up" id="k-reg-d">—</p>
-          <canvas data-spark="1" aria-hidden="true"></canvas>
-        </article>
-        <article class="card">
-          <p class="card__k">Конверсия в оплату</p>
-          <p class="card__v" id="k-cvr">—</p>
-          <p class="card__d" id="k-cvr-d">—</p>
-          <canvas data-spark="2" aria-hidden="true"></canvas>
-        </article>
-        <article class="card">
-          <p class="card__k">Отток</p>
-          <p class="card__v" id="k-churn">—</p>
-          <p class="card__d down" id="k-churn-d">—</p>
-          <canvas data-spark="3" aria-hidden="true"></canvas>
-        </article>
-      </section>
-
-      <div class="dash">
-        <section class="panel" aria-labelledby="t-traffic">
-          <div class="panel__head">
-            <h2 class="panel__t" id="t-traffic">Визиты и регистрации</h2>
-            <span class="panel__s" id="chart-range">30 дней</span>
-          </div>
-          <div class="legend">
-            <span><i style="background:#4de3d0"></i>визиты</span>
-            <span><i style="background:#ffb25e"></i>регистрации</span>
-          </div>
-          <div class="chart" id="chart" tabindex="0" role="img" aria-label="График визитов и регистраций по дням">
-            <canvas id="area"></canvas>
-            <div class="tip" id="tip"></div>
-          </div>
-        </section>
-
-        <section class="panel" aria-labelledby="t-src">
-          <div class="panel__head">
-            <h2 class="panel__t" id="t-src">Источники</h2>
-            <span class="panel__s">доля визитов</span>
-          </div>
-          <div class="bars" id="bars"></div>
-        </section>
-      </div>
-
-      <section class="spark-row" aria-label="Мини-метрики">
-        <div class="spark"><p class="spark__k">Средний чек</p><p class="spark__v" id="s-aov">—</p></div>
-        <div class="spark"><p class="spark__k">Сессия</p><p class="spark__v" id="s-dur">—</p></div>
-        <div class="spark"><p class="spark__k">Отказы</p><p class="spark__v" id="s-bounce">—</p></div>
-        <div class="spark"><p class="spark__k">Страниц за сессию</p><p class="spark__v" id="s-pv">—</p></div>
-      </section>
-
-      <section class="panel" aria-labelledby="t-pages">
-        <div class="panel__head">
-          <h2 class="panel__t" id="t-pages">Топ страниц</h2>
-          <span class="panel__s">за период</span>
+      <!-- ═══════ ОБЗОР ═══════ -->
+      <section class="view" id="view-overview" aria-label="Обзор">
+        <div class="kpis">
+          <article class="card">
+            <p class="card__k">Активные за день</p>
+            <p class="card__v" id="k-dau">—</p>
+            <p class="card__d up" id="k-dau-d">—</p>
+            <canvas data-spark="0" aria-hidden="true"></canvas>
+          </article>
+          <article class="card">
+            <p class="card__k">Регистрации</p>
+            <p class="card__v" id="k-reg">—</p>
+            <p class="card__d up" id="k-reg-d">—</p>
+            <canvas data-spark="1" aria-hidden="true"></canvas>
+          </article>
+          <article class="card">
+            <p class="card__k">Конверсия в оплату</p>
+            <p class="card__v" id="k-cvr">—</p>
+            <p class="card__d" id="k-cvr-d">—</p>
+            <canvas data-spark="2" aria-hidden="true"></canvas>
+          </article>
+          <article class="card">
+            <p class="card__k">Отток</p>
+            <p class="card__v" id="k-churn">—</p>
+            <p class="card__d down" id="k-churn-d">—</p>
+            <canvas data-spark="3" aria-hidden="true"></canvas>
+          </article>
         </div>
-        <table>
-          <thead><tr><th scope="col">Страница</th><th scope="col">Визиты</th><th scope="col">Конверсия</th><th scope="col">Ср. время</th></tr></thead>
-          <tbody id="pages"></tbody>
-        </table>
+
+        <div class="dash">
+          <section class="panel" aria-labelledby="t-traffic">
+            <div class="panel__head">
+              <h2 class="panel__t" id="t-traffic">Визиты и регистрации</h2>
+              <span class="panel__s" id="chart-range">30 дней</span>
+            </div>
+            <div class="legend">
+              <span><i style="background:#4de3d0"></i>визиты</span>
+              <span><i style="background:#ffb25e"></i>регистрации</span>
+            </div>
+            <div class="chart" id="chart-main" tabindex="0" role="img" aria-label="График визитов и регистраций по дням">
+              <canvas id="area-main"></canvas>
+              <div class="tip" id="tip-main"></div>
+            </div>
+          </section>
+
+          <section class="panel" aria-labelledby="t-src">
+            <div class="panel__head">
+              <h2 class="panel__t" id="t-src">Источники</h2>
+              <span class="panel__s">доля визитов</span>
+            </div>
+            <div class="bars" id="bars"></div>
+          </section>
+        </div>
+
+        <section class="spark-row" aria-label="Мини-метрики">
+          <div class="spark"><p class="spark__k">Средний чек</p><p class="spark__v" id="s-aov">—</p></div>
+          <div class="spark"><p class="spark__k">Сессия</p><p class="spark__v" id="s-dur">—</p></div>
+          <div class="spark"><p class="spark__k">Отказы</p><p class="spark__v" id="s-bounce">—</p></div>
+          <div class="spark"><p class="spark__k">Страниц за сессию</p><p class="spark__v" id="s-pv">—</p></div>
+        </section>
+
+        <section class="panel" aria-labelledby="t-pages">
+          <div class="panel__head">
+            <h2 class="panel__t" id="t-pages">Топ страниц</h2>
+            <span class="panel__s">за период</span>
+          </div>
+          <table>
+            <thead><tr><th scope="col">Страница</th><th scope="col" class="r">Визиты</th><th scope="col" class="r">Конверсия</th><th scope="col" class="r">Ср. время</th></tr></thead>
+            <tbody id="pages"></tbody>
+          </table>
+        </section>
+      </section>
+
+      <!-- ═══════ ТРАФИК ═══════ -->
+      <section class="view" id="view-traffic" aria-label="Трафик" hidden>
+        <div class="dash">
+          <section class="panel" aria-labelledby="t-uniques">
+            <div class="panel__head">
+              <h2 class="panel__t" id="t-uniques">Уникальные посетители</h2>
+              <span class="panel__s" id="tr-range">30 дней</span>
+            </div>
+            <div class="legend"><span><i style="background:#4de3d0"></i>уникальные</span></div>
+            <div class="chart" id="chart-traffic" tabindex="0" role="img" aria-label="График уникальных посетителей">
+              <canvas id="area-traffic"></canvas>
+              <div class="tip" id="tip-traffic"></div>
+            </div>
+          </section>
+
+          <section class="panel" aria-labelledby="t-devices">
+            <div class="panel__head">
+              <h2 class="panel__t" id="t-devices">Устройства</h2>
+              <span class="panel__s">доля сессий</span>
+            </div>
+            <div class="donut">
+              <canvas id="donut" width="292" height="292" role="img" aria-label="Распределение по устройствам"></canvas>
+              <ul class="donut__legend" id="device-legend"></ul>
+            </div>
+          </section>
+        </div>
+
+        <div class="dash dash--even">
+          <section class="panel" aria-labelledby="t-channels">
+            <div class="panel__head">
+              <h2 class="panel__t" id="t-channels">Каналы</h2>
+              <span class="panel__s">визиты · конверсия</span>
+            </div>
+            <table>
+              <thead><tr><th scope="col">Канал</th><th scope="col" class="r">Визиты</th><th scope="col" class="r">Регистрации</th><th scope="col" class="r">CR</th></tr></thead>
+              <tbody id="channels"></tbody>
+            </table>
+          </section>
+
+          <section class="panel" aria-labelledby="t-geo">
+            <div class="panel__head">
+              <h2 class="panel__t" id="t-geo">География</h2>
+              <span class="panel__s">доля визитов</span>
+            </div>
+            <div class="bars" id="geo"></div>
+          </section>
+        </div>
+      </section>
+
+      <!-- ═══════ ВОРОНКА ═══════ -->
+      <section class="view" id="view-funnel" aria-label="Воронка" hidden>
+        <div class="dash">
+          <section class="panel" aria-labelledby="t-funnel">
+            <div class="panel__head">
+              <h2 class="panel__t" id="t-funnel">Путь до повторной оплаты</h2>
+              <span class="panel__s" id="funnel-note">30 дней</span>
+            </div>
+            <div class="funnel" id="funnel"></div>
+          </section>
+
+          <section class="panel" aria-labelledby="t-steps">
+            <div class="panel__head">
+              <h2 class="panel__t" id="t-steps">Шаги воронки</h2>
+              <span class="panel__s">переход от шага</span>
+            </div>
+            <table>
+              <thead><tr><th scope="col">Шаг</th><th scope="col" class="r">Переход</th><th scope="col" class="r">Потери</th></tr></thead>
+              <tbody id="steps"></tbody>
+            </table>
+          </section>
+        </div>
+
+        <section class="panel" aria-labelledby="t-cohort">
+          <div class="panel__head">
+            <h2 class="panel__t" id="t-cohort">Когорты по месяцу регистрации</h2>
+            <span class="panel__s">6 месяцев · не зависит от периода</span>
+          </div>
+          <table class="heat" id="cohort">
+            <thead>
+              <tr><th scope="col">&nbsp;</th><th scope="col">W0</th><th scope="col">W1</th><th scope="col">W2</th><th scope="col">W3</th><th scope="col">W4</th></tr>
+            </thead>
+            <tbody id="cohort-body"></tbody>
+          </table>
+          <p class="heat__legend"><span>меньше</span><i style="background:rgba(77,227,208,.12)"></i><i style="background:rgba(77,227,208,.3)"></i><i style="background:rgba(77,227,208,.48)"></i><i style="background:rgba(77,227,208,.66)"></i><span>больше</span><span class="heat__note">— неделя ещё не прошла</span></p>
+        </section>
+      </section>
+
+      <!-- ═══════ ОТЧЁТЫ ═══════ -->
+      <section class="view" id="view-reports" aria-label="Отчёты" hidden>
+        <section class="panel" aria-labelledby="t-reports">
+          <div class="panel__head">
+            <h2 class="panel__t" id="t-reports">Отчёты</h2>
+            <span class="panel__s">экспорт считается в браузере</span>
+          </div>
+          <div class="toolbar">
+            <button class="btn btn--main" type="button" id="make-report">Сформировать отчёт</button>
+            <button class="btn" type="button" id="download-all">Скачать всё одним CSV</button>
+            <span class="rep__m" id="rep-count"></span>
+          </div>
+          <div class="rep" aria-hidden="true" style="border-bottom:1px solid var(--line);padding-bottom:8px">
+            <span class="rep__m">Отчёт</span><span class="rep__m">Период</span><span class="rep__m">Строк</span><span class="rep__m">Статус</span><span></span>
+          </div>
+          <div id="report-list"></div>
+        </section>
       </section>
     </main>
 
@@ -226,37 +399,42 @@ footer a{color:var(--acc);text-decoration:none;border-bottom:1px solid var(--acc
   </div>
 </div>
 
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
 <script>
 (() => {
   "use strict";
 
-  // Детерминированный PRNG — графики не «дёргаются» между перерисовками
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const fmt = new Intl.NumberFormat("ru-RU");
+  const ru = (n, d = 1) => n.toFixed(d).replace(".", ",");
+
+  /* ——— детерминированный PRNG: графики не дёргаются между перерисовками ——— */
   let seed = 20260214;
   const rnd = () => {
     seed = (seed * 1664525 + 1013904223) % 4294967296;
     return seed / 4294967296;
   };
-  const pick = (arr) => arr[Math.floor(rnd() * arr.length)];
-  const fmt = new Intl.NumberFormat("ru-RU");
 
-  let range = 30;
-  let data = [];
+  const state = { view: "overview", range: 30, series: [], traffic: [] };
 
   function buildSeries(days) {
     const out = [];
-    let base = 2400 + rnd() * 900;
+    let base = 2400 + (seed % 900);
     for (let i = 0; i < days; i++) {
       const dow = (i + 3) % 7;
       const weekend = dow === 5 || dow === 6 ? 0.72 : 1;
       const trend = 1 + i * 0.004;
       const visits = Math.round(base * weekend * trend * (0.9 + rnd() * 0.2));
+      const uniq = Math.round(visits * (0.62 + rnd() * 0.1));
       const regs = Math.round(visits * (0.055 + rnd() * 0.02));
-      out.push({ visits, regs });
+      out.push({ visits, uniq, regs });
     }
     return out;
   }
 
-  // ——— canvas с учётом плотности пикселей ———
+  /* ——— canvas с учётом плотности пикселей ——— */
   function setup(canvas, cssW, cssH) {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = Math.round(cssW * dpr);
@@ -274,11 +452,11 @@ footer a{color:var(--acc);text-decoration:none;border-bottom:1px solid var(--acc
     const max = Math.max(...values), min = Math.min(...values);
     const x = (i) => (i / (values.length - 1)) * w;
     const y = (v) => h - 6 - ((v - min) / (max - min || 1)) * (h - 14);
-    ctx.beginPath();
-    values.forEach((v, i) => (i ? ctx.lineTo(x(i), y(v)) : ctx.moveTo(x(i), y(v))));
     const grad = ctx.createLinearGradient(0, 0, 0, h);
     grad.addColorStop(0, accent + "55");
     grad.addColorStop(1, accent + "00");
+    ctx.beginPath();
+    values.forEach((v, i) => (i ? ctx.lineTo(x(i), y(v)) : ctx.moveTo(x(i), y(v))));
     ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.closePath();
     ctx.fillStyle = grad; ctx.fill();
     ctx.beginPath();
@@ -286,191 +464,461 @@ footer a{color:var(--acc);text-decoration:none;border-bottom:1px solid var(--acc
     ctx.strokeStyle = accent; ctx.lineWidth = 1.6; ctx.stroke();
   }
 
-  const area = document.getElementById("area");
-  const tip = document.getElementById("tip");
-  const chartBox = document.getElementById("chart");
-  let geometry = null;
+  /* ——— график-область, параметризованный ——— */
+  function makeArea({ box, canvas, tip, getValues, getSecond, labelA, labelB }) {
+    let geo = null;
 
-  function drawArea() {
-    const w = chartBox.clientWidth;
-    const h = Math.max(220, Math.min(340, Math.round(w * 0.34)));
-    if (!w) return;
-    const ctx = setup(area, w, h);
-    const padL = 42, padR = 10, padT = 14, padB = 26;
-    const iw = w - padL - padR, ih = h - padT - padB;
-    const maxV = Math.max(...data.map(d => d.visits)) * 1.12;
-    const X = (i) => padL + (i / (data.length - 1)) * iw;
-    const Y = (v) => padT + ih - (v / maxV) * ih;
+    function draw() {
+      const w = box.clientWidth;
+      if (!w) return;
+      const h = Math.max(200, Math.min(320, Math.round(w * 0.32)));
+      const ctx = setup(canvas, w, h);
+      const data = getValues();
+      if (!data.length) return;
+      const padL = 44, padR = 10, padT = 14, padB = 26;
+      const iw = w - padL - padR, ih = h - padT - padB;
+      const maxV = Math.max(...data) * 1.14;
+      const X = (i) => padL + (i / (data.length - 1)) * iw;
+      const Y = (v) => padT + ih - (v / maxV) * ih;
 
-    ctx.clearRect(0, 0, w, h);
+      ctx.clearRect(0, 0, w, h);
+      ctx.font = "10px 'JetBrains Mono', monospace";
+      ctx.fillStyle = "#6d828d";
+      ctx.textAlign = "right";
+      for (let g = 0; g <= 4; g++) {
+        const v = (maxV / 4) * g, yy = Y(v);
+        ctx.strokeStyle = g === 0 ? "#2a3941" : "#182026";
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(padL, yy + .5); ctx.lineTo(w - padR, yy + .5); ctx.stroke();
+        ctx.fillText(Math.round(v / 100) / 10 + "k", padL - 8, yy + 3);
+      }
 
-    // сетка
-    ctx.font = "10px 'JetBrains Mono', monospace";
-    ctx.fillStyle = "#54666f";
-    ctx.textAlign = "right";
-    for (let g = 0; g <= 4; g++) {
-      const v = (maxV / 4) * g;
-      const yy = Y(v);
-      ctx.strokeStyle = g === 0 ? "#2a3941" : "#182026";
-      ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(padL, yy + .5); ctx.lineTo(w - padR, yy + .5); ctx.stroke();
-      ctx.fillText(Math.round(v / 100) / 10 + "k", padL - 8, yy + 3);
+      const grad = ctx.createLinearGradient(0, padT, 0, padT + ih);
+      grad.addColorStop(0, "rgba(77,227,208,.34)");
+      grad.addColorStop(1, "rgba(77,227,208,0)");
+      ctx.beginPath();
+      data.forEach((v, i) => (i ? ctx.lineTo(X(i), Y(v)) : ctx.moveTo(X(i), Y(v))));
+      ctx.lineTo(X(data.length - 1), padT + ih);
+      ctx.lineTo(X(0), padT + ih);
+      ctx.closePath();
+      ctx.fillStyle = grad; ctx.fill();
+
+      ctx.beginPath();
+      data.forEach((v, i) => (i ? ctx.lineTo(X(i), Y(v)) : ctx.moveTo(X(i), Y(v))));
+      ctx.strokeStyle = "#4de3d0"; ctx.lineWidth = 2; ctx.lineJoin = "round"; ctx.stroke();
+
+      const second = getSecond ? getSecond() : null;
+      if (second) {
+        const regMax = Math.max(...second) * 1.6;
+        const YR = (v) => padT + ih - (v / regMax) * ih;
+        ctx.beginPath();
+        second.forEach((v, i) => (i ? ctx.lineTo(X(i), YR(v)) : ctx.moveTo(X(i), YR(v))));
+        ctx.strokeStyle = "#ffb25e"; ctx.lineWidth = 1.6; ctx.setLineDash([4, 3]); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#6d828d";
+      const step = Math.ceil(data.length / 6);
+      data.forEach((_, i) => {
+        if (i % step) return;
+        const day = new Date(Date.now() - (data.length - 1 - i) * 864e5);
+        ctx.fillText(day.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" }), X(i), h - 8);
+      });
+
+      geo = { X, Y, padL, padR, w };
     }
 
-    // визиты — площадь
-    const grad = ctx.createLinearGradient(0, padT, 0, padT + ih);
-    grad.addColorStop(0, "rgba(77,227,208,.34)");
-    grad.addColorStop(1, "rgba(77,227,208,0)");
-    ctx.beginPath();
-    data.forEach((d, i) => (i ? ctx.lineTo(X(i), Y(d.visits)) : ctx.moveTo(X(i), Y(d.visits))));
-    ctx.lineTo(X(data.length - 1), padT + ih);
-    ctx.lineTo(X(0), padT + ih);
-    ctx.closePath();
-    ctx.fillStyle = grad; ctx.fill();
+    function move(ev) {
+      if (!geo) return;
+      const rect = box.getBoundingClientRect();
+      const px = ev.clientX - rect.left;
+      const ratio = Math.min(1, Math.max(0, (px - geo.padL) / (geo.w - geo.padL - geo.padR)));
+      const data = getValues();
+      const idx = Math.round(ratio * (data.length - 1));
+      const day = new Date(Date.now() - (data.length - 1 - idx) * 864e5);
+      let html = day.toLocaleDateString("ru-RU", { day: "2-digit", month: "long" }) +
+        "<br>" + labelA + " <b>" + fmt.format(data[idx]) + "</b>";
+      const second = getSecond ? getSecond() : null;
+      if (second) html += "<br>" + labelB + " <b>" + fmt.format(second[idx]) + "</b>";
+      tip.innerHTML = html;
+      tip.style.left = geo.X(idx) + "px";
+      tip.style.top = geo.Y(data[idx]) + "px";
+      tip.style.opacity = 1;
+    }
 
-    ctx.beginPath();
-    data.forEach((d, i) => (i ? ctx.lineTo(X(i), Y(d.visits)) : ctx.moveTo(X(i), Y(d.visits))));
-    ctx.strokeStyle = "#4de3d0"; ctx.lineWidth = 2; ctx.lineJoin = "round"; ctx.stroke();
-
-    // регистрации — линия
-    const regMax = Math.max(...data.map(d => d.regs)) * 1.6;
-    const YR = (v) => padT + ih - (v / regMax) * ih;
-    ctx.beginPath();
-    data.forEach((d, i) => (i ? ctx.lineTo(X(i), YR(d.regs)) : ctx.moveTo(X(i), YR(d.regs))));
-    ctx.strokeStyle = "#ffb25e"; ctx.lineWidth = 1.6; ctx.setLineDash([4, 3]); ctx.stroke();
-    ctx.setLineDash([]);
-
-    // подписи дат: fillStyle сбрасываем — выше он переключён на градиент заливки
-    ctx.textAlign = "center";
-    ctx.fillStyle = "#6d828d";
-    const step = Math.ceil(data.length / 6);
-    data.forEach((d, i) => {
-      if (i % step) return;
-      const day = new Date(Date.now() - (data.length - 1 - i) * 864e5);
-      ctx.fillText(day.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" }), X(i), h - 8);
-    });
-
-    geometry = { X, Y, padL, padR, padT, ih, w, h };
+    box.addEventListener("pointermove", move);
+    box.addEventListener("pointerleave", () => (tip.style.opacity = 0));
+    if ("ResizeObserver" in window) new ResizeObserver(() => draw()).observe(box);
+    return draw;
   }
 
-  function onMove(ev) {
-    if (!geometry) return;
-    const rect = chartBox.getBoundingClientRect();
-    const px = ev.clientX - rect.left;
-    const { padL, padR, w } = geometry;
-    const ratio = Math.min(1, Math.max(0, (px - padL) / (w - padL - padR)));
-    const idx = Math.round(ratio * (data.length - 1));
-    const d = data[idx];
-    const day = new Date(Date.now() - (data.length - 1 - idx) * 864e5);
-    tip.innerHTML =
-      day.toLocaleDateString("ru-RU", { day: "2-digit", month: "long" }) +
-      "<br>визиты <b>" + fmt.format(d.visits) + "</b>" +
-      "<br>регистрации <b>" + fmt.format(d.regs) + "</b>";
-    tip.style.left = geometry.X(idx) + "px";
-    tip.style.top = geometry.Y(d.visits) + "px";
-    tip.style.opacity = 1;
-  }
+  const drawMain = makeArea({
+    box: $("#chart-main"), canvas: $("#area-main"), tip: $("#tip-main"),
+    getValues: () => state.series.map((d) => d.visits),
+    getSecond: () => state.series.map((d) => d.regs),
+    labelA: "визиты", labelB: "регистрации",
+  });
+  const drawTraffic = makeArea({
+    box: $("#chart-traffic"), canvas: $("#area-traffic"), tip: $("#tip-traffic"),
+    getValues: () => state.series.map((d) => d.uniq),
+    labelA: "уникальные",
+  });
 
-  chartBox.addEventListener("pointermove", onMove);
-  chartBox.addEventListener("pointerleave", () => (tip.style.opacity = 0));
-
-  const SOURCES = [
-    ["Поиск", 0.42], ["Прямые", 0.21], ["Соцсети", 0.16], ["Реклама", 0.13], ["Почта", 0.08]
-  ];
-
-  function render() {
-    data = buildSeries(range);
-    document.getElementById("chart-range").textContent = range + " дней";
-
+  /* ——— обзор ——— */
+  function renderOverview() {
+    const data = state.series;
     const total = data.reduce((s, d) => s + d.visits, 0);
     const regs = data.reduce((s, d) => s + d.regs, 0);
     const cvr = (regs / total) * 100;
 
-    const set = (id, val) => (document.getElementById(id).textContent = val);
-    set("k-dau", fmt.format(Math.round(total / range)));
-    set("k-dau-d", "+" + (3 + rnd() * 9).toFixed(1) + "% к прошлому периоду");
+    const set = (id, v) => ($("#" + id).textContent = v);
+    set("k-dau", fmt.format(Math.round(total / state.range)));
+    set("k-dau-d", "+" + ru(3 + rnd() * 9) + "% к прошлому периоду");
     set("k-reg", fmt.format(regs));
-    set("k-reg-d", "+" + (2 + rnd() * 12).toFixed(1) + "% к прошлому периоду");
-    set("k-cvr", cvr.toFixed(1).replace(".", ",") + "%");
+    set("k-reg-d", "+" + ru(2 + rnd() * 12) + "% к прошлому периоду");
+    set("k-cvr", ru(cvr) + "%");
     set("k-cvr-d", cvr > 5.4 ? "выше цели 5,4%" : "ниже цели 5,4%");
-    document.getElementById("k-cvr-d").className = "card__d " + (cvr > 5.4 ? "up" : "down");
+    $("#k-cvr-d").className = "card__d " + (cvr > 5.4 ? "up" : "down");
     const churn = 1.4 + rnd() * 2.1;
-    set("k-churn", churn.toFixed(1).replace(".", ",") + "%");
+    set("k-churn", ru(churn) + "%");
     set("k-churn-d", churn < 2.4 ? "−0," + Math.round(rnd() * 4 + 1) + " п.п." : "+0," + Math.round(rnd() * 4 + 1) + " п.п.");
+    $("#chart-range").textContent = state.range + " дней";
 
     const sparks = [
-      [data.map(d => d.visits), "#4de3d0"],
-      [data.map(d => d.regs), "#4de3d0"],
-      [data.map(d => d.regs / d.visits * 1000), "#4de3d0"],
-      [data.map(d => 1.6 + rnd()), "#ff6b6b"]
+      [data.map((d) => d.visits), "#4de3d0"],
+      [data.map((d) => d.regs), "#4de3d0"],
+      [data.map((d) => (d.regs / d.visits) * 1000), "#4de3d0"],
+      [data.map(() => 1.6 + rnd()), "#ff6b6b"],
     ];
-    document.querySelectorAll("[data-spark]").forEach((c) => {
+    $$("[data-spark]").forEach((c) => {
       const [vals, color] = sparks[+c.dataset.spark];
       drawSpark(c, vals, color);
     });
 
     set("s-aov", fmt.format(Math.round(2400 + rnd() * 2600)) + " ₽");
-    set("s-dur", (2 + rnd() * 4).toFixed(1).replace(".", ",") + " мин");
-    set("s-bounce", (22 + rnd() * 14).toFixed(0) + "%");
-    set("s-pv", (2.4 + rnd() * 2.6).toFixed(1).replace(".", ","));
+    set("s-dur", ru(2 + rnd() * 4) + " мин");
+    set("s-bounce", Math.round(22 + rnd() * 14) + "%");
+    set("s-pv", ru(2.4 + rnd() * 2.6));
 
-    // источники
-    const bars = document.getElementById("bars");
+    const bars = $("#bars");
     bars.innerHTML = "";
-    SOURCES.forEach(([name, share]) => {
-      const jitter = 0.85 + rnd() * 0.3;
-      const pct = Math.min(0.72, share * jitter);
+    const sources = [["Поиск", 0.42], ["Прямые", 0.21], ["Соцсети", 0.16], ["Реклама", 0.13], ["Почта", 0.08]];
+    sources.forEach(([name, share]) => {
+      const pct = Math.min(0.72, share * (0.85 + rnd() * 0.3));
       const row = document.createElement("div");
       row.className = "bar__row";
-      row.innerHTML = '<span>' + name + '</span><span class="bar__track"><span class="bar__fill"></span></span><span class="bar__v">' + Math.round(pct * 100) + '%</span>';
+      row.innerHTML = '<span>' + name + '</span><span class="bar__track"><span class="bar__fill"></span></span><span class="bar__v">' + Math.round(pct * 100) + "%</span>";
       bars.appendChild(row);
       requestAnimationFrame(() => (row.querySelector(".bar__fill").style.width = (pct / 0.72) * 100 + "%"));
     });
 
-    // таблица страниц
     const pages = [
       ["/", "Главная", 0.031, "0:52"],
       ["/tarify", "Тарифы", 0.088, "1:41"],
       ["/blog/seo-struktura", "Блог · SEO-структура", 0.012, "3:08"],
       ["/keysy", "Кейсы", 0.041, "2:13"],
-      ["/registraciya", "Регистрация", 0.164, "1:07"]
+      ["/registraciya", "Регистрация", 0.164, "1:07"],
     ];
-    const tbody = document.getElementById("pages");
+    const tbody = $("#pages");
     tbody.innerHTML = "";
     pages.forEach(([url, title, cr, time]) => {
       const visits = Math.round((total / pages.length) * (0.5 + rnd()));
       const tr = document.createElement("tr");
       tr.innerHTML =
-        '<td><span class="tag">' + url + '</span> ' + title + '</td>' +
-        '<td class="mono">' + fmt.format(visits) + '</td>' +
-        '<td class="mono">' + (cr * 100).toFixed(1).replace(".", ",") + '%</td>' +
-        '<td class="mono">' + time + '</td>';
+        '<td><span class="tag">' + url + "</span> " + title + "</td>" +
+        '<td class="mono r">' + fmt.format(visits) + "</td>" +
+        '<td class="mono r">' + ru(cr * 100) + "%</td>" +
+        '<td class="mono r">' + time + "</td>";
       tbody.appendChild(tr);
     });
 
-    drawArea();
+    drawMain();
   }
 
-  // ——— события ———
-  document.querySelectorAll("[data-range]").forEach((btn) => {
+  /* ——— трафик ——— */
+  const DEVICES = [
+    ["Десктоп", 0.61, "#4de3d0"],
+    ["Мобильные", 0.33, "#ffb25e"],
+    ["Планшеты", 0.06, "#8a7dff"],
+  ];
+
+  function drawDonut() {
+    const c = $("#donut");
+    const size = 146;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    c.width = size * dpr; c.height = size * dpr;
+    c.style.width = size + "px"; c.style.height = size + "px";
+    const ctx = c.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const cx = size / 2, cy = size / 2, r = 56, lw = 17;
+    let start = -Math.PI / 2;
+    ctx.clearRect(0, 0, size, size);
+    DEVICES.forEach(([, share, color]) => {
+      const end = start + share * Math.PI * 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, start + 0.02, end - 0.02);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lw;
+      ctx.lineCap = "butt";
+      ctx.stroke();
+      start = end;
+    });
+    ctx.fillStyle = "#e8eef2";
+    ctx.font = "600 17px 'Golos Text', sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("61%", cx, cy - 2);
+    ctx.fillStyle = "#7d8f9b";
+    ctx.font = "9px 'JetBrains Mono', monospace";
+    ctx.fillText("ДЕСКТОП", cx, cy + 14);
+  }
+
+  function renderTraffic() {
+    $("#tr-range").textContent = state.range + " дней";
+    drawTraffic();
+    drawDonut();
+
+    $("#device-legend").innerHTML = DEVICES
+      .map(([name, share, color]) => '<li><i style="background:' + color + '"></i>' + name + "<b>" + ru(share * 100, 0) + "%</b></li>")
+      .join("");
+
+    const total = state.series.reduce((s, d) => s + d.visits, 0);
+    const channels = [
+      ["Поиск", 0.42, 0.061],
+      ["Прямые", 0.21, 0.044],
+      ["Соцсети", 0.16, 0.052],
+      ["Реклама", 0.13, 0.071],
+      ["Почта", 0.08, 0.034],
+    ];
+    $("#channels").innerHTML = channels
+      .map(([name, share, cr]) => {
+        const v = Math.round(total * share);
+        return "<tr><td>" + name + '</td><td class="mono r">' + fmt.format(v) +
+          '</td><td class="mono r">' + fmt.format(Math.round(v * cr)) +
+          '</td><td class="mono r">' + ru(cr * 100) + "%</td></tr>";
+      })
+      .join("");
+
+    const geo = [["Москва", 0.31], ["Санкт-Петербург", 0.18], ["Новосибирск", 0.09], ["Екатеринбург", 0.07], ["Казань", 0.05], ["Остальные", 0.30]];
+    const box = $("#geo");
+    box.innerHTML = "";
+    geo.forEach(([name, share]) => {
+      const row = document.createElement("div");
+      row.className = "bar__row";
+      row.innerHTML = '<span>' + name + '</span><span class="bar__track"><span class="bar__fill"></span></span><span class="bar__v">' + Math.round(share * 100) + "%</span>";
+      box.appendChild(row);
+      requestAnimationFrame(() => (row.querySelector(".bar__fill").style.width = (share / 0.31) * 100 + "%"));
+    });
+  }
+
+  /* ——— воронка ——— */
+  function renderFunnel() {
+    const total = state.series.reduce((s, d) => s + d.visits, 0);
+    const stages = [
+      ["Визит", "зашли на сайт", total],
+      ["Просмотр тарифов", "открыли цены", Math.round(total * 0.34)],
+      ["Регистрация", "создали аккаунт", Math.round(total * 0.071)],
+      ["Активация", "первый проект", Math.round(total * 0.041)],
+      ["Оплата", "подписка", Math.round(total * 0.024)],
+      ["Повторная оплата", "второй месяц", Math.round(total * 0.014)],
+    ];
+    const box = $("#funnel");
+    box.innerHTML = stages
+      .map(([name, hint, value], i) => {
+        const share = (value / stages[0][2]) * 100;
+        return '<div class="fstage">' +
+          '<span class="fstage__n"><b>' + name + "</b>" + hint + "</span>" +
+          '<span class="fbar"><i data-w="' + share + '"></i></span>' +
+          '<span class="fstage__v">' + fmt.format(value) + "<small>" + ru(share) + "%</small></span>" +
+          "</div>";
+      })
+      .join("");
+    requestAnimationFrame(() => {
+      $$("#funnel .fbar i").forEach((el) => (el.style.width = Math.max(1.5, +el.dataset.w) + "%"));
+    });
+
+    // первая строка — база, дальше переход от предыдущего шага и потери
+    $("#steps").innerHTML = ['<tr><td>Визит</td><td class="mono r">100%</td><td class="mono r">—</td></tr>']
+      .concat(stages.slice(1).map(([name], i) => {
+        const prev = stages[i][2], cur = stages[i + 1][2];
+        const conv = (cur / prev) * 100;
+        const lost = prev - cur;
+        return "<tr><td>" + name + '</td><td class="mono r">' + ru(conv) +
+          '%</td><td class="mono r">' + fmt.format(lost) + "</td></tr>";
+      }))
+      .join("");
+
+    $("#funnel-note").textContent = state.range + " дней · % от визитов";
+
+    // когорты: последние шесть месяцев; недели, которых ещё не было, — без данных
+    const MN = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"];
+    const now = new Date();
+    const cohorts = [];
+    for (let i = 5; i >= 0; i--) cohorts.push(new Date(now.getFullYear(), now.getMonth() - i, 1));
+
+    $("#cohort-body").innerHTML = cohorts
+      .map((start, row) => {
+        const weeksPassed = Math.floor((now - start) / (7 * 864e5));
+        const cells = [0, 1, 2, 3, 4].map((w) => {
+          if (w > weeksPassed) {
+            return '<td><div class="cell is-empty" title="неделя ещё не прошла">—</div></td>';
+          }
+          const v = w === 0 ? 100 : Math.max(6, Math.round(62 - w * 11 - (5 - row) * 1.4 + rnd() * 5));
+          const alpha = 0.06 + (v / 100) * 0.62;
+          const dark = v > 55;
+          return '<td><div class="cell" style="background:rgba(77,227,208,' + alpha.toFixed(2) + ");color:" + (dark ? "#04211f" : "#b9c8cf") + '">' + v + "</div></td>";
+        }).join("");
+        return '<tr><td class="sp">' + MN[start.getMonth()] + " " + start.getFullYear() + "</td>" + cells + "</tr>";
+      })
+      .join("");
+  }
+
+  /* ——— отчёты ——— */
+  const reports = [
+    { name: "Сводка по продукту", period: "30 дн", rows: 1240, at: "09.11, 10:20" },
+    { name: "Каналы и конверсия", period: "90 дн", rows: 3860, at: "01.11, 18:05" },
+    { name: "Когорты удержания", period: "90 дн", rows: 620, at: "28.10, 12:40" },
+  ];
+
+  function csvFor(period) {
+    const days = { "7 дн": 7, "30 дн": 30, "90 дн": 90 }[period] || 30;
+    const rows = [["дата", "визиты", "уникальные", "регистрации"]];
+    const series = buildSeries(days);
+    series.forEach((d, i) => {
+      const day = new Date(Date.now() - (days - 1 - i) * 864e5);
+      rows.push([day.toISOString().slice(0, 10), d.visits, d.uniq, d.regs]);
+    });
+    return "\ufeff" + rows.map((r) => r.join(";")).join("\r\n");
+  }
+
+  function download(name, text) {
+    const blob = new Blob([text], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function renderReports() {
+    $("#rep-count").textContent = "всего отчётов: " + reports.length;
+    $("#report-list").innerHTML = reports.length
+      ? reports
+          .map((r, i) => {
+            const slug = r.period.replace(/\s/g, "-");
+            return '<div class="rep">' +
+              '<span class="rep__name">' + r.name + "<small>" + r.at + "</small></span>" +
+              '<span class="rep__m">' + r.period + "</span>" +
+              '<span class="rep__m">' + fmt.format(r.rows) + "</span>" +
+              '<span class="status">готов</span>' +
+              '<button class="btn" type="button" data-csv="' + i + '">скачать</button>' +
+              "</div>";
+          })
+          .join("")
+      : '<p class="empty">Отчётов пока нет — сформируйте первый.</p>';
+
+    $$("#report-list [data-csv]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const r = reports[+btn.dataset.csv];
+        download("skala-" + r.period.replace(/\s/g, "-") + ".csv", csvFor(r.period));
+        btn.dataset.done = "1";
+        btn.textContent = "готово";
+        setTimeout(() => { btn.textContent = "скачать"; delete btn.dataset.done; }, 1500);
+      });
+    });
+  }
+
+  /* ——— тосты ——— */
+  let toastTimer;
+  function toast(text) {
+    const t = $("#toast");
+    t.textContent = text;
+    t.dataset.show = "1";
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => (t.dataset.show = "0"), 2600);
+  }
+
+  /* ——— переключение экранов ——— */
+  const TITLES = {
+    overview: ["Продукт / обзор", "Скала — метрики продукта"],
+    traffic: ["Продукт / трафик", "Трафик и устройства"],
+    funnel: ["Продукт / воронка", "Воронка продукта"],
+    reports: ["Продукт / отчёты", "Отчёты и выгрузка"],
+  };
+
+  function show(view) {
+    state.view = view;
+    $$(".view").forEach((v) => (v.hidden = v.id !== "view-" + view));
+    $$(".rail button").forEach((b) =>
+      b.setAttribute("aria-current", b.dataset.view === view ? "page" : "false")
+    );
+    const [crumb, title] = TITLES[view];
+    $("#crumb").textContent = crumb;
+    $("#title").textContent = title;
+    $("#range-chips").style.visibility = view === "reports" ? "hidden" : "visible";
+
+    // новые размеры контейнеров появляются только после показа
+    requestAnimationFrame(() => {
+      if (view === "overview") renderOverview();
+      if (view === "traffic") renderTraffic();
+      if (view === "funnel") renderFunnel();
+      if (view === "reports") renderReports();
+    });
+  }
+
+  $$(".rail button").forEach((btn) => {
+    btn.addEventListener("click", () => show(btn.dataset.view));
+  });
+
+  /* ——— период и обновление ——— */
+  $$("[data-range]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      range = +btn.dataset.range;
-      document.querySelectorAll("[data-range]").forEach(b => b.setAttribute("aria-pressed", String(b === btn)));
-      render();
+      state.range = +btn.dataset.range;
+      $$("[data-range]").forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
+      state.series = buildSeries(state.range);
+      show(state.view);
     });
   });
-  document.getElementById("shuffle").addEventListener("click", () => { seed += 7919; render(); });
 
-  const clock = document.getElementById("live-clock");
+  $("#shuffle").addEventListener("click", () => {
+    seed += 7919;
+    state.series = buildSeries(state.range);
+    show(state.view);
+    toast("Данные пересчитаны");
+  });
+
+  $("#make-report").addEventListener("click", () => {
+    const now = new Date();
+    reports.unshift({
+      name: "Сводка по продукту",
+      period: state.range + " дн",
+      rows: Math.round(state.range * (38 + rnd() * 20)),
+      at: now.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" }) + ", " +
+          now.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+    });
+    renderReports();
+    toast("Отчёт сформирован — лежит первым в списке");
+  });
+
+  $("#download-all").addEventListener("click", (e) => {
+    download("skala-vse-otchyoty.csv", csvFor("90 дн"));
+    const b = e.currentTarget;
+    b.dataset.done = "1";
+    b.textContent = "Скачано";
+    setTimeout(() => { b.textContent = "Скачать всё одним CSV"; delete b.dataset.done; }, 1600);
+  });
+
+  /* ——— часы ——— */
+  const clock = $("#live-clock");
   const tick = () => (clock.textContent = new Date().toLocaleTimeString("ru-RU"));
   tick(); setInterval(tick, 1000);
 
-  let raf;
-  const redraw = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(drawArea); };
-  new ResizeObserver(redraw).observe(chartBox);
-  window.addEventListener("resize", redraw);
-
-  render();
+  /* ——— старт ——— */
+  state.series = buildSeries(state.range);
+  show("overview");
 })();
 </script>
 </body>
