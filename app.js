@@ -1,222 +1,459 @@
-/* Портфолио верстальщика — интерактив.
-   Три блока: тема, ресайзер вьюпорта, копирование контактов. */
+/* Руслан Качев — портфолио · интерфейс
+   Ванильный ES2020, без зависимостей и сборки. */
+(() => {
+  "use strict";
 
-(function () {
-  'use strict';
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  var root = document.documentElement;
-  var store = {
-    get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
-    set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) { /* приватное окно */ } }
+  /* ——————————————————— тема ——————————————————— */
+  const root = document.documentElement;
+  const themeBtn = $("#theme-toggle");
+  const stored = localStorage.getItem("rk-theme");
+  const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const initialTheme = stored || (systemDark ? "dark" : "light");
+
+  function setTheme(theme) {
+    root.dataset.theme = theme;
+    themeBtn.setAttribute("aria-pressed", String(theme === "dark"));
+    themeBtn.setAttribute("aria-label", theme === "dark" ? "Включить светлую тему" : "Включить тёмную тему");
+    const meta = $('meta[name="theme-color"]:not([media])');
+    if (meta) meta.setAttribute("content", theme === "dark" ? "#0b0c09" : "#efede4");
+  }
+  setTheme(initialTheme);
+  themeBtn.addEventListener("click", () => {
+    const next = root.dataset.theme === "dark" ? "light" : "dark";
+    localStorage.setItem("rk-theme", next);
+    setTheme(next);
+  });
+
+  /* ——————————————————— прогресс чтения + активный раздел ——————————————————— */
+  const progress = $("#progress");
+  let ticking = false;
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      const h = document.documentElement.scrollHeight - window.innerHeight;
+      progress.style.transform = `scaleX(${h > 0 ? clamp(window.scrollY / h, 0, 1) : 0})`;
+      ticking = false;
+    });
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+
+  const navLinks = $$("#nav a");
+  const sections = $$("main section[id]");
+
+  if ("IntersectionObserver" in window) {
+    const navObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          // у «Обо мне» ссылки в меню нет — тогда подсветка снимается целиком
+          navLinks.forEach((a) =>
+            a.setAttribute("aria-current", String(a.getAttribute("href") === "#" + entry.target.id))
+          );
+        });
+      },
+      { rootMargin: "-45% 0px -50% 0px", threshold: 0 }
+    );
+    sections.forEach((s) => navObserver.observe(s));
+
+    /* появление блоков */
+    const revealObserver = new IntersectionObserver(
+      (entries, obs) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("is-in");
+          obs.unobserve(entry.target);
+        });
+      },
+      { rootMargin: "0px 0px -8% 0px", threshold: 0.06 }
+    );
+    $$(".reveal").forEach((el) => revealObserver.observe(el));
+
+    /* шаг процесса подсвечивается, когда он в середине экрана */
+    const stepObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => entry.target.classList.toggle("is-active", entry.isIntersecting));
+      },
+      { rootMargin: "-49.5% 0px -49.5% 0px" }
+    );
+    $$(".step").forEach((s) => stepObserver.observe(s));
+  } else {
+    $$(".reveal").forEach((el) => el.classList.add("is-in"));
+  }
+
+  /* ——————————————————— масштабирование живого стенда ——————————————————— */
+  function makeFitter(stage, screen, readout, suffix) {
+    let width = 1280;
+
+    function label(w) {
+      if (w < 520) return "мобильный";
+      if (w < 900) return "планшет";
+      return "десктоп";
+    }
+
+    function apply() {
+      const stageW = stage.clientWidth;
+      const stageH = stage.clientHeight;
+      if (!stageW || !stageH) return;
+      const scale = Math.min(1, stageW / width);
+      screen.style.width = width + "px";
+      screen.style.height = Math.round(stageH / scale) + "px";
+      // центровку держит CSS-свойство translate: -50% 0, здесь только масштаб
+      screen.style.transform = `scale(${scale})`;
+      if (readout) {
+        readout.innerHTML = `${width} px${suffix ? ` · <b>${label(width)}</b>` : ""}`;
+      }
+    }
+
+    // размеры стенда могут появиться позже (диалог, шрифты) — следим за ними
+    if ("ResizeObserver" in window) new ResizeObserver(() => apply()).observe(stage);
+
+    return {
+      apply,
+      get width() { return width; },
+      setWidth(w) { width = clamp(Math.round(w), 280, 1440); apply(); },
+    };
+  }
+
+  const specStage = $("#spec-stage");
+  const specScreen = $("#spec-screen");
+  const specReadout = $("#spec-readout");
+  const specGrip = $("#spec-grip");
+  const specChips = $$(".spec .chips button");
+  const specFit = makeFitter(specStage, specScreen, specReadout, true);
+
+  specChips.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      specChips.forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
+      specFit.setWidth(+btn.dataset.w);
+    });
+  });
+
+  /* перетаскивание правого края */
+  let dragging = false;
+  specGrip.addEventListener("pointerdown", (e) => {
+    dragging = true;
+    specGrip.setPointerCapture(e.pointerId);
+  });
+  specGrip.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+    const rect = specStage.getBoundingClientRect();
+    const ratio = clamp((e.clientX - rect.left) / rect.width, 0.06, 1);
+    specFit.setWidth(280 + ratio * 1160);
+    specChips.forEach((b) => b.setAttribute("aria-pressed", "false"));
+  });
+  const stopDrag = () => { dragging = false; };
+  specGrip.addEventListener("pointerup", stopDrag);
+  specGrip.addEventListener("pointercancel", stopDrag);
+  specGrip.addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    e.preventDefault();
+    specChips.forEach((b) => b.setAttribute("aria-pressed", "false"));
+    specFit.setWidth(specFit.width + (e.key === "ArrowRight" ? 40 : -40) * (e.shiftKey ? 4 : 1));
+  });
+
+  specFit.setWidth(1280);
+
+  /* ——————————————————— фильтр работ ——————————————————— */
+  const filters = $$(".filters button");
+  const works = $$(".work[data-cat]");
+  filters.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const value = btn.dataset.filter;
+      filters.forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
+      works.forEach((card) => card.classList.toggle("is-hidden", value !== "all" && card.dataset.cat !== value));
+    });
+  });
+
+  /* ——————————————————— кейс в диалоге ——————————————————— */
+  const caseDialog = $("#case");
+  const caseStage = $("#case-stage");
+  const caseScreen = $("#case-screen");
+  const caseFrame = $("#case-frame");
+  const caseReadout = $("#case-readout");
+  const caseChips = $$("#case-chips button");
+  const caseFit = makeFitter(caseStage, caseScreen, caseReadout, false);
+
+  function openCase(card) {
+    const d = card.dataset;
+    $("#case-k").textContent = d.kind || "кейс";
+    $("#case-t").textContent = d.title || "";
+    $("#case-d").textContent = d.desc || "";
+
+    const stats = (d.stats || "").split("|").filter(Boolean);
+    $("#case-stats").innerHTML = stats
+      .map((pair) => {
+        const [k, ...rest] = pair.split(":");
+        return `<li><span>${k}</span><b>${rest.join(":")}</b></li>`;
+      })
+      .join("");
+
+    $("#case-tags").innerHTML = (d.tags || "")
+      .split(",")
+      .filter(Boolean)
+      .map((t) => `<span class="tag">${t.trim()}</span>`)
+      .join("");
+
+    const demo = $("#case-demo");
+    demo.href = d.demo || "#";
+    const code = $("#case-code");
+    if (d.code) {
+      code.hidden = false;
+      code.href = d.code;
+    } else {
+      code.hidden = true;
+      code.removeAttribute("href");
+    }
+
+    caseFrame.src = d.demo || "about:blank";
+    caseChips.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.w === "1280")));
+    caseFit.setWidth(window.innerWidth < 900 ? 390 : 1280);
+
+    caseDialog.showModal();
+    document.body.style.overflow = "hidden";
+    requestAnimationFrame(() => {
+      caseFit.apply();
+      $(".case__close").focus({ preventScroll: true });
+    });
+  }
+
+  function closeCase() {
+    caseDialog.close();
+    caseFrame.src = "about:blank";
+    document.body.style.overflow = "";
+  }
+
+  works.forEach((card) => {
+    card.addEventListener("click", () => openCase(card));
+    card.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openCase(card);
+      }
+    });
+  });
+
+  caseChips.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      caseChips.forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
+      caseFit.setWidth(+btn.dataset.w);
+    });
+  });
+
+  $$("[data-close-case]").forEach((b) => b.addEventListener("click", closeCase));
+  caseDialog.addEventListener("click", (e) => {
+    if (e.target === caseDialog) closeCase();
+  });
+  caseDialog.addEventListener("close", () => {
+    document.body.style.overflow = "";
+    caseFrame.src = "about:blank";
+  });
+
+  /* ——————————————————— письмо ——————————————————— */
+  const sheet = $("#contact-sheet");
+  $$("[data-open-contact]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      sheet.showModal();
+      document.body.style.overflow = "hidden";
+    })
+  );
+  sheet.addEventListener("close", () => (document.body.style.overflow = ""));
+  sheet.addEventListener("click", (e) => {
+    if (e.target === sheet) sheet.close();
+  });
+
+  /* ——————————————————— копирование ——————————————————— */
+  $$("[data-copy]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const target = $(btn.dataset.copy);
+      if (!target) return;
+      const text = target.textContent.trim();
+      try {
+        await navigator.clipboard.writeText(text);
+        btn.dataset.done = "1";
+        btn.textContent = "скопировано";
+      } catch {
+        btn.textContent = "не вышло — выделите";
+      }
+      setTimeout(() => {
+        btn.textContent = "копировать";
+        delete btn.dataset.done;
+      }, 1800);
+    });
+  });
+
+  /* ——————————————————— меню ——————————————————— */
+  const menu = $("#menu");
+  const burger = $("#burger");
+  let menuOpen = false;
+
+  function toggleMenu(open) {
+    menuOpen = open;
+    menu.dataset.open = String(open);
+    burger.setAttribute("aria-expanded", String(open));
+    document.body.style.overflow = open ? "hidden" : "";
+    if (open) $(".overlay__close").focus({ preventScroll: true });
+    else burger.focus({ preventScroll: true });
+  }
+  burger.addEventListener("click", () => toggleMenu(!menuOpen));
+  $$("[data-close-menu]").forEach((b) => b.addEventListener("click", () => toggleMenu(false)));
+  $$(".menu__link").forEach((a) => a.addEventListener("click", () => toggleMenu(false)));
+
+  /* ——————————————————— палитра команд ——————————————————— */
+  const palette = $("#palette");
+  const paletteInput = $("#palette-input");
+  const paletteList = $("#palette-list");
+  const SECTION_LABELS = {
+    services: "раздел 01 · услуги",
+    works: "раздел 02 · работы",
+    process: "раздел 03 · процесс",
+    pricing: "раздел 04 · цены",
+    about: "раздел 05 · обо мне",
+    faq: "раздел 06 · вопросы",
+    contact: "раздел 07 · контакты",
   };
 
-  /* ---------- Тема ---------- */
-  var toggle = document.getElementById('theme-toggle');
-  var saved = store.get('theme');
-  if (saved === 'dark' || saved === 'light') root.setAttribute('data-theme', saved);
+  const items = Object.entries(SECTION_LABELS).map(([id, label]) => ({
+    label,
+    text: label.replace(/раздел \d+ · /, ""),
+    hay: label,
+    run: () => {
+      closePalette();
+      $(`#${id}`).scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+      history.replaceState(null, "", `#${id}`);
+    },
+  }));
 
-  function isDark() {
-    var attr = root.getAttribute('data-theme');
-    if (attr) return attr === 'dark';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  }
-  function syncToggle() {
-    if (toggle) toggle.setAttribute('aria-pressed', isDark() ? 'true' : 'false');
-  }
-  syncToggle();
-  if (toggle) {
-    toggle.addEventListener('click', function () {
-      var next = isDark() ? 'light' : 'dark';
-      root.setAttribute('data-theme', next);
-      store.set('theme', next);
-      syncToggle();
-    });
-  }
+  works.forEach((card) =>
+    items.push({
+      label: "кейс",
+      text: card.dataset.title || "",
+      hay: [card.dataset.title, card.dataset.kind, card.dataset.tags].join(" "),
+      run: () => {
+        closePalette();
+        openCase(card);
+      },
+    })
+  );
 
-  /* ---------- Мобильное меню ---------- */
-  var burger = document.getElementById('burger');
-  var nav = document.getElementById('nav');
-  if (burger && nav) {
-    burger.addEventListener('click', function () {
-      var open = nav.classList.toggle('is-open');
-      burger.setAttribute('aria-expanded', open ? 'true' : 'false');
-    });
-    nav.addEventListener('click', function (e) {
-      if (e.target.tagName === 'A') {
-        nav.classList.remove('is-open');
-        burger.setAttribute('aria-expanded', 'false');
-      }
-    });
+  let results = items.slice();
+  let cursor = 0;
+
+  function renderPalette() {
+    paletteList.innerHTML = results.length
+      ? results
+          .map(
+            (item, i) =>
+              `<li role="option" aria-selected="${i === cursor}" data-i="${i}"><b>${item.label.split(" · ")[0]}</b>${item.text}</li>`
+          )
+          .join("")
+      : `<li role="option" aria-selected="false" aria-disabled="true"><b>—</b>ничего не нашлось</li>`;
   }
 
-  /* ---------- Ресайзер вьюпорта ---------- */
-  var stage = document.getElementById('vp-stage');
-  var vp = document.getElementById('vp');
-  var grip = document.getElementById('vp-grip');
-  var readout = document.getElementById('vp-readout');
-  var MIN = 280;
-
-  function maxW() {
-    if (!stage) return 0;
-    var cs = getComputedStyle(stage);
-    return stage.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  function openPalette() {
+    palette.dataset.open = "true";
+    paletteInput.value = "";
+    results = items.slice();
+    cursor = 0;
+    renderPalette();
+    document.body.style.overflow = "hidden";
+    setTimeout(() => paletteInput.focus({ preventScroll: true }), 30);
   }
 
-  function label(w) {
-    if (w < 480) return 'Мобильный';
-    if (w < 768) return 'Крупный мобильный';
-    if (w < 1024) return 'Планшет';
-    return 'Десктоп';
+  function closePalette() {
+    palette.dataset.open = "false";
+    document.body.style.overflow = "";
   }
 
-  function report() {
-    if (!vp || !readout) return;
-    var w = Math.round(vp.getBoundingClientRect().width);
-    readout.textContent = w + ' px · ' + label(w);
-  }
+  paletteInput.addEventListener("input", () => {
+    const q = paletteInput.value.trim().toLowerCase();
+    results = q ? items.filter((i) => (i.hay || i.text).toLowerCase().includes(q)) : items.slice();
+    cursor = 0;
+    renderPalette();
+  });
 
-  function setW(w) {
-    if (!vp) return;
-    var max = maxW();
-    vp.style.width = Math.max(MIN, Math.min(w, max)) + 'px';
-    report();
-  }
+  paletteList.addEventListener("click", (e) => {
+    const li = e.target.closest("li[data-i]");
+    if (!li) return;
+    results[+li.dataset.i].run();
+  });
 
-  if (vp && grip && stage) {
-    var dragging = false, startX = 0, startW = 0;
+  palette.addEventListener("click", (e) => {
+    if (e.target.hasAttribute("data-close-palette")) closePalette();
+  });
 
-    grip.addEventListener('pointerdown', function (e) {
-      dragging = true;
-      startX = e.clientX;
-      startW = vp.getBoundingClientRect().width;
-      grip.setPointerCapture(e.pointerId);
-      vp.classList.add('is-dragging');
+  $("#open-palette").addEventListener("click", openPalette);
+
+  document.addEventListener("keydown", (e) => {
+    const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
       e.preventDefault();
-    });
-
-    grip.addEventListener('pointermove', function (e) {
-      if (!dragging) return;
-      setW(startW + (e.clientX - startX));
-    });
-
-    function endDrag(e) {
-      if (!dragging) return;
-      dragging = false;
-      vp.classList.remove('is-dragging');
-      if (e.pointerId !== undefined && grip.hasPointerCapture(e.pointerId)) {
-        grip.releasePointerCapture(e.pointerId);
-      }
+      palette.dataset.open === "true" ? closePalette() : openPalette();
+      return;
     }
-    grip.addEventListener('pointerup', endDrag);
-    grip.addEventListener('pointercancel', endDrag);
+    if (e.key === "/" && !typing && palette.dataset.open !== "true") {
+      e.preventDefault();
+      openPalette();
+      return;
+    }
 
-    grip.addEventListener('keydown', function (e) {
-      var step = e.shiftKey ? 100 : 20;
-      if (e.key === 'ArrowLeft') { setW(vp.getBoundingClientRect().width - step); e.preventDefault(); }
-      if (e.key === 'ArrowRight') { setW(vp.getBoundingClientRect().width + step); e.preventDefault(); }
-    });
-
-    document.querySelectorAll('.demo__presets .chip').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var v = btn.dataset.w;
-        if (v === 'auto') { vp.style.width = ''; report(); }
-        else setW(parseInt(v, 10));
-        document.querySelectorAll('.demo__presets .chip').forEach(function (b) {
-          b.classList.toggle('is-on', b === btn);
-        });
-      });
-    });
-
-    window.addEventListener('resize', function () {
-      if (vp.style.width) setW(vp.getBoundingClientRect().width);
-      else report();
-    });
-
-    report();
-  }
-
-  /* ---------- Копирование контактов ---------- */
-  document.querySelectorAll('.copy').forEach(function (btn) {
-    var target = document.querySelector(btn.dataset.copy);
-    if (!target) return;
-
-    btn.addEventListener('click', function () {
-      var text = target.textContent.trim();
-      var done = function () {
-        var was = btn.textContent;
-        btn.textContent = 'Скопировано';
-        btn.classList.add('is-done');
-        setTimeout(function () { btn.textContent = was; btn.classList.remove('is-done'); }, 1600);
-      };
-      var fallback = function () {
-        var range = document.createRange();
-        range.selectNodeContents(target);
-        var sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(range);
-        btn.textContent = 'Выделено — Ctrl+C';
-        setTimeout(function () { btn.textContent = 'Копировать'; }, 2200);
-      };
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(done, fallback);
-      } else {
-        fallback();
+    if (palette.dataset.open === "true") {
+      if (e.key === "Escape") { closePalette(); return; }
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        if (!results.length) return;
+        cursor = (cursor + (e.key === "ArrowDown" ? 1 : -1) + results.length) % results.length;
+        renderPalette();
+        const active = paletteList.querySelector('[aria-selected="true"]');
+        if (active) active.scrollIntoView({ block: "nearest" });
+        return;
       }
+      if (e.key === "Enter" && results[cursor]) {
+        e.preventDefault();
+        results[cursor].run();
+      }
+      return;
+    }
+
+    if (e.key === "Escape" && menuOpen) toggleMenu(false);
+  });
+
+  /* ——————————————————— часы и год ——————————————————— */
+  const clock = $("#clock");
+  function tick() {
+    clock.textContent = new Date().toLocaleTimeString("ru-RU", {
+      timeZone: "Europe/Moscow",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  }
+  tick();
+  setInterval(tick, 1000);
+  $("#year").textContent = String(new Date().getFullYear());
+
+  /* ——————————————————— пересчёт стендов при ресайзе ——————————————————— */
+  let resizeRaf;
+  window.addEventListener("resize", () => {
+    cancelAnimationFrame(resizeRaf);
+    resizeRaf = requestAnimationFrame(() => {
+      specFit.apply();
+      if (caseDialog.open) caseFit.apply();
     });
   });
 
-  /* ---------- Окно «Написать мне» ---------- */
-  var sheet = document.getElementById('contact-sheet');
-  var openers = document.querySelectorAll('[data-open-contact]');
-  if (sheet && openers.length) {
-    Array.prototype.forEach.call(openers, function (btn) {
-      btn.addEventListener('click', function () {
-        if (typeof sheet.showModal === 'function') sheet.showModal();
-        else sheet.setAttribute('open', '');
-      });
-    });
-    // клик по затемнению закрывает окно
-    sheet.addEventListener('click', function (e) {
-      if (e.target !== sheet) return;
-      if (typeof sheet.close === 'function') sheet.close();
-      else sheet.removeAttribute('open');
+  /* шрифты догрузились — стенд мог изменить высоту */
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => {
+      specFit.apply();
+      if (caseDialog.open) caseFit.apply();
     });
   }
-
-  /* ---------- Подсветка пункта меню ---------- */
-  var navLinks = document.querySelectorAll('.nav a[href^="#"]');
-  var sections = [];
-  Array.prototype.forEach.call(navLinks, function (a) {
-    var el = document.querySelector(a.getAttribute('href'));
-    if (el) sections.push({ link: a, el: el });
-  });
-
-  function spy() {
-    if (!sections.length) return;
-    var line = window.scrollY + 140;
-    var current = null;
-    sections.forEach(function (s) {
-      if (s.el.getBoundingClientRect().top + window.scrollY <= line) current = s;
-    });
-    // у самого низа страницы подсвечиваем последний раздел
-    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) {
-      current = sections[sections.length - 1];
-    }
-    sections.forEach(function (s) { s.link.classList.toggle('is-active', s === current); });
-  }
-
-  var spyTick = false;
-  window.addEventListener('scroll', function () {
-    if (spyTick) return;
-    spyTick = true;
-    window.requestAnimationFrame(function () { spyTick = false; spy(); });
-  }, { passive: true });
-  window.addEventListener('resize', spy);
-  // страховка: обновляем и по таймеру — на случай, если scroll-события не доходят
-  window.setInterval(spy, 400);
-  spy();
-
-  /* ---------- Год в подвале ---------- */
-  var year = document.getElementById('year');
-  if (year) year.textContent = new Date().getFullYear();
 })();

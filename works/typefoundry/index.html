@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Гарнитура — шрифтовая студия</title>
+<meta name="description" content="Демо-стенд: шрифтовая студия с живым тестером набора. Ванильный JS, без библиотек.">
+<meta name="theme-color" content="#f4f1ea">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Manrope:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --paper:#f4f1ea; --paper-2:#ebe6dc; --ink:#16140f; --muted:#6f6759;
+  --line:#d8d1c3; --acc:#c8412a;
+  --mono:"JetBrains Mono",ui-monospace,monospace; --sans:"Manrope",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1240px;margin:0 auto;padding:0 28px}
+a{color:inherit}
+/* ——— шапка ——— */
+.top{display:flex;align-items:center;gap:20px;padding:26px 0 18px;border-bottom:1px solid var(--line)}
+.brand{font-family:"Unbounded",sans-serif;font-weight:800;font-size:19px;letter-spacing:-.03em;text-decoration:none}
+.brand span{color:var(--acc)}
+.top nav{margin-left:auto;display:flex;gap:22px;font-size:13px;font-family:var(--mono);letter-spacing:.04em}
+.top nav a{text-decoration:none;color:var(--muted);padding-bottom:2px;border-bottom:1px solid transparent}
+.top nav a:hover{color:var(--ink);border-color:var(--acc)}
+.top__cta{font-family:var(--mono);font-size:12px;background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:2px;text-decoration:none;margin-left:12px}
+.top__cta:hover{background:var(--acc)}
+/* ——— заголовок ——— */
+.hero{padding:56px 0 40px;display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:end;border-bottom:1px solid var(--line)}
+.hero h1{font-family:"Unbounded",sans-serif;font-weight:800;font-size:clamp(40px,6.4vw,86px);line-height:.93;letter-spacing:-.045em;margin:0}
+.hero h1 em{font-family:"Playfair Display",serif;font-style:italic;font-weight:500;letter-spacing:-.01em}
+.hero p{color:var(--muted);max-width:38ch;margin:22px 0 0;font-size:15px}
+.hero__spec{display:grid;gap:14px}
+.hero__num{display:flex;align-items:baseline;gap:12px;border-top:1px solid var(--line);padding-top:10px;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.hero__num b{font-family:"Unbounded",sans-serif;font-size:22px;color:var(--ink);letter-spacing:-.02em;margin-left:auto;text-transform:none}
+/* ——— тестер ——— */
+.tester{padding:40px 0 8px}
+.tester__title{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:400;margin:0 0 18px}
+.tester__bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:26px}
+.seg{display:flex;border:1px solid var(--line);border-radius:2px;overflow:hidden;background:#fff}
+.seg button{
+  font-family:var(--mono);font-size:11px;letter-spacing:.03em;padding:8px 12px;border:0;background:transparent;
+  color:var(--muted);cursor:pointer;border-right:1px solid var(--line);transition:.14s
+}
+.seg button:last-child{border-right:0}
+.seg button:hover{background:var(--paper-2);color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.field{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.field input[type=range]{width:96px;accent-color:var(--acc)}
+.field output{color:var(--ink);min-width:42px;font-variant-numeric:tabular-nums}
+.tester__stage{
+  border:1px solid var(--line);background:#fff;padding:34px 34px 26px;position:relative;
+  min-height:260px;display:flex;align-items:center
+}
+.tester__stage::before{
+  content:attr(data-meta);position:absolute;top:10px;right:14px;font-family:var(--mono);
+  font-size:10px;color:#a9a193;letter-spacing:.1em;text-transform:uppercase
+}
+#sample{
+  width:100%;border:0;background:transparent;resize:none;overflow:hidden;
+  font-family:var(--sans);color:var(--ink);line-height:1.15;outline:none;
+  caret-color:var(--acc);
+}
+.tester__foot{display:flex;gap:14px;align-items:center;margin-top:12px;flex-wrap:wrap}
+.tester__hint{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.copy{font-family:var(--mono);font-size:11px;background:transparent;border:1px solid var(--line);padding:7px 12px;border-radius:2px;cursor:pointer;color:var(--muted);margin-left:auto}
+.copy:hover{border-color:var(--ink);color:var(--ink)}
+.copy[data-done="1"]{background:var(--acc);border-color:var(--acc);color:#fff}
+/* ——— глифы ——— */
+.glyphs{padding:40px 0;border-top:1px solid var(--line);margin-top:40px}
+.glyphs__head{display:flex;align-items:baseline;gap:14px;margin-bottom:18px}
+.glyphs h2{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:0;font-weight:400}
+.glyphs__fam{font-family:var(--mono);font-size:11px;color:var(--acc);margin-left:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.grid span{
+  border-right:1px solid var(--line);border-bottom:1px solid var(--line);aspect-ratio:1;display:grid;place-items:center;
+  font-size:28px;transition:background .16s,color .16s;cursor:default
+}
+.grid span:hover{background:var(--ink);color:var(--paper)}
+/* ——— витрина ——— */
+.show{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-top:8px}
+.spec{background:#fff;padding:26px 22px;min-height:230px;display:flex;flex-direction:column;gap:10px;text-decoration:none;transition:background .2s}
+.spec:hover{background:var(--paper-2)}
+.spec__aa{font-size:64px;line-height:1;letter-spacing:-.03em}
+.spec__n{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--muted)}
+.spec__t{margin-top:auto;font-size:15px;font-weight:700}
+.spec__d{font-size:13px;color:var(--muted)}
+.spec__w{font-family:var(--mono);font-size:10px;color:var(--acc);letter-spacing:.1em}
+/* ——— футер ——— */
+.end{padding:56px 0 40px;border-top:1px solid var(--line);margin-top:56px;display:flex;gap:18px;flex-wrap:wrap;align-items:baseline}
+.end h2{font-family:"Unbounded",sans-serif;font-size:clamp(26px,4vw,44px);letter-spacing:-.035em;margin:0;line-height:1}
+.back{font-family:var(--mono);font-size:12px;margin-left:auto;text-decoration:none;border-bottom:1px solid var(--acc);padding-bottom:2px}
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr;gap:26px;padding:36px 0 28px}
+  .show{grid-template-columns:1fr}
+  .top nav{display:none}
+  .tester__stage{padding:22px 18px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <a class="brand" href="#top">Гарнитура<span>.</span></a>
+    <nav aria-label="Разделы">
+      <a href="#tester">Тестер</a>
+      <a href="#glyphs">Глифы</a>
+      <a href="#show">Каталог</a>
+    </nav>
+    <a class="top__cta" href="#show">Смотреть каталог</a>
+  </header>
+
+  <section class="hero" id="top">
+    <div>
+      <h1>Шрифт<br><em>как</em> инструмент</h1>
+      <p>Небольшая студия: четыре гарнитуры с полной кириллицей. Тестер ниже работает по-настоящему — правьте текст, кегль и трекинг прямо на странице.</p>
+    </div>
+    <div class="hero__spec">
+      <div class="hero__num"><span>Файлы</span><b>16</b></div>
+      <div class="hero__num"><span>Языки</span><b>3</b></div>
+      <div class="hero__num"><span>Лицензия</span><b>OFL</b></div>
+      <div class="hero__num"><span>Год</span><b>2026</b></div>
+    </div>
+  </section>
+
+  <section class="tester" id="tester" aria-labelledby="tester-t">
+    <h2 id="tester-t" class="tester__title">Живой тестер</h2>
+
+    <div class="tester__bar">
+      <div class="seg" role="group" aria-label="Гарнитура">
+        <button type="button" data-family="Unbounded" aria-pressed="true">Unbounded</button>
+        <button type="button" data-family="Playfair Display" aria-pressed="false" aria-label="Playfair Display">Playfair</button>
+        <button type="button" data-family="Manrope" aria-pressed="false">Manrope</button>
+        <button type="button" data-family="JetBrains Mono" aria-pressed="false" aria-label="JetBrains Mono">JetBrains</button>
+      </div>
+      <div class="seg" role="group" aria-label="Начертание">
+        <button type="button" data-weight="400" aria-pressed="true">400</button>
+        <button type="button" data-weight="600" aria-pressed="false">600</button>
+        <button type="button" data-weight="800" aria-pressed="false">800</button>
+      </div>
+      <label class="field">кегль <input id="f-size" type="range" min="16" max="140" value="64"><output id="o-size">64</output></label>
+      <label class="field">трекинг <input id="f-track" type="range" min="-80" max="80" value="-20"><output id="o-track">-0,02</output></label>
+      <label class="field">интерлиньяж <input id="f-lh" type="range" min="80" max="180" value="100"><output id="o-lh">1,00</output></label>
+    </div>
+
+    <div class="tester__stage" id="stage" data-meta="Unbounded 400 · 64px">
+      <textarea id="sample" rows="2" spellcheck="false" aria-label="Текст для проверки набора">Съешь же ещё этих мягких французских булок</textarea>
+    </div>
+
+    <div class="tester__foot">
+      <p class="tester__hint">Текст в рамке можно править. Всё считается на лету — ни одного запроса к серверу.</p>
+      <button class="copy" type="button" id="copy-css">Скопировать CSS</button>
+    </div>
+
+    <div class="glyphs" id="glyphs">
+      <div class="glyphs__head">
+        <h2>Глифы</h2>
+        <span class="glyphs__fam" id="glyph-fam">Unbounded · 400</span>
+      </div>
+      <div class="grid" id="glyph-grid"></div>
+    </div>
+  </section>
+
+  <section id="show" aria-labelledby="show-t" style="padding-top:8px">
+    <div class="glyphs__head">
+      <h2 id="show-t">Каталог</h2>
+      <span class="glyphs__fam">4 гарнитуры · 16 файлов</span>
+    </div>
+    <div class="show">
+      <a class="spec" href="#tester" data-set="Unbounded|800|Unbounded — дисплейная|Плотная, широкая, для заголовков и обложек.">
+        <span class="spec__aa" style="font-family:'Unbounded',sans-serif;font-weight:800">Аа</span>
+        <span class="spec__n">01 / display</span>
+        <span class="spec__t">Unbounded</span>
+        <span class="spec__d">Плотная, широкая, для заголовков и обложек.</span>
+        <span class="spec__w">400 · 600 · 800</span>
+      </a>
+      <a class="spec" href="#tester" data-set="Playfair Display|500|Playfair Display — акциденция|Высокий контраст, курсив для акцентов.">
+        <span class="spec__aa" style="font-family:'Playfair Display',serif;font-weight:500">Аа</span>
+        <span class="spec__n">02 / serif</span>
+        <span class="spec__t">Playfair Display</span>
+        <span class="spec__d">Высокий контраст, курсив для акцентов.</span>
+        <span class="spec__w">500 · 700 · italic</span>
+      </a>
+      <a class="spec" href="#tester" data-set="Manrope|400|Manrope — текстовая|Нейтральная, читается с 14 px.">
+        <span class="spec__aa" style="font-family:'Manrope',sans-serif;font-weight:400">Аа</span>
+        <span class="spec__n">03 / sans</span>
+        <span class="spec__t">Manrope</span>
+        <span class="spec__d">Нейтральная, читается с 14 px.</span>
+        <span class="spec__w">400 · 500 · 700</span>
+      </a>
+    </div>
+  </section>
+
+  <footer class="end">
+    <h2>Попробуйте на своём тексте</h2>
+    <a class="back" href="../../index.html">← в портфолио</a>
+  </footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const stage = document.getElementById("stage");
+  const sample = document.getElementById("sample");
+  const grid = document.getElementById("glyph-grid");
+  const famLabel = document.getElementById("glyph-fam");
+  const outSize = document.getElementById("o-size");
+  const outTrack = document.getElementById("o-track");
+  const outLh = document.getElementById("o-lh");
+
+  const state = { family: "Unbounded", weight: 400, size: 64, track: -0.02, lh: 1 };
+
+  const GLYPHS = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя0123456789.,:;!?—–()«»№%";
+
+  function apply() {
+    sample.style.fontFamily = `"${state.family}", sans-serif`;
+    sample.style.fontWeight = state.weight;
+    sample.style.fontSize = state.size + "px";
+    sample.style.letterSpacing = state.track + "em";
+    sample.style.lineHeight = state.lh;
+    // авто-высота textarea: рамка растёт под набранное
+    sample.style.height = "auto";
+    sample.style.height = Math.max(state.size * state.lh, sample.scrollHeight) + "px";
+    stage.dataset.meta = `${state.family} ${state.weight} · ${state.size}px`;
+    famLabel.textContent = `${state.family} · ${state.weight}`;
+    outSize.value = state.size;
+    outTrack.value = state.track.toFixed(2).replace(".", ",");
+    outLh.value = state.lh.toFixed(2).replace(".", ",");
+    renderGlyphs();
+  }
+
+  function renderGlyphs() {
+    const chars = GLYPHS.split("");
+    // перерисовываем только при смене гарнитуры — экономим layout
+    if (grid.dataset.sig === state.family + state.weight) return;
+    grid.dataset.sig = state.family + state.weight;
+    grid.innerHTML = chars.map(c => `<span style="font-family:'${state.family}',sans-serif;font-weight:${state.weight}">${c}</span>`).join("");
+  }
+
+  document.querySelectorAll("[data-family]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      state.family = btn.dataset.family;
+      document.querySelectorAll("[data-family]").forEach(b => b.setAttribute("aria-pressed", String(b === btn)));
+      apply();
+    });
+  });
+
+  document.querySelectorAll("[data-weight]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      state.weight = +btn.dataset.weight;
+      document.querySelectorAll("[data-weight]").forEach(b => b.setAttribute("aria-pressed", String(b === btn)));
+      apply();
+    });
+  });
+
+  document.getElementById("f-size").addEventListener("input", (e) => { state.size = +e.target.value; apply(); });
+  document.getElementById("f-track").addEventListener("input", (e) => { state.track = +e.target.value / 1000; apply(); });
+  document.getElementById("f-lh").addEventListener("input", (e) => { state.lh = +e.target.value / 100; apply(); });
+  sample.addEventListener("input", apply);
+
+  // карточки каталога переключают тестер
+  document.querySelectorAll("[data-set]").forEach((card) => {
+    card.addEventListener("click", () => {
+      const [family, weight] = card.dataset.set.split("|");
+      state.family = family;
+      state.weight = +weight;
+      document.querySelectorAll("[data-family]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.family === family)));
+      document.querySelectorAll("[data-weight]").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.weight === +weight)));
+      apply();
+      document.getElementById("tester").scrollIntoView({ behavior: "smooth", block: "start" });
+      setTimeout(() => sample.focus({ preventScroll: true }), 400);
+    });
+  });
+
+  const copyBtn = document.getElementById("copy-css");
+  copyBtn.addEventListener("click", async () => {
+    const css = `font-family: "${state.family}", sans-serif;\nfont-weight: ${state.weight};\nfont-size: ${state.size}px;\nletter-spacing: ${state.track.toFixed(3)}em;\nline-height: ${state.lh.toFixed(2)};`;
+    try {
+      await navigator.clipboard.writeText(css);
+      copyBtn.textContent = "Скопировано";
+      copyBtn.dataset.done = "1";
+    } catch {
+      copyBtn.textContent = "Не вышло — выделите вручную";
+    }
+    setTimeout(() => { copyBtn.textContent = "Скопировать CSS"; delete copyBtn.dataset.done; }, 1800);
+  });
+
+  apply();
+})();
+</script>
+</body>
+</html>

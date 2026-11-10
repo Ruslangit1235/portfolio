@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Скала — панель продукта</title>
+<meta name="description" content="Демо-стенд: дашборд продуктовой аналитики на ванильном JS и canvas. Без библиотек и фреймворков.">
+<meta name="theme-color" content="#0a0c0e">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+:root{
+  --bg:#0a0c0e; --panel:#101418; --panel-2:#141a1f; --line:#222c33;
+  --ink:#e8eef2; --muted:#7d8f9b; --acc:#4de3d0; --acc-dim:#1c4b47; --warn:#ffb25e; --bad:#ff6b6b;
+  --r:14px; --mono:"JetBrains Mono",ui-monospace,monospace; --sans:"Golos Text",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--sans);
+  font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(1200px 600px at 80% -10%,#123 0%,transparent 60%);
+  min-height:100vh;
+}
+.app{display:grid; grid-template-columns:76px 1fr; min-height:100vh}
+/* ——— рейл ——— */
+.rail{border-right:1px solid var(--line); display:flex; flex-direction:column; align-items:center; gap:6px; padding:18px 0; position:sticky; top:0; height:100vh}
+.rail__logo{width:38px;height:38px;border:1px solid var(--acc);border-radius:11px;display:grid;place-items:center;color:var(--acc);font-family:var(--mono);font-weight:700;margin-bottom:14px}
+.rail button{
+  width:44px;height:44px;border:0;background:transparent;color:var(--muted);border-radius:11px;
+  cursor:pointer;display:grid;place-items:center;transition:.18s;position:relative
+}
+.rail button:hover{background:var(--panel-2);color:var(--ink)}
+.rail button[aria-current="page"]{background:var(--acc-dim);color:var(--acc)}
+.rail button[aria-current="page"]::before{content:"";position:absolute;left:-18px;top:12px;bottom:12px;width:2px;background:var(--acc)}
+.rail svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6}
+.rail .rail__foot{margin-top:auto;font-family:var(--mono);font-size:9px;color:#41525d;writing-mode:vertical-rl;letter-spacing:.18em}
+/* ——— шапка ——— */
+.head{display:flex;align-items:center;gap:16px;padding:22px 28px 0;flex-wrap:wrap}
+.head h1{font-size:19px;margin:0;font-weight:600;letter-spacing:-.01em}
+.head__crumb{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase}
+.head__live{margin-left:auto;display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 0 rgba(77,227,208,.6);animation:pulse 2.4s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(77,227,208,.5)}70%{box-shadow:0 0 0 9px rgba(77,227,208,0)}100%{box-shadow:0 0 0 0 rgba(77,227,208,0)}}
+/* ——— контролы ——— */
+.chips{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px;margin-left:auto}
+.chips button{
+  font-family:var(--mono);font-size:11px;padding:6px 11px;border:0;border-radius:7px;background:transparent;
+  color:var(--muted);cursor:pointer;transition:.16s
+}
+.chips button:hover{color:var(--ink)}
+.chips button[aria-pressed="true"]{background:var(--acc);color:#04211f;font-weight:700}
+/* ——— сетка ——— */
+main{padding:18px 28px 40px;display:grid;gap:14px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 16px 12px;position:relative;overflow:hidden}
+.card__k{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.card__v{font-family:var(--mono);font-size:27px;font-weight:700;letter-spacing:-.02em;margin:6px 0 2px;font-variant-numeric:tabular-nums}
+.card__d{font-size:12px;font-family:var(--mono)}
+.up{color:var(--acc)} .down{color:var(--bad)} .flat{color:var(--muted)}
+.card canvas{position:absolute;right:0;bottom:0;width:100%;height:44px;opacity:.85}
+.dash{display:grid;grid-template-columns:1.55fr 1fr;gap:14px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.panel__head{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}
+.panel__t{margin:0;font-size:13px;font-weight:600;letter-spacing:.01em}
+.panel__s{font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:auto}
+.legend{display:flex;gap:14px;font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:6px}
+.legend i{display:inline-block;width:9px;height:2px;vertical-align:middle;margin-right:6px}
+.chart{position:relative}
+.chart canvas{display:block;width:100%}
+.tip{
+  position:absolute;pointer-events:none;background:#04100f;border:1px solid var(--acc-dim);
+  border-radius:9px;padding:8px 10px;font-family:var(--mono);font-size:11px;line-height:1.55;
+  opacity:0;transform:translate(-50%,-118%);transition:opacity .12s;white-space:nowrap;z-index:3
+}
+.tip b{color:var(--acc);font-weight:700}
+.bars{display:grid;gap:12px;margin-top:14px}
+.bar__row{display:grid;grid-template-columns:96px 1fr 46px;align-items:center;gap:10px;font-family:var(--mono);font-size:11px}
+.bar__track{height:6px;background:#182026;border-radius:99px;overflow:hidden}
+.bar__fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#1c4b47,var(--acc));width:0;transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.bar__v{text-align:right;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:left;padding:0 0 9px;font-weight:400;border-bottom:1px solid var(--line)}
+td{padding:9px 0;border-bottom:1px solid #171f24;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+td.mono{font-family:var(--mono);font-size:12px}
+.tag{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
+.spark-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.spark{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.spark__k{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.spark__v{font-family:var(--mono);font-size:18px;font-weight:700;margin-top:2px}
+footer{padding:0 28px 26px;font-family:var(--mono);font-size:10px;color:#4a5b66;display:flex;gap:18px;flex-wrap:wrap}
+footer a{color:var(--acc);text-decoration:none;border-bottom:1px solid var(--acc-dim)}
+@media (max-width:1080px){
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .dash{grid-template-columns:1fr}
+  .spark-row{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:720px){
+  .app{grid-template-columns:1fr}
+  .rail{flex-direction:row;height:auto;position:static;border-right:0;border-bottom:1px solid var(--line);padding:10px 12px;overflow:auto}
+  .rail__logo{margin:0 8px 0 0}
+  .rail .rail__foot{display:none}
+  .rail button[aria-current="page"]::before{display:none}
+  main,.head,footer{padding-left:16px;padding-right:16px}
+  .head{padding-top:16px}
+  .chips{margin-left:0;width:100%;justify-content:space-between}
+  .kpis,.spark-row{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="rail" aria-label="Разделы панели">
+    <div class="rail__logo" aria-hidden="true">С</div>
+    <button type="button" aria-current="page" aria-label="Обзор">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+    </button>
+    <button type="button" aria-label="Трафик">
+      <svg viewBox="0 0 24 24"><path d="M3 17l5-6 4 3 4-7 5 4"/><path d="M3 21h18"/></svg>
+    </button>
+    <button type="button" aria-label="Воронка">
+      <svg viewBox="0 0 24 24"><path d="M4 5h16l-6 7v6l-4 2v-8L4 5z"/></svg>
+    </button>
+    <button type="button" aria-label="Отчёты">
+      <svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></svg>
+    </button>
+    <span class="rail__foot">skala demo</span>
+  </nav>
+
+  <div>
+    <header class="head">
+      <div>
+        <p class="head__crumb">Продукт / обзор</p>
+        <h1>Скала — метрики продукта</h1>
+      </div>
+      <div class="head__live"><span class="dot"></span><span id="live-clock">--:--:--</span> · данные обновляются</div>
+      <div class="chips" role="group" aria-label="Период">
+        <button type="button" data-range="7" aria-pressed="false">7 дн</button>
+        <button type="button" data-range="30" aria-pressed="true">30 дн</button>
+        <button type="button" data-range="90" aria-pressed="false">90 дн</button>
+        <button type="button" id="shuffle">Обновить</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="kpis" aria-label="Ключевые метрики">
+        <article class="card">
+          <p class="card__k">Активные за день</p>
+          <p class="card__v" id="k-dau">—</p>
+          <p class="card__d up" id="k-dau-d">—</p>
+          <canvas data-spark="0" aria-hidden="true"></canvas>
+        </article>
+        <article class="card">
+          <p class="card__k">Регистрации</p>
+          <p class="card__v" id="k-reg">—</p>
+          <p class="card__d up" id="k-reg-d">—</p>
+          <canvas data-spark="1" aria-hidden="true"></canvas>
+        </article>
+        <article class="card">
+          <p class="card__k">Конверсия в оплату</p>
+          <p class="card__v" id="k-cvr">—</p>
+          <p class="card__d" id="k-cvr-d">—</p>
+          <canvas data-spark="2" aria-hidden="true"></canvas>
+        </article>
+        <article class="card">
+          <p class="card__k">Отток</p>
+          <p class="card__v" id="k-churn">—</p>
+          <p class="card__d down" id="k-churn-d">—</p>
+          <canvas data-spark="3" aria-hidden="true"></canvas>
+        </article>
+      </section>
+
+      <div class="dash">
+        <section class="panel" aria-labelledby="t-traffic">
+          <div class="panel__head">
+            <h2 class="panel__t" id="t-traffic">Визиты и регистрации</h2>
+            <span class="panel__s" id="chart-range">30 дней</span>
+          </div>
+          <div class="legend">
+            <span><i style="background:#4de3d0"></i>визиты</span>
+            <span><i style="background:#ffb25e"></i>регистрации</span>
+          </div>
+          <div class="chart" id="chart" tabindex="0" role="img" aria-label="График визитов и регистраций по дням">
+            <canvas id="area"></canvas>
+            <div class="tip" id="tip"></div>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="t-src">
+          <div class="panel__head">
+            <h2 class="panel__t" id="t-src">Источники</h2>
+            <span class="panel__s">доля визитов</span>
+          </div>
+          <div class="bars" id="bars"></div>
+        </section>
+      </div>
+
+      <section class="spark-row" aria-label="Мини-метрики">
+        <div class="spark"><p class="spark__k">Средний чек</p><p class="spark__v" id="s-aov">—</p></div>
+        <div class="spark"><p class="spark__k">Сессия</p><p class="spark__v" id="s-dur">—</p></div>
+        <div class="spark"><p class="spark__k">Отказы</p><p class="spark__v" id="s-bounce">—</p></div>
+        <div class="spark"><p class="spark__k">Страниц за сессию</p><p class="spark__v" id="s-pv">—</p></div>
+      </section>
+
+      <section class="panel" aria-labelledby="t-pages">
+        <div class="panel__head">
+          <h2 class="panel__t" id="t-pages">Топ страниц</h2>
+          <span class="panel__s">за период</span>
+        </div>
+        <table>
+          <thead><tr><th scope="col">Страница</th><th scope="col">Визиты</th><th scope="col">Конверсия</th><th scope="col">Ср. время</th></tr></thead>
+          <tbody id="pages"></tbody>
+        </table>
+      </section>
+    </main>
+
+    <footer>
+      <span>демо-стенд · данные синтетические, генерируются в браузере</span>
+      <a href="../../index.html">← вернуться в портфолио</a>
+    </footer>
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  // Детерминированный PRNG — графики не «дёргаются» между перерисовками
+  let seed = 20260214;
+  const rnd = () => {
+    seed = (seed * 1664525 + 1013904223) % 4294967296;
+    return seed / 4294967296;
+  };
+  const pick = (arr) => arr[Math.floor(rnd() * arr.length)];
+  const fmt = new Intl.NumberFormat("ru-RU");
+
+  let range = 30;
+  let data = [];
+
+  function buildSeries(days) {
+    const out = [];
+    let base = 2400 + rnd() * 900;
+    for (let i = 0; i < days; i++) {
+      const dow = (i + 3) % 7;
+      const weekend = dow === 5 || dow === 6 ? 0.72 : 1;
+      const trend = 1 + i * 0.004;
+      const visits = Math.round(base * weekend * trend * (0.9 + rnd() * 0.2));
+      const regs = Math.round(visits * (0.055 + rnd() * 0.02));
+      out.push({ visits, regs });
+    }
+    return out;
+  }
+
+  // ——— canvas с учётом плотности пикселей ———
+  function setup(canvas, cssW, cssH) {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    canvas.style.height = cssH + "px";
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return ctx;
+  }
+
+  function drawSpark(canvas, values, accent) {
+    const w = canvas.clientWidth, h = 44;
+    if (!w) return;
+    const ctx = setup(canvas, w, h);
+    const max = Math.max(...values), min = Math.min(...values);
+    const x = (i) => (i / (values.length - 1)) * w;
+    const y = (v) => h - 6 - ((v - min) / (max - min || 1)) * (h - 14);
+    ctx.beginPath();
+    values.forEach((v, i) => (i ? ctx.lineTo(x(i), y(v)) : ctx.moveTo(x(i), y(v))));
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, accent + "55");
+    grad.addColorStop(1, accent + "00");
+    ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.closePath();
+    ctx.fillStyle = grad; ctx.fill();
+    ctx.beginPath();
+    values.forEach((v, i) => (i ? ctx.lineTo(x(i), y(v)) : ctx.moveTo(x(i), y(v))));
+    ctx.strokeStyle = accent; ctx.lineWidth = 1.6; ctx.stroke();
+  }
+
+  const area = document.getElementById("area");
+  const tip = document.getElementById("tip");
+  const chartBox = document.getElementById("chart");
+  let geometry = null;
+
+  function drawArea() {
+    const w = chartBox.clientWidth;
+    const h = Math.max(220, Math.min(340, Math.round(w * 0.34)));
+    if (!w) return;
+    const ctx = setup(area, w, h);
+    const padL = 42, padR = 10, padT = 14, padB = 26;
+    const iw = w - padL - padR, ih = h - padT - padB;
+    const maxV = Math.max(...data.map(d => d.visits)) * 1.12;
+    const X = (i) => padL + (i / (data.length - 1)) * iw;
+    const Y = (v) => padT + ih - (v / maxV) * ih;
+
+    ctx.clearRect(0, 0, w, h);
+
+    // сетка
+    ctx.font = "10px 'JetBrains Mono', monospace";
+    ctx.fillStyle = "#54666f";
+    ctx.textAlign = "right";
+    for (let g = 0; g <= 4; g++) {
+      const v = (maxV / 4) * g;
+      const yy = Y(v);
+      ctx.strokeStyle = g === 0 ? "#2a3941" : "#182026";
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(padL, yy + .5); ctx.lineTo(w - padR, yy + .5); ctx.stroke();
+      ctx.fillText(Math.round(v / 100) / 10 + "k", padL - 8, yy + 3);
+    }
+
+    // визиты — площадь
+    const grad = ctx.createLinearGradient(0, padT, 0, padT + ih);
+    grad.addColorStop(0, "rgba(77,227,208,.34)");
+    grad.addColorStop(1, "rgba(77,227,208,0)");
+    ctx.beginPath();
+    data.forEach((d, i) => (i ? ctx.lineTo(X(i), Y(d.visits)) : ctx.moveTo(X(i), Y(d.visits))));
+    ctx.lineTo(X(data.length - 1), padT + ih);
+    ctx.lineTo(X(0), padT + ih);
+    ctx.closePath();
+    ctx.fillStyle = grad; ctx.fill();
+
+    ctx.beginPath();
+    data.forEach((d, i) => (i ? ctx.lineTo(X(i), Y(d.visits)) : ctx.moveTo(X(i), Y(d.visits))));
+    ctx.strokeStyle = "#4de3d0"; ctx.lineWidth = 2; ctx.lineJoin = "round"; ctx.stroke();
+
+    // регистрации — линия
+    const regMax = Math.max(...data.map(d => d.regs)) * 1.6;
+    const YR = (v) => padT + ih - (v / regMax) * ih;
+    ctx.beginPath();
+    data.forEach((d, i) => (i ? ctx.lineTo(X(i), YR(d.regs)) : ctx.moveTo(X(i), YR(d.regs))));
+    ctx.strokeStyle = "#ffb25e"; ctx.lineWidth = 1.6; ctx.setLineDash([4, 3]); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // подписи дат: fillStyle сбрасываем — выше он переключён на градиент заливки
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#6d828d";
+    const step = Math.ceil(data.length / 6);
+    data.forEach((d, i) => {
+      if (i % step) return;
+      const day = new Date(Date.now() - (data.length - 1 - i) * 864e5);
+      ctx.fillText(day.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" }), X(i), h - 8);
+    });
+
+    geometry = { X, Y, padL, padR, padT, ih, w, h };
+  }
+
+  function onMove(ev) {
+    if (!geometry) return;
+    const rect = chartBox.getBoundingClientRect();
+    const px = ev.clientX - rect.left;
+    const { padL, padR, w } = geometry;
+    const ratio = Math.min(1, Math.max(0, (px - padL) / (w - padL - padR)));
+    const idx = Math.round(ratio * (data.length - 1));
+    const d = data[idx];
+    const day = new Date(Date.now() - (data.length - 1 - idx) * 864e5);
+    tip.innerHTML =
+      day.toLocaleDateString("ru-RU", { day: "2-digit", month: "long" }) +
+      "<br>визиты <b>" + fmt.format(d.visits) + "</b>" +
+      "<br>регистрации <b>" + fmt.format(d.regs) + "</b>";
+    tip.style.left = geometry.X(idx) + "px";
+    tip.style.top = geometry.Y(d.visits) + "px";
+    tip.style.opacity = 1;
+  }
+
+  chartBox.addEventListener("pointermove", onMove);
+  chartBox.addEventListener("pointerleave", () => (tip.style.opacity = 0));
+
+  const SOURCES = [
+    ["Поиск", 0.42], ["Прямые", 0.21], ["Соцсети", 0.16], ["Реклама", 0.13], ["Почта", 0.08]
+  ];
+
+  function render() {
+    data = buildSeries(range);
+    document.getElementById("chart-range").textContent = range + " дней";
+
+    const total = data.reduce((s, d) => s + d.visits, 0);
+    const regs = data.reduce((s, d) => s + d.regs, 0);
+    const cvr = (regs / total) * 100;
+
+    const set = (id, val) => (document.getElementById(id).textContent = val);
+    set("k-dau", fmt.format(Math.round(total / range)));
+    set("k-dau-d", "+" + (3 + rnd() * 9).toFixed(1) + "% к прошлому периоду");
+    set("k-reg", fmt.format(regs));
+    set("k-reg-d", "+" + (2 + rnd() * 12).toFixed(1) + "% к прошлому периоду");
+    set("k-cvr", cvr.toFixed(1).replace(".", ",") + "%");
+    set("k-cvr-d", cvr > 5.4 ? "выше цели 5,4%" : "ниже цели 5,4%");
+    document.getElementById("k-cvr-d").className = "card__d " + (cvr > 5.4 ? "up" : "down");
+    const churn = 1.4 + rnd() * 2.1;
+    set("k-churn", churn.toFixed(1).replace(".", ",") + "%");
+    set("k-churn-d", churn < 2.4 ? "−0," + Math.round(rnd() * 4 + 1) + " п.п." : "+0," + Math.round(rnd() * 4 + 1) + " п.п.");
+
+    const sparks = [
+      [data.map(d => d.visits), "#4de3d0"],
+      [data.map(d => d.regs), "#4de3d0"],
+      [data.map(d => d.regs / d.visits * 1000), "#4de3d0"],
+      [data.map(d => 1.6 + rnd()), "#ff6b6b"]
+    ];
+    document.querySelectorAll("[data-spark]").forEach((c) => {
+      const [vals, color] = sparks[+c.dataset.spark];
+      drawSpark(c, vals, color);
+    });
+
+    set("s-aov", fmt.format(Math.round(2400 + rnd() * 2600)) + " ₽");
+    set("s-dur", (2 + rnd() * 4).toFixed(1).replace(".", ",") + " мин");
+    set("s-bounce", (22 + rnd() * 14).toFixed(0) + "%");
+    set("s-pv", (2.4 + rnd() * 2.6).toFixed(1).replace(".", ","));
+
+    // источники
+    const bars = document.getElementById("bars");
+    bars.innerHTML = "";
+    SOURCES.forEach(([name, share]) => {
+      const jitter = 0.85 + rnd() * 0.3;
+      const pct = Math.min(0.72, share * jitter);
+      const row = document.createElement("div");
+      row.className = "bar__row";
+      row.innerHTML = '<span>' + name + '</span><span class="bar__track"><span class="bar__fill"></span></span><span class="bar__v">' + Math.round(pct * 100) + '%</span>';
+      bars.appendChild(row);
+      requestAnimationFrame(() => (row.querySelector(".bar__fill").style.width = (pct / 0.72) * 100 + "%"));
+    });
+
+    // таблица страниц
+    const pages = [
+      ["/", "Главная", 0.031, "0:52"],
+      ["/tarify", "Тарифы", 0.088, "1:41"],
+      ["/blog/seo-struktura", "Блог · SEO-структура", 0.012, "3:08"],
+      ["/keysy", "Кейсы", 0.041, "2:13"],
+      ["/registraciya", "Регистрация", 0.164, "1:07"]
+    ];
+    const tbody = document.getElementById("pages");
+    tbody.innerHTML = "";
+    pages.forEach(([url, title, cr, time]) => {
+      const visits = Math.round((total / pages.length) * (0.5 + rnd()));
+      const tr = document.createElement("tr");
+      tr.innerHTML =
+        '<td><span class="tag">' + url + '</span> ' + title + '</td>' +
+        '<td class="mono">' + fmt.format(visits) + '</td>' +
+        '<td class="mono">' + (cr * 100).toFixed(1).replace(".", ",") + '%</td>' +
+        '<td class="mono">' + time + '</td>';
+      tbody.appendChild(tr);
+    });
+
+    drawArea();
+  }
+
+  // ——— события ———
+  document.querySelectorAll("[data-range]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      range = +btn.dataset.range;
+      document.querySelectorAll("[data-range]").forEach(b => b.setAttribute("aria-pressed", String(b === btn)));
+      render();
+    });
+  });
+  document.getElementById("shuffle").addEventListener("click", () => { seed += 7919; render(); });
+
+  const clock = document.getElementById("live-clock");
+  const tick = () => (clock.textContent = new Date().toLocaleTimeString("ru-RU"));
+  tick(); setInterval(tick, 1000);
+
+  let raf;
+  const redraw = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(drawArea); };
+  new ResizeObserver(redraw).observe(chartBox);
+  window.addEventListener("resize", redraw);
+
+  render();
+})();
+</script>
+</body>
+</html>
